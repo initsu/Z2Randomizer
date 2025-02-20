@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text.Json.Serialization;
@@ -169,6 +170,7 @@ public class RandomizerProperties
     public bool PbagItemShuffle { get; set; }
     public bool StartWithSpellItems { get; set; }
     public bool ShufflePbagXp { get; set; }
+    public Dictionary<Collectable, bool> RemoveItems { get; set; } = [];
 
     //Drops
     public bool ShuffleItemDropFrequency { get; set; }

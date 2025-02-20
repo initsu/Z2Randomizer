@@ -415,6 +415,15 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
     [Reactive]
     private bool? includeQuestItemsInShuffle;
 
+    [Reactive]
+    private bool removeGlove;
+
+    [Reactive]
+    private bool removeFairy;
+
+    [Reactive]
+    private bool removeDownstab;
+
     //Drops
     [Reactive]
     private bool shuffleItemDropFrequency;
@@ -1238,6 +1247,10 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
         properties.IncludeQuestItemsInShuffle = includeQuestItemsInShuffle ?? GetIndeterminateFlagValue(r);
         properties.IncludeSpellsInShuffle = includeSpellsInShuffle ?? GetIndeterminateFlagValue(r);
         properties.IncludeSwordTechsInShuffle = includeSwordTechsInShuffle ?? GetIndeterminateFlagValue(r);
+        properties.RemoveItems = [];
+        if (removeGlove) { properties.RemoveItems.Add(Collectable.GLOVE, true); }
+        if (removeFairy) { properties.RemoveItems.Add(Collectable.FAIRY_SPELL, true); }
+        if (removeDownstab) { properties.RemoveItems.Add(Collectable.DOWNSTAB, true); }
 
         //Drops
         properties.ShuffleItemDropFrequency = shuffleItemDropFrequency;

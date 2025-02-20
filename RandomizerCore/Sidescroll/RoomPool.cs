@@ -198,19 +198,32 @@ public class RoomPool
             }
         }
 
-        if (!props.BlockersAnywhere)
+        RequirementType[] allowedBlockers = !props.BlockersAnywhere ? Palaces.ALLOWED_BLOCKERS_BY_PALACE[palaceNumber - 1] : Palaces.ALL_PALACE_ALLOWED_BLOCKERS;
+        if(!props.ReplaceFireWithDash)
         {
-            RequirementType[] allowedBlockers = Palaces.ALLOWED_BLOCKERS_BY_PALACE[palaceNumber - 1];
-            NormalRooms.RemoveAll(room => !room.IsTraversable(allowedBlockers));
-            NormalRooms.RemoveAll(room => room.LinkedRoomName != null && !LinkedRooms[room.LinkedRoomName].IsTraversable(allowedBlockers));
-            foreach (var key in ItemRoomsByDirection.Keys)
+            allowedBlockers = allowedBlockers.Where(r => r != RequirementType.DASH).ToArray();
+        }
+        if (props.RemoveItems.GetValueOrDefault(Collectable.GLOVE, false))
+        {
+            allowedBlockers = allowedBlockers.Where(r => r != RequirementType.GLOVE).ToArray();
+        }
+        if (props.RemoveItems.GetValueOrDefault(Collectable.DOWNSTAB, false))
+        {
+            allowedBlockers = allowedBlockers.Where(r => r != RequirementType.DOWNSTAB).ToArray();
+        }
+        if (props.RemoveItems.GetValueOrDefault(Collectable.FAIRY_SPELL, false))
+        {
+            allowedBlockers = allowedBlockers.Where(r => r != RequirementType.FAIRY).ToArray();
+        }
+        NormalRooms.RemoveAll(room => !room.IsTraversable(allowedBlockers));
+        NormalRooms.RemoveAll(room => room.LinkedRoomName != null && !LinkedRooms[room.LinkedRoomName].IsTraversable(allowedBlockers));
+        foreach (var key in ItemRoomsByDirection.Keys)
+        {
+            var values = ItemRoomsByDirection[key];
+            var toRemove = values.Where(room => !room.IsTraversable(allowedBlockers)).ToList();
+            foreach (var room in toRemove)
             {
-                var values = ItemRoomsByDirection[key];
-                var toRemove = values.Where(room => !room.IsTraversable(allowedBlockers)).ToList();
-                foreach (var room in toRemove)
-                {
-                    ItemRoomsByDirection.Remove(key, room);
-                }
+                ItemRoomsByDirection.Remove(key, room);
             }
         }
     }

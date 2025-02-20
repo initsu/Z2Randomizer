@@ -772,6 +772,14 @@ public class Hyrule
         {
             ItemGet[collectable] = props.StartsWithCollectable(collectable);
         }
+        if (props.RemoveItems.GetValueOrDefault(Collectable.GLOVE, false))
+        {
+            ItemGet[Collectable.GLOVE] = true; // there will be no palace rooms with this anyway
+        }
+        if (props.RemoveItems.GetValueOrDefault(Collectable.DOWNSTAB, false))
+        {
+            ItemGet[Collectable.DOWNSTAB] = true;
+        }
 
         pbagHearts = [];
         //Replace any unused heart containers with small items
@@ -859,6 +867,11 @@ public class Hyrule
             }
         }
 
+        if(props.RemoveItems.GetValueOrDefault(Collectable.GLOVE, false) && !props.StartsWithCollectable(Collectable.GLOVE))
+        {
+            shufflableItems[shufflableItems.IndexOf(Collectable.GLOVE)] = minorItems.Sample(RNG);
+        }
+
         if(props.IncludeSpellsInShuffle)
         {
             foreach (Collectable item in possibleStartSpells)
@@ -868,11 +881,17 @@ public class Hyrule
                     shufflableItems[shufflableItems.IndexOf(item)] = minorItems.Sample(r);
                 }
             }
+            // TODO: handle fairyless without spell shuffle?
+            if(props.RemoveItems.GetValueOrDefault(Collectable.FAIRY_SPELL, false) && !props.StartsWithCollectable(Collectable.FAIRY_SPELL))
+            {
+                shufflableItems[shufflableItems.IndexOf(Collectable.FAIRY_SPELL)] = minorItems.Sample(RNG);
+            }
         }
 
-        if(props.IncludeSwordTechsInShuffle)
+        // TODO: handle downstabless without sword tech shuffle?
+        if (props.IncludeSwordTechsInShuffle)
         {
-            if (props.StartWithDownstab)
+            if (props.StartWithDownstab || props.RemoveItems.GetValueOrDefault(Collectable.DOWNSTAB, false))
             {
                 shufflableItems[shufflableItems.IndexOf(Collectable.DOWNSTAB)] = minorItems.Sample(r);
             }
@@ -1451,7 +1470,7 @@ public class Hyrule
 
         foreach(Collectable item in ItemGet.Keys)
         {
-            if (ItemGet[item] == false && item.IsItemGetItem())
+            if (ItemGet[item] == false && !props.RemoveItems.GetValueOrDefault(item, false) && item.IsItemGetItem())
             {
                 itemGetReachableFailures++;
 #if UNSAFE_DEBUG

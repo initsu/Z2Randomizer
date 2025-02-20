@@ -115,6 +115,13 @@
             >
                 <ToolTip.Tip><TextBlock Text="{x:Static lang:Resources.AllowDuplicatesofImportantItemsToolTip}"/></ToolTip.Tip>
             </CheckBox>
-        </StackPanel>
+			<Border BorderBrush="{DynamicResource MaterialPrimaryForegroundBrush}" CornerRadius="4" BorderThickness="1">
+				<StackPanel>
+					<CheckBox IsChecked="{Binding Config.RemoveGlove}" Content="Remove Glove" />
+					<CheckBox IsChecked="{Binding Config.RemoveFairy}" Content="Remove Fairy" />
+					<CheckBox IsChecked="{Binding Config.RemoveDownstab}" Content="Remove Downstab" />
+				</StackPanel>
+			</Border>
+		</StackPanel>
     </Grid>
 </UserControl>
