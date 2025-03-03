@@ -551,12 +551,23 @@ public class Room : IJsonOnDeserialized
         const byte statueId = 0x09; // Iron Knuckle statue map command ID
         const byte statueXpos = 62;
         const byte statueYpos = 9;
+        const byte horizontalBrick = 0x20;
 
         SideViewEditable edit = new SideViewEditable(SideView);
+        // remove vanilla block above the boss room exit that prevents entering from the right
+        SideViewMapCommand? exitBlocker = edit.Find(o => (o.Id & 0xF0) == horizontalBrick && o.AbsX == 62 && o.Y > 7 && o.Y < 11);
+        if (exitBlocker != null)
+        {
+            edit.Remove(exitBlocker);
+        }
+        // remove statue to indicate the palace continues
         SideViewMapCommand? statue = edit.Find(o => o.Id == statueId && o.AbsX == statueXpos && o.Y == statueYpos);
         if (statue != null)
         {
             edit.Remove(statue);
+        }
+        if (exitBlocker != null || statue != null)
+        {
             SideView = edit.Finalize();
         }
     }
