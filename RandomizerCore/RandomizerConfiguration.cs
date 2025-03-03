@@ -1713,7 +1713,8 @@ public sealed class RandomizerConfiguration : INotifyPropertyChanged
         }
 
         properties.BlockersAnywhere = BlockingRoomsInAnyPalace;
-        properties.BossRoomConnect = BossRoomsExitToPalace ?? GetIndeterminateFlagValue(r); ;
+        properties.BossRoomConnect = BossRoomsExitToPalace ?? true;
+        properties.BossRoomAlwaysConnect = BossRoomsExitToPalace ?? false;
         properties.NoDuplicateRooms = NoDuplicateRoomsByEnemies;
         properties.NoDuplicateRoomsBySideview = NoDuplicateRoomsByLayout;
         properties.GeneratorsAlwaysMatch = GeneratorsAlwaysMatch;

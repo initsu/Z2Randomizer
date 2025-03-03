@@ -39,10 +39,13 @@ internal class ChaosPalaceGenerator : PalaceGenerator
         palace.BossRoom.PalaceGroup = palaceGroup;
         palace.AllRooms.Add(palace.BossRoom);
 
-        if (props.BossRoomConnect)
+        if (props.BossRoomConnect && palace.Number < 7)
         {
-            palace.BossRoom.HasRightExit = true;
-            palace.BossRoom.AdjustContinuingBossRoom();
+            if (props.BossRoomAlwaysConnect || r.Next(2) == 0)
+            {
+                palace.BossRoom.HasRightExit = true;
+                palace.BossRoom.AdjustContinuingBossRoom();
+            }
         }
 
         if (palaceNumber < 7)

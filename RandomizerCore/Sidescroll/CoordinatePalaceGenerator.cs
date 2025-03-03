@@ -106,7 +106,7 @@ public abstract class CoordinatePalaceGenerator() : PalaceGenerator
                 break;
             }
             RoomExitType bossRoomExitType = bossRoomCandidate.CategorizeExits();
-            if (props.BossRoomConnect && palace.Number < 7)
+            if (props.BossRoomConnect && palace.Number < 7 && (props.BossRoomAlwaysConnect || r.Next(2) == 0))
             {
                 bossRoomExitType = bossRoomExitType.AddRight();
             }
@@ -125,8 +125,11 @@ public abstract class CoordinatePalaceGenerator() : PalaceGenerator
                     palace.BossRoom.Enemies = (byte[])roomPool.VanillaBossRoom.Enemies.Clone();
                     if (props.BossRoomConnect && palace.Number < 7)
                     {
-                        palace.BossRoom.HasRightExit = true;
-                        palace.BossRoom.AdjustContinuingBossRoom();
+                        if (bossRoomExitType.ContainsRight())
+                        {
+                            palace.BossRoom.HasRightExit = true;
+                            palace.BossRoom.AdjustContinuingBossRoom();
+                        }
                     }
                     palace.ReplaceRoom(bossRoomReplacementRoom, palace.BossRoom);
                     break;

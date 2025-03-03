@@ -80,8 +80,11 @@ public class ReconstructedPalaceGenerator(CancellationToken ct) : PalaceGenerato
 
                     if (props.BossRoomConnect)
                     {
-                        palace.BossRoom.HasRightExit = true;
-                        palace.BossRoom.AdjustContinuingBossRoom();
+                        if (props.BossRoomAlwaysConnect || r.Next(2) == 0)
+                        {
+                            palace.BossRoom.HasRightExit = true;
+                            palace.BossRoom.AdjustContinuingBossRoom();
+                        }
                     }
 
                     if (palace.ItemRoom.LinkedRoomName != null)

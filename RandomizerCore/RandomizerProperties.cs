@@ -107,6 +107,7 @@ public class RandomizerProperties
     public bool BossItem { get; set; }
     public bool BlockersAnywhere { get; set; }
     public bool BossRoomConnect { get; set; }
+    public bool BossRoomAlwaysConnect { get; set; }
     public bool NoDuplicateRooms { get; set; }
     public bool NoDuplicateRoomsBySideview { get; set; }
     public bool GeneratorsAlwaysMatch { get; set; }
