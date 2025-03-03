@@ -130,6 +130,10 @@ public abstract class CoordinatePalaceGenerator() : PalaceGenerator
                             palace.BossRoom.HasRightExit = true;
                             palace.BossRoom.AdjustContinuingBossRoom();
                         }
+                        else
+                        {
+                            palace.BossRoom.AdjustNotContinuingBossRoom();
+                        }
                     }
                     palace.ReplaceRoom(bossRoomReplacementRoom, palace.BossRoom);
                     break;

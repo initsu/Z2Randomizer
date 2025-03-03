@@ -85,6 +85,10 @@ public class ReconstructedPalaceGenerator(CancellationToken ct) : PalaceGenerato
                             palace.BossRoom.HasRightExit = true;
                             palace.BossRoom.AdjustContinuingBossRoom();
                         }
+                        else
+                        {
+                            palace.BossRoom.AdjustNotContinuingBossRoom();
+                        }
                     }
 
                     if (palace.ItemRoom.LinkedRoomName != null)
