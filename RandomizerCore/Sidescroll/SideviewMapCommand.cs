@@ -202,6 +202,66 @@ public class SideviewMapCommand<T> where T : Enum
         }
     }
 
+    public int Width
+    {
+        get {
+            if (Y < 13)
+            {
+                switch (this)
+                {
+                    case SideviewMapCommand<PalaceObject>:
+                        switch (Id)
+                        {
+                            case PalaceObject.CrystalReturnStatue1:
+                            case PalaceObject.CrystalReturnStatue2:
+                                return 4;
+                            case PalaceObject.LargeCloud:
+                            case PalaceObject.SmallCloud1:
+                            case PalaceObject.SmallCloud2:
+                            case PalaceObject.SmallCloud3:
+                            case PalaceObject.SmallCloud4:
+                            case PalaceObject.SmallCloud5:
+                            case PalaceObject.SmallCloud6:
+                                return 2;
+                            case PalaceObject.HorizontalPitOrLava:
+                            case PalaceObject.HorizontalBrick:
+                            case PalaceObject.BreakableBlock:
+                            case PalaceObject.SteelBrick:
+                            case PalaceObject.CrumbleBridgeOrElevator:
+                            case PalaceObject.Bridge:
+                            case PalaceObject.PalaceBricks:
+                            case PalaceObject.Curtains:
+                            case PalaceObject.BreakableBlock2:
+                            case PalaceObject.WalkThruBricks:
+                            case PalaceObject.HorizontalPit:
+                                return 1 + Param;
+                            default:
+                                return 1;
+                        }
+                    case SideviewMapCommand<GreatPalaceObject>:
+                    default:
+                        throw new NotImplementedException();
+                }
+            }
+            else if (Y < 15)
+            {
+                return 0;
+            }
+            else
+            {
+                if (IsElevator())
+                {
+                    return 2;
+                }
+                else if (IsLava())
+                {
+                    return 1 + Param;
+                }
+            }
+            throw new NotImplementedException();
+        }
+    }
+
     public String DebugString()
     {
         var bytes = Convert.ToHexString(Bytes);
