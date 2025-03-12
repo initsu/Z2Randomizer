@@ -686,7 +686,37 @@ void DebugPalaceRoomHex<T>(String hex) where T : Enum
     var sv = new SideviewEditable<T>(bytes);
     sb.AppendLine(sv.DebugString());
 }
+
 #pragma warning restore CS8321 // Local function is declared but never used
+void MirrorRoom<T>(String hex) where T : Enum
+{
+    byte[] bytes = Convert.FromHexString(hex);
+    var sv = new SideviewEditable<T>(bytes);
+    sb.AppendLine(sv.DebugString());
+    sv.Mirror();
+    byte[] mirrored = sv.Finalize();
+    sb.AppendLine("Mirrored:");
+    sb.AppendLine(sv.DebugString());
+    sb.AppendLine(Convert.ToHexString(mirrored));
+}
+
+void MirrorEnemies(String hex)
+{
+    byte[] bytes = Convert.FromHexString(hex);
+    var sv = new EnemiesEditable<EnemiesPalace125>(bytes);
+    sb.AppendLine(sv.DebugString());
+    sv.Mirror();
+    byte[] mirrored = sv.Finalize();
+    sb.AppendLine(sv.DebugString());
+    sb.AppendLine(Convert.ToHexString(mirrored));
+}
+
+void MirrorConnections(String hex)
+{
+    byte[] bytes = Convert.FromHexString(hex);
+    byte[] mirrored = [(byte)(bytes[3] | 0b00000011), .. bytes[1..3], (byte)(bytes[0] & 0b11111100)];
+    sb.AppendLine(Convert.ToHexString(mirrored));
+}
 
 ValidateRoomsForFile("PalaceRooms.json");
 sb.AppendLine();
@@ -694,6 +724,11 @@ sb.AppendLine();
 sb.AppendLine();
 
 //DebugPalaceRoomHex<GreatPalaceObject>("32600808102F23F8D50123F7D502102F23F694069106D10323F5D404102F23F4D50522F3F3500006B0910106B091D10F112F");
+
+MirrorConnections("FCFCFC00");
+MirrorEnemies("050A0D6644");
+MirrorRoom<PalaceObject>("1F600E08D208F312510024C89090F1189058530096765100650F087090D10F");
+
 
 var result = sb.ToString();
 File.WriteAllText("ValidationOutput.txt", result);
