@@ -6,6 +6,8 @@ using RandomizerCore.Sidescroll;
 
 StringBuilder sb = new StringBuilder("");
 
+bool optimize = true;
+
 void ValidateRoomsForFile(string filename)
 {
     sb.AppendLine("Validating \"" + filename + "\"...");
@@ -108,6 +110,18 @@ void ValidateRoomsForFile(string filename)
         }
         CheckDropZones(room, openCeilingTiles);
         CheckDrops(room, dropTiles);
+
+        if (optimize)
+        {
+            var oldLength = sv.Commands.Count;
+            byte[] optimizedBytes = sv.Finalize();
+            if (sv.Commands.Count < oldLength)
+            {
+                var oldHex = Convert.ToHexString(room.SideView);
+                var newHex = Convert.ToHexString(optimizedBytes);
+                sb.AppendLine($"{GetName(room)}: Sideview can be optimized from\n\"{oldHex}\" to \n\"{newHex}\"");
+            }
+        }
     }
 
     // GREAT PALACE ROOMS
@@ -147,6 +161,18 @@ void ValidateRoomsForFile(string filename)
         }
         CheckDropZones(room, openCeilingTiles);
         CheckDrops(room, dropTiles);
+
+        if (optimize)
+        {
+            var oldLength = sv.Commands.Count;
+            byte[] optimizedBytes = sv.Finalize();
+            if (sv.Commands.Count < oldLength)
+            {
+                var oldHex = Convert.ToHexString(room.SideView);
+                var newHex = Convert.ToHexString(optimizedBytes);
+                sb.AppendLine($"{GetName(room)}: Sideview can be optimized from\n\"{oldHex}\" to \n\"{newHex}\"");
+            }
+        }
     }
 }
 
