@@ -186,6 +186,24 @@ public class SideviewEditable<T> where T : Enum
             FloorHeader = (byte)((FloorHeader & 0b01110000) + (nextFloorParam & 0b10001111));
         }
 
+        foreach (var cmd in Commands.Where(o => o.Y < 13))
+        {
+            switch (this)
+            {
+                case SideviewMapCommand<PalaceObject>:
+                    var cmd1 = cmd as SideviewMapCommand<PalaceObject>;
+                    if (cmd1!.Id == PalaceObject.UnicornHead)
+                    {
+                        cmd1.Id = PalaceObject.RatHead;
+                    }
+                    else if (cmd1!.Id == PalaceObject.RatHead)
+                    {
+                        cmd1.Id = PalaceObject.UnicornHead;
+                    }
+                    break;
+            }
+        }
+
         foreach (var cmd in Commands)
         {
             cmd.AbsX = 63 - cmd.AbsX - (cmd.Width - 1);
