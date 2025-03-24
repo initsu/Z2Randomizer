@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 
 namespace Z2Randomizer.RandomizerCore.Sidescroll;
 
@@ -39,10 +40,10 @@ public enum RoomExitType
 
 public static class RoomExitTypeExtensions
 {
-    public const int LEFT = 0b00010000;
-    public const int DOWN = 0b00001000;
-    public const int DROP = 0b00000100;
-    public const int UP = 0b00000010;
+    public const int LEFT =  0b00010000;
+    public const int DOWN =  0b00001000;
+    public const int DROP =  0b00000100;
+    public const int UP =    0b00000010;
     public const int RIGHT = 0b00000001;
     public static bool ContainsRight(this RoomExitType exitType)
     {
@@ -123,5 +124,16 @@ public static class RoomExitTypeExtensions
     public static RoomExitType Merge(this RoomExitType exitType, RoomExitType toMerge)
     {
         return exitType | toMerge;
+    }
+
+    public static String ToArrowString(this RoomExitType exitType)
+    {
+        StringBuilder sb = new();
+        if (exitType.ContainsLeft())  { sb.Append(@"\u21E6"); }
+        if (exitType.ContainsDown())  { sb.Append(@"\u21E9"); }
+        if (exitType.ContainsDrop())  { sb.Append(@"\u21E3"); }
+        if (exitType.ContainsUp())    { sb.Append(@"\u21E7"); }
+        if (exitType.ContainsRight()) { sb.Append(@"\u21E8"); }
+        return sb.ToString();
     }
 }
