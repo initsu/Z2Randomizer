@@ -70,6 +70,11 @@ public class SideviewEditable<T> where T : Enum
 
     public byte Length { get => Header[0]; }
 
+    public byte PageCount {
+        get => (byte)(((Header[1] & 0b01100000) >> 5) + 1);
+        set { Header[1] = (byte)((Header[1] & 0b10011111) | (((value - 1) << 5) & 0b01100000)); }
+    }
+
     public byte FloorHeader
     {
         get { return Header[2]; }
