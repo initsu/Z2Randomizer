@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Text;
 
 namespace Z2Randomizer.RandomizerCore.Sidescroll;
 
@@ -141,5 +142,16 @@ public static class RoomExitTypeExtensions
     public static RoomExitType Merge(this RoomExitType exitType, RoomExitType toMerge)
     {
         return exitType | toMerge;
+    }
+
+    public static String ToArrowString(this RoomExitType exitType)
+    {
+        StringBuilder sb = new();
+        if (exitType.ContainsLeft())  { sb.Append(@"\u21E6"); }
+        if (exitType.ContainsDown())  { sb.Append(@"\u21E9"); }
+        if (exitType.ContainsDrop())  { sb.Append(@"\u21E3"); }
+        if (exitType.ContainsUp())    { sb.Append(@"\u21E7"); }
+        if (exitType.ContainsRight()) { sb.Append(@"\u21E8"); }
+        return sb.ToString();
     }
 }
