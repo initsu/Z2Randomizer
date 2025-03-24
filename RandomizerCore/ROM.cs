@@ -565,7 +565,7 @@ TitleEnd:
          */
 
         if (charSprite.Patch != null) {
-            IpsPatcher.Patch(rawdata, charSprite.Patch, true);
+            IpsPatcher.PatchSpriteSanitized(rawdata, charSprite.Patch, true);
         }
 
         var colorMap = new Dictionary<CharacterColor, int>()
