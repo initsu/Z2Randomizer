@@ -41,6 +41,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ValidateRooms", "ValidateRo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreSourceGenerator", "CoreSourceGenerator\CoreSourceGenerator.csproj", "{BE1657FD-EA4D-4683-8C4B-1B2DA38595AF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PrintRooms", "PrintRooms\PrintRooms.csproj", "{C8742699-E989-142E-1D3A-B0DBA58DC2CF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -207,6 +209,18 @@ Global
 		{BE1657FD-EA4D-4683-8C4B-1B2DA38595AF}.Unsafe Debug|Any CPU.Build.0 = Unsafe Debug|Any CPU
 		{BE1657FD-EA4D-4683-8C4B-1B2DA38595AF}.Unsafe Debug|x64.ActiveCfg = Unsafe Debug|Any CPU
 		{BE1657FD-EA4D-4683-8C4B-1B2DA38595AF}.Unsafe Debug|x64.Build.0 = Unsafe Debug|Any CPU
+		{C8742699-E989-142E-1D3A-B0DBA58DC2CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8742699-E989-142E-1D3A-B0DBA58DC2CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8742699-E989-142E-1D3A-B0DBA58DC2CF}.Debug|x64.ActiveCfg = Debug|x64
+		{C8742699-E989-142E-1D3A-B0DBA58DC2CF}.Debug|x64.Build.0 = Debug|x64
+		{C8742699-E989-142E-1D3A-B0DBA58DC2CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8742699-E989-142E-1D3A-B0DBA58DC2CF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8742699-E989-142E-1D3A-B0DBA58DC2CF}.Release|x64.ActiveCfg = Release|x64
+		{C8742699-E989-142E-1D3A-B0DBA58DC2CF}.Release|x64.Build.0 = Release|x64
+		{C8742699-E989-142E-1D3A-B0DBA58DC2CF}.Unsafe Debug|Any CPU.ActiveCfg = Release|Any CPU
+		{C8742699-E989-142E-1D3A-B0DBA58DC2CF}.Unsafe Debug|Any CPU.Build.0 = Release|Any CPU
+		{C8742699-E989-142E-1D3A-B0DBA58DC2CF}.Unsafe Debug|x64.ActiveCfg = Release|x64
+		{C8742699-E989-142E-1D3A-B0DBA58DC2CF}.Unsafe Debug|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
