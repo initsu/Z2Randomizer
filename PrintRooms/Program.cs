@@ -1,0 +1,620 @@
+﻿using System.Runtime.InteropServices;
+using System.Text;
+using System.Text.Json;
+using RandomizerCore;
+using RandomizerCore.Sidescroll;
+using SkiaSharp;
+
+namespace PrintRooms;
+
+public class Program
+{
+    private static Dictionary<int, SKBitmap> palaceTiles = new();
+    private static ROM? vanillaRom;
+    private static byte[]? paletteClouds;
+    private static byte[]? paletteBricks;
+    private static byte[]? paletteWindows;
+    private static byte[]? paletteCurtains;
+    private static byte[]? paletteLink;
+    private static byte[]? paletteOrange;
+    private static byte[]? paletteRed;
+    private static byte[]? paletteBlue;
+    private static byte[]? paletteGpBricks;
+
+    public static int Main(string[] args)
+    {
+        if (args.Length < 1)
+        {
+            Console.WriteLine("Pass a vanilla ROM file as argument so we can read tile data.");
+            return 0;
+        }
+        string rom = args[0];
+        if (!File.Exists(rom))
+        {
+            Console.WriteLine($"The specified ROM file does not exist: {rom}");
+            return 0;
+        }
+        var vanillaRomData = File.ReadAllBytes(rom);
+        vanillaRom = new ROM(vanillaRomData);
+        paletteLink = vanillaRom.GetBytes(ROM.RomHdrSize + 0x2849, 4);
+        paletteClouds = vanillaRom.GetBytes(ROM.RomHdrSize + 0x1001e, 4);
+        paletteBricks = vanillaRom.GetBytes(ROM.RomHdrSize + 0x1001e + 4, 4);
+        paletteWindows = vanillaRom.GetBytes(ROM.RomHdrSize + 0x1001e + 8, 4);
+        paletteCurtains = vanillaRom.GetBytes(ROM.RomHdrSize + 0x1001e + 12, 4);
+        paletteCurtains[0] = 0;
+        paletteOrange = vanillaRom.GetBytes(ROM.RomHdrSize + 0x100a2, 4);
+        paletteOrange[0] = 0;
+        paletteRed = vanillaRom.GetBytes(ROM.RomHdrSize + 0x10056, 4);
+        paletteBlue = vanillaRom.GetBytes(ROM.RomHdrSize + 0x100aa, 4);
+        paletteBlue[0] = 0;
+        paletteGpBricks = vanillaRom.GetBytes(ROM.RomHdrSize + 0x10062, 4);
+
+        PrintRoomsForFileAndGroup("PalaceRooms.json", RoomGroup.V4_4);
+
+        return 0;
+    }
+
+    public static void PrintRoomsForFileAndGroup(string jsonFilename, RoomGroup? roomGroup)
+    {
+        Console.WriteLine("Scanning \"" + jsonFilename + "\"...");
+        var json = RandomizerCore.Util.ReadAllTextFromFile(jsonFilename);
+        var palaceRooms = JsonSerializer.Deserialize(json, RoomSerializationContext.Default.ListRoom);
+
+        foreach (Room room in palaceRooms!.Where(r => r.Enabled))
+        {
+            if (roomGroup != null && room.Group != roomGroup) { continue; }
+            PrintRoom(room);
+        }
+    }
+
+    public static void PrintRoom(Room room)
+    {
+        if (room.PalaceNumber == 7)
+        {
+            var sv = new SideviewEditable<GreatPalaceObject>(room.SideView);
+            var ee = new EnemiesEditable<EnemiesGreatPalace>(room.Enemies);
+            PrintRoom(room, sv, ee);
+        }
+        else if (room.PalaceGroup == 2)
+        {
+            var sv = new SideviewEditable<PalaceObject>(room.SideView);
+            var ee = new EnemiesEditable<EnemiesPalace346>(room.Enemies);
+            PrintRoom(room, sv, ee);
+        }
+        else
+        {
+            var sv = new SideviewEditable<PalaceObject>(room.SideView);
+            var ee = new EnemiesEditable<EnemiesPalace125>(room.Enemies);
+            PrintRoom(room, sv, ee);
+        }
+    }
+
+    public static void PrintRoom<T,U>(Room room, SideviewEditable<T> sv, EnemiesEditable<U> ee) where T : Enum where U : Enum
+    {
+        if (sv.BackgroundMap != 0) { return; /* Not supporting built-in "background" maps */ }
+
+        int width = sv.PageCount * 16 * 16;
+        const int height = 13 * 16;
+        using SKBitmap bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
+        using SKCanvas canvas = new SKCanvas(bitmap);
+        canvas.Clear(new SKColor(0, 0, 0));
+        DrawFloors(canvas, sv);
+        foreach (var cmd in sv.Commands)
+        {
+            if (cmd.IsXSkip() || cmd.IsNewFloor() || cmd.IsElevator()) { continue; }
+            DrawCommand(canvas, cmd);
+        }
+        // 2nd phase - draw objects that must appear on top
+        foreach (var cmd in sv.Commands)
+        {
+            if (cmd.IsElevator()) {
+                DrawElevator(canvas, cmd.AbsX);
+            }
+        }
+        foreach (var e in ee.Enemies)
+        {
+            DrawEnemy(canvas, e);
+        }
+
+        using var image = SKImage.FromBitmap(bitmap);
+        using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+        var filePath = $"png/{GetName(room)}.png";
+        var fileInfo = new System.IO.FileInfo(filePath);
+        fileInfo.Directory!.Create();
+        File.WriteAllBytes(fileInfo.FullName, data.ToArray());
+        image.Dispose();
+        canvas.Dispose();
+        bitmap.Dispose();
+        Console.WriteLine($"PNG image generated: {filePath}");
+        GC.Collect();
+    }
+
+    static void DrawFloors<T>(SKCanvas canvas, SideviewEditable<T> sv) where T : Enum
+    {
+        var floor = SideviewMapCommand<T>.CreateNewFloor(0, sv.FloorHeader);
+        List<SideviewMapCommand<T>> floors = sv.FindAll(o => o.IsNewFloor());
+        var tile = LoadPalaceBrickTile<T>();
+        for (var x = 0; x < 64; x++)
+        {
+            while (floors.Count > 0 && floors[0].AbsX == x)
+            {
+                floor = floors[0];
+                floors.RemoveAt(0);
+            }
+            for (var y = 0; y < 13; y++)
+            {
+                if (floor.IsFloorSolidAt(y))
+                {
+                    canvas.DrawBitmap(tile, x * 16, y * 16);
+                }
+            }
+        }
+    }
+
+    static void DrawCommand<T>(SKCanvas canvas, SideviewMapCommand<T> cmd) where T : Enum
+    {
+        int startX = cmd.AbsX;
+        int startY = cmd.Y;
+        int endX = cmd.AbsX + cmd.Width;
+        int endY = cmd.Y + cmd.Height;
+        SKBitmap? tile = null;
+        if (cmd.IsLava())
+        {
+            tile = LoadChrFillPattern(palaceTiles, 0x9980, 1, 2, 2, 2, paletteWindows!, false);
+            for (int i = startX; i < endX; i++)
+            {
+                canvas.DrawBitmap(tile, i * 16, 11 * 16);
+            }
+            startY = 12;
+            tile = LoadChrFillPattern(palaceTiles, 0x9fe0, 1, 1, 2, 2, paletteWindows!);
+        }
+        else if (cmd.IsElevator())
+        {
+            return;
+        }
+        else
+        {
+            switch (cmd.Id)
+            {
+                case PalaceObject.Window:
+                case GreatPalaceObject.Window:
+                    tile = LoadChr(palaceTiles, 0x96a0, 2, 3, paletteWindows!, false);
+                    break;
+                case PalaceObject.DragonHead:
+                    tile = LoadChr(palaceTiles, 0x9340, 2, 2, paletteBricks!, false);
+                    break;
+                case GreatPalaceObject.DragonHead:
+                    tile = LoadChr(palaceTiles, 0xd340, 2, 2, paletteGpBricks!, false);
+                    break;
+                case PalaceObject.WolfHead:
+                    tile = LoadChr(palaceTiles, 0x9380, 2, 2, paletteBricks!, false);
+                    break;
+                case GreatPalaceObject.WolfHead:
+                    tile = LoadChr(palaceTiles, 0xd380, 2, 2, paletteGpBricks!, false);
+                    break;
+                case PalaceObject.CrystalReturnStatue1:
+                case PalaceObject.CrystalReturnStatue2:
+                case GreatPalaceObject.CrystalReturnStatue1:
+                case GreatPalaceObject.CrystalReturnStatue2:
+                    tile = LoadChr(palaceTiles, 0x9700, 2, 1, paletteCurtains!);
+                    canvas.DrawBitmap(tile, startX * 16 + 3 * 8, startY * 16 + 1 * 8);
+                    tile = LoadChr(palaceTiles, 0x9720, 4, 1, paletteCurtains!);
+                    canvas.DrawBitmap(tile, startX * 16 + 2 * 8, startY * 16 + 2 * 8);
+                    tile = LoadChr(palaceTiles, 0x9760, 1, 1, paletteCurtains!);
+                    canvas.DrawBitmap(tile, startX * 16 + 2 * 8, startY * 16 + 5 * 8);
+                    tile = LoadChr(palaceTiles, 0x9770, 1, 1, paletteCurtains!);
+                    DrawTileRepeat(canvas, tile, startX, startY,
+                        [3, 3, 3, 3, 3, 3, 4, 4],
+                        [3, 4, 5, 6, 8, 9, 8, 9]);
+                    tile = LoadChr(palaceTiles, 0x9780, 1, 1, paletteCurtains!);
+                    canvas.DrawBitmap(tile, startX * 16 + 4 * 8, startY * 16 + 3 * 8);
+                    tile = LoadChr(palaceTiles, 0x9790, 1, 1, paletteCurtains!);
+                    DrawTileRepeat(canvas, tile, startX, startY,
+                        [4, 4, 4],
+                        [4, 5, 6]);
+                    tile = LoadChr(palaceTiles, 0x97a0, 2, 1, paletteCurtains!);
+                    canvas.DrawBitmap(tile, startX * 16 + 3 * 8, startY * 16 + 7 * 8);
+                    tile = LoadChr(palaceTiles, 0x9880, 1, 1, paletteCurtains!);
+                    DrawTileRepeat(canvas, tile, startX, startY,
+                        [2, 0, 6],
+                        [0, 6, 6]);
+                    tile = LoadChr(palaceTiles, 0x98a0, 1, 1, paletteCurtains!);
+                    DrawTileRepeat(canvas, tile, startX, startY,
+                        [3, 4],
+                        [0, 0]);
+                    tile = LoadChr(palaceTiles, 0x98c0, 1, 1, paletteCurtains!);
+                    DrawTileRepeat(canvas, tile, startX, startY,
+                        [5, 1, 7],
+                        [0, 6, 6]);
+                    tile = LoadChr(palaceTiles, 0x9a80, 1, 1, paletteCurtains!);
+                    DrawTileRepeat(canvas, tile, startX, startY,
+                        [0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 6, 6, 6],
+                        [7, 8, 9, 1, 3, 4, 6, 7, 8, 9, 7, 8, 9]);
+                    tile = LoadChr(palaceTiles, 0x9aa0, 1, 1, paletteCurtains!);
+                    DrawTileRepeat(canvas, tile, startX, startY,
+                        [1, 1, 1, 5, 5, 5, 5, 5, 5, 5, 5, 7, 7, 7],
+                        [7, 8, 9, 1, 3, 4, 5, 6, 7, 8, 9, 7, 8, 9]);
+                    return;
+                case PalaceObject.LockedDoor:
+                case GreatPalaceObject.LockedDoor:
+                    DrawLockedDoor(canvas, startX, startY);
+                    return;
+                case PalaceObject.LargeCloud:
+                case GreatPalaceObject.LargeCloud:
+                    tile = LoadChr(palaceTiles, 0x9b30, 1, 2, paletteClouds!, false);
+                    canvas.DrawBitmap(tile, startX * 16 + 0 * 8, startY * 16);
+                    tile = LoadChr(palaceTiles, 0x9b50, 1, 2, paletteClouds!, false);
+                    canvas.DrawBitmap(tile, startX * 16 + 1 * 8, startY * 16);
+                    canvas.DrawBitmap(tile, startX * 16 + 2 * 8, startY * 16);
+                    tile = LoadChr(palaceTiles, 0x9b70, 1, 2, paletteClouds!, false);
+                    canvas.DrawBitmap(tile, startX * 16 + 3 * 8, startY * 16);
+                    return;
+                case PalaceObject.SmallCloud1:
+                case PalaceObject.SmallCloud2:
+                case PalaceObject.SmallCloud3:
+                case PalaceObject.SmallCloud4:
+                case PalaceObject.SmallCloud5:
+                case PalaceObject.SmallCloud6:
+                case GreatPalaceObject.SmallCloud1:
+                case GreatPalaceObject.SmallCloud2:
+                case GreatPalaceObject.SmallCloud3:
+                case GreatPalaceObject.SmallCloud4:
+                case GreatPalaceObject.SmallCloud5:
+                    tile = LoadChr(palaceTiles, 0x9b30, 1, 2, paletteClouds!, false);
+                    canvas.DrawBitmap(tile, startX * 16 + 0 * 8, startY * 16);
+                    tile = LoadChr(palaceTiles, 0x9b50, 1, 2, paletteClouds!, false);
+                    canvas.DrawBitmap(tile, startX * 16 + 1 * 8, startY * 16);
+                    tile = LoadChr(palaceTiles, 0x9b70, 1, 2, paletteClouds!, false);
+                    canvas.DrawBitmap(tile, startX * 16 + 2 * 8, startY * 16);
+                    return;
+                case PalaceObject.IronknuckleStatue:
+                    tile = LoadChr(palaceTiles, 0x9400, 2, 2, paletteBricks!, false);
+                    canvas.DrawBitmap(tile, startX * 16, startY * 16);
+                    tile = LoadChr(palaceTiles, 0x9480, 2, 2, paletteBricks!, false);
+                    canvas.DrawBitmap(tile, startX * 16, (startY + 1) * 16);
+                    return;
+                case GreatPalaceObject.BirdKnight:
+                    tile = LoadChr(palaceTiles, 0xd400, 2, 2, paletteGpBricks!, false);
+                    canvas.DrawBitmap(tile, startX * 16, startY * 16);
+                    tile = LoadChr(palaceTiles, 0xd480, 2, 2, paletteGpBricks!, false);
+                    canvas.DrawBitmap(tile, startX * 16, (startY + 1) * 16);
+                    return;
+                case PalaceObject.Collectable:
+                case GreatPalaceObject.Collectable:
+                    switch (cmd.Extra)
+                    {
+                        case Collectable.KEY:
+                            tile = LoadChr(palaceTiles, 0x8660, 1, 2, paletteOrange!);
+                            break;
+                        case Collectable.SMALL_BAG:
+                        case Collectable.MEDIUM_BAG:
+                        case Collectable.LARGE_BAG:
+                        case Collectable.XL_BAG:
+                            tile = LoadChr(palaceTiles, 0x8720, 1, 2, paletteOrange!);
+                            break;
+                        case Collectable.BLUE_JAR:
+                            tile = LoadChr(palaceTiles, 0x88a0, 1, 2, paletteBlue!);
+                            break;
+                        case Collectable.RED_JAR:
+                            DrawRedJar(canvas, startX, startY);
+                            return;
+                        case Collectable.ONEUP:
+                            tile = LoadChr(palaceTiles, 0x8a80, 1, 2, paletteLink!);
+                            break;
+                        default:
+                            tile = LoadChr(palaceTiles, 0x88e0, 1, 2, paletteOrange!);
+                            break;
+                    }
+                    break;
+                case PalaceObject.HorizontalPitOrLava:
+                case PalaceObject.VerticalPit1:
+                case PalaceObject.VerticalPit2:
+                case PalaceObject.HorizontalPit:
+                case GreatPalaceObject.ElevatorShaft:
+                    tile = LoadChrFillPattern(palaceTiles, 0x9f40, 1, 1, 2, 2, paletteBricks!, false);
+                    break;
+                case PalaceObject.HorizontalBrick:
+                case PalaceObject.PalaceBricks:
+                    tile = LoadPalaceBrickTile<PalaceObject>();
+                    break;
+                case GreatPalaceObject.HorizontalBrick:
+                case GreatPalaceObject.Bricks:
+                    tile = LoadPalaceBrickTile<GreatPalaceObject>();
+                    break;
+                case PalaceObject.BreakableBlock1:
+                case PalaceObject.BreakableBlock2:
+                case PalaceObject.BreakableBlockVertical:
+                    tile = LoadChr(palaceTiles, 0x9ba0, 2, 2, paletteBricks!);
+                    break;
+                case GreatPalaceObject.BreakableBlock1:
+                case GreatPalaceObject.BreakableBlock2:
+                case GreatPalaceObject.BreakableBlockVertical:
+                    tile = LoadChr(palaceTiles, 0xdba0, 2, 2, paletteGpBricks!);
+                    break;
+                case PalaceObject.SteelBrick:
+                case GreatPalaceObject.SteelBrick:
+                    tile = LoadChr(palaceTiles, 0x95c0, 2, 2, paletteCurtains!);
+                    break;
+                case GreatPalaceObject.NorthCastleBricksOrElevator:
+                    tile = LoadChrBrickPattern(palaceTiles, 0xd9a0, 1, 1, paletteGpBricks!);
+                    break;
+                case PalaceObject.CrumbleBridgeOrElevator:
+                    tile = LoadChrFillPattern(palaceTiles, 0x9920, 1, 2, 2, 2, paletteBricks!);
+                    break;
+                case GreatPalaceObject.CrumbleBridge:
+                    tile = LoadChrFillPattern(palaceTiles, 0xd920, 1, 2, 2, 2, paletteGpBricks!);
+                    break;
+                case PalaceObject.Bridge:
+                    tile = LoadChrFillPattern(palaceTiles, 0x97c0, 1, 2, 2, 2, paletteBricks!);
+                    startY++;
+                    break;
+                case GreatPalaceObject.Bridge:
+                    tile = LoadChrFillPattern(palaceTiles, 0xd7c0, 1, 2, 2, 2, paletteGpBricks!);
+                    startY++;
+                    break;
+                case PalaceObject.Curtains:
+                case GreatPalaceObject.Curtains:
+                    tile = LoadChr(palaceTiles, 0x9840, 2, 2, paletteCurtains!, true);
+                    for (int i = startX; i < endX; i++)
+                    {
+                        for (int j = 0; j < 3; j++)
+                        {
+                            canvas.DrawBitmap(tile, i * 16, startY * 16 + j * 8);
+                        }
+                    }
+                    return;
+                case PalaceObject.WalkThruBricks:
+                    tile = LoadPalaceBrickTile<PalaceObject>();
+                    // we can't really use the alpha channel because
+                    // walkthrough bricks are likely put on top of regular
+                    // bricks, so we just make them darker
+                    tile = AdjustTileBrightness(tile, 0.50f);
+                    break;
+                case GreatPalaceObject.WalkThruBricks:
+                    tile = LoadPalaceBrickTile<GreatPalaceObject>();
+                    tile = AdjustTileBrightness(tile, 0.50f);
+                    break;
+                case PalaceObject.Pillar:
+                    tile = LoadChr(palaceTiles, 0x98e0, 2, 2, paletteBricks!);
+                    canvas.DrawBitmap(tile, startX * 16, startY * 16);
+                    startY++;
+                    tile = LoadChrFillPattern(palaceTiles, 0x9a50, 2, 1, 2, 2, paletteBricks!);
+                    break;
+                case GreatPalaceObject.Pillar:
+                    tile = LoadChr(palaceTiles, 0xd8e0, 2, 2, paletteGpBricks!);
+                    canvas.DrawBitmap(tile, startX * 16, startY * 16);
+                    startY++;
+                    tile = LoadChrFillPattern(palaceTiles, 0xda50, 2, 1, 2, 2, paletteGpBricks!);
+                    break;
+                case GreatPalaceObject.FinalBossCanopyOrLava:
+                    tile = LoadChrFillPattern(palaceTiles, 0xd780, 1, 2, 2, 2, paletteGpBricks!);
+                    break;
+                case GreatPalaceObject.SleepingZelda:
+                    break;
+                case GreatPalaceObject.NorthCastleSteps:
+                    break;
+                case GreatPalaceObject.ElectricBarrier:
+                    return;
+            }
+        }
+        if (tile != null)
+        {
+            for (int i = startX; i < endX; i++)
+            {
+                for (int j = startY; j < endY; j++)
+                {
+                    canvas.DrawBitmap(tile, i * 16, j * 16);
+                    if (tile.Height > 16)
+                    {
+                        j += (int)Math.Ceiling(tile.Height / 16.0) - 1;
+                    }
+                }
+            }
+        }
+        else
+        {
+            Console.WriteLine($"No tile info for: {cmd.DebugString()}");
+        }
+    }
+
+    static void DrawEnemy<T>(SKCanvas canvas, Enemy<T> enemy) where T : Enum
+    {
+        int startX = enemy.X;
+        int startY = enemy.Y + 2;
+        SKBitmap? tile = null;
+        switch (enemy.Id)
+        {
+            case EnemiesPalace125.Fairy:
+            case EnemiesPalace346.Fairy:
+            case EnemiesGreatPalace.Fairy:
+                tile = LoadChr(palaceTiles, 0x86a0, 1, 2, paletteOrange!);
+                canvas.DrawBitmap(tile, startX * 16, startY * 16);
+                break;
+            case EnemiesPalace125.StrikeForRedJar:
+            case EnemiesPalace346.StrikeForRedJarOrIronKnuckle:
+            case EnemiesGreatPalace.StrikeForRedJarOrFokka:
+                DrawRedJar(canvas, startX, startY);
+                break;
+            case EnemiesPalace125.LockedDoor:
+            case EnemiesPalace346.LockedDoor:
+            case EnemiesGreatPalace.LockedDoor:
+                DrawLockedDoor(canvas, startX, startY);
+                break;
+            case EnemiesPalace125.Dripper:
+            case EnemiesPalace346.Dripper:
+                tile = LoadChr(palaceTiles, 0xb8e0, 2, 2, paletteRed!, false);
+                canvas.DrawBitmap(tile, startX * 16, startY * 16);
+                break;
+            case EnemiesPalace346.Flame:
+                tile = LoadChr(palaceTiles, 0x8520, 1, 2, paletteRed!);
+                canvas.DrawBitmap(tile, startX * 16, startY * 16);
+                break;
+            case EnemiesPalace125.Elevator:
+            case EnemiesPalace346.Elevator:
+            case EnemiesGreatPalace.Elevator:
+                DrawElevator(canvas, startX);
+                break;
+        }
+    }
+
+    private static void DrawLockedDoor(SKCanvas canvas, int startX, int startY)
+    {
+        SKBitmap? tile = LoadChr(palaceTiles, 0x8740, 1, 2, paletteOrange!, false);
+        canvas.DrawBitmap(tile, startX * 16 + 0, startY * 16 + 0 * 16);
+        canvas.DrawBitmap(tile, startX * 16 + 0, startY * 16 + 2 * 16);
+        tile = LoadChr(palaceTiles, 0x8760, 1, 2, paletteOrange!);
+        canvas.DrawBitmap(tile, startX * 16 + 0, startY * 16 + 1 * 16);
+    }
+
+    private static void DrawElevator(SKCanvas canvas, int startX)
+    {
+        SKBitmap? tile = LoadChr(palaceTiles, 0x8ac0, 1, 1, paletteOrange!);
+        for (int i = startX * 16 + 4; i < (startX + 2) * 16 - 8; i += 8)
+        {
+            for (int j = 7 * 16 + 8; j < 11 * 16; j += 2 * 16 + 8)
+            {
+                canvas.DrawBitmap(tile, i, j);
+            }
+        }
+    }
+    private static void DrawRedJar(SKCanvas canvas, int startX, int startY)
+    {
+        SKBitmap? tile = LoadChr(palaceTiles, 0xa8a0, 1, 2, paletteRed!);
+        canvas.DrawBitmap(tile, startX * 16, startY * 16);
+    }
+
+    private static void DrawTileRepeat(SKCanvas canvas, SKBitmap tile, int startX, int startY, int[] xOffsets, int[] yOffsets)
+    {
+        for (int i = 0; i < xOffsets.Length; i++)
+        {
+            canvas.DrawBitmap(tile, startX * 16 + xOffsets[i] * 8, startY * 16 + yOffsets[i] * 8);
+        }
+    }
+
+    private static SKBitmap LoadPalaceBrickTile<T>()
+    {
+        if (typeof(T) == typeof(GreatPalaceObject))
+        {
+            return LoadChrBrickPattern(palaceTiles, 0xd640, 2, 1, paletteGpBricks!);
+        }
+        else
+        {
+            return LoadChrBrickPattern(palaceTiles, 0x9640, 2, 1, paletteBricks!);
+        }
+    }
+
+    private static SKBitmap AdjustTileBrightness(SKBitmap tile, float v)
+    {
+        SKBitmap res = new SKBitmap(tile.Width, tile.Height);
+        for (int x = 0; x < tile.Width; x++)
+        {
+            for (int y = 0; y < tile.Height; y++)
+            {
+                SKColor color = tile.GetPixel(x, y);
+                byte r = (byte)(color.Red * v);
+                byte g = (byte)(color.Green * v);
+                byte b = (byte)(color.Blue * v);
+                res.SetPixel(x, y, new SKColor(r, g, b, color.Alpha));
+            }
+        }
+        return res;
+    }
+
+    private static SKBitmap LoadChr(Dictionary<int, SKBitmap> d, int chrAddr, int w, int h, byte[] palette, bool alpha = true)
+    {
+        SKBitmap? tile;
+        d.TryGetValue(chrAddr, out tile);
+        if (tile == null)
+        {
+            int stride = w * 8 * 4;
+            byte[] tileData = vanillaRom!.ReadSprite(ROM.VanillaChrRomOffs + chrAddr, w, h, palette);
+            if (!alpha)
+            {
+                for (var i = 3; i < tileData.Length; i += 4)
+                {
+                    tileData[i] = 0xff;
+                }
+            }
+            d[chrAddr] = tile = MakeSpriteBitmap(tileData, w * 8, h * 8);
+        }
+        return tile;
+    }
+
+    private static SKBitmap LoadChrFillPattern(Dictionary<int, SKBitmap> d, int chrAddr, int w, int h, int fullW, int fullH, byte[] palette, bool alpha=true)
+    {
+        SKBitmap? tile;
+        d.TryGetValue(chrAddr, out tile);
+        if (tile == null)
+        {
+            int stride = w * 8 * 4;
+            byte[] originalTileData = vanillaRom!.ReadSprite(ROM.VanillaChrRomOffs + chrAddr, w, h, palette);
+            int fullStride = fullW * 8 * 4;
+            byte[] fullTileData = new byte[fullW * 8 * fullH * 8 * 4];
+            for (var j = 0; j < fullH * 8; j++)
+            {
+                int originalRowStart = (j % (h * 8)) * stride;
+                int fullRowStart = j * fullStride;
+                byte[] row = originalTileData.Skip(originalRowStart).Take(stride).ToArray();
+                for (var i = 0; i < fullW; i += w)
+                {
+                    Array.Copy(row, 0, fullTileData, fullRowStart + i * stride, stride);
+                }
+            }
+            if (!alpha)
+            {
+                for (var i = 3; i < fullTileData.Length; i += 4)
+                {
+                    fullTileData[i] = 0xff;
+                }
+            }
+            d[chrAddr] = tile = MakeSpriteBitmap(fullTileData, fullW * 8, fullH * 8);
+        }
+        return tile;
+    }
+
+    private static SKBitmap LoadChrBrickPattern(Dictionary<int, SKBitmap> d, int chrAddr, int w, int h, byte[] palette)
+    {
+        SKBitmap? tile;
+        d.TryGetValue(chrAddr, out tile);
+        if (tile == null)
+        {
+            int stride = w * 8 * 4;
+            byte[] firstRowTileData = vanillaRom!.ReadSprite(ROM.VanillaChrRomOffs + chrAddr, w, h, palette);
+            byte[] fullTileData = new byte[2 * firstRowTileData.Length];
+            Array.Copy(firstRowTileData, 0, fullTileData, 0, firstRowTileData.Length);
+            int shiftX = (w * 8 / 2) * 4; // amount to shift 2nd row of bricks (in bytes)
+            for (var i = 0; i < 8; i++)
+            {
+                int rowStart = i * stride;
+                byte[] shiftedRow = firstRowTileData.Skip(rowStart + stride - shiftX).Take(shiftX)
+                    .Concat(firstRowTileData.Skip(rowStart).Take(stride - shiftX)).ToArray();
+                Array.Copy(shiftedRow, 0, fullTileData, firstRowTileData.Length + rowStart, stride);
+            }
+            d[chrAddr] = tile = MakeSpriteBitmap(fullTileData, w * 8, h * 2 * 8);
+        }
+        return tile;
+    }
+
+    private static SKBitmap MakeSpriteBitmap(byte[] tileData, int w, int h)
+    {
+        SKBitmap tile = new SKBitmap(w, h, SKColorType.Rgba8888, SKAlphaType.Unpremul);
+        GCHandle handle = GCHandle.Alloc(tileData, GCHandleType.Pinned);
+        try
+        {
+            IntPtr ptr = handle.AddrOfPinnedObject();
+            using (var pixmap = new SKPixmap(tile.Info, ptr, tile.Info.RowBytes))
+            {
+                tile.InstallPixels(pixmap);
+            }
+            // Copy to avoid problems with original memory being freed
+            return tile.Copy();
+        }
+        finally { handle.Free(); }
+    }
+
+    static string GetName(Room room)
+    {
+        char[] invalidChars = Path.GetInvalidFileNameChars();
+        return room.Name.Length > 0 ? new string(room.Name.Where(c => !invalidChars.Contains(c)).ToArray()) : Convert.ToHexString(room.SideView);
+    }
+}
