@@ -60,6 +60,12 @@ void ValidateRoomsForFile(string filename)
             if (exitBlocker != null) { sb.AppendLine($"{GetName(room)}: Boss room has low ceiling at exit preventing re-entry."); }
         }
 
+        var lockedDoors = sv.FindAll(o => o.Id == PalaceObject.LockedDoor && o.Y < 12);
+        foreach (var door in lockedDoors)
+        {
+            if (door.AbsX % 16 == 0) { sb.AppendLine($"{GetName(room)}: Room has locked door on page transition. x={door.AbsX}"); }
+        }
+            
         SortedSet<int> openCeilingTiles = [];
         SortedSet<int> dropTiles = [];
 
