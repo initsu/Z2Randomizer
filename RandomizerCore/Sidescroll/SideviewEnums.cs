@@ -5,8 +5,8 @@ namespace RandomizerCore.Sidescroll;
 public enum PalaceObject
 {
     Window = 0x00,
-    UnicornHead = 0x01,
-    RatHead = 0x02,
+    DragonHead = 0x01,
+    WolfHead = 0x02,
     CrystalReturnStatue1 = 0x03,
     CrystalReturnStatue2 = 0x04,
     LockedDoor = 0x05,
@@ -39,8 +39,8 @@ public enum PalaceObject
 public enum GreatPalaceObject
 {
     Window = 0x00,
-    UnicornHead = 0x01,
-    RatHead = 0x02,
+    DragonHead = 0x01,
+    WolfHead = 0x02,
     CrystalReturnStatue1 = 0x03,
     CrystalReturnStatue2 = 0x04,
     LockedDoor = 0x05,
@@ -139,8 +139,8 @@ public static class PalaceObjectExtensions
         switch (command.Id)
         {
             case PalaceObject.Window:
-            case PalaceObject.UnicornHead:
-            case PalaceObject.RatHead:
+            case PalaceObject.DragonHead:
+            case PalaceObject.WolfHead:
             case PalaceObject.CrystalReturnStatue1:
             case PalaceObject.CrystalReturnStatue2:
             case PalaceObject.LockedDoor:
@@ -257,8 +257,8 @@ public static class GreatPalaceObjectExtensions
         switch (command.Id)
         {
             case GreatPalaceObject.Window:
-            case GreatPalaceObject.UnicornHead:
-            case GreatPalaceObject.RatHead:
+            case GreatPalaceObject.DragonHead:
+            case GreatPalaceObject.WolfHead:
             case GreatPalaceObject.CrystalReturnStatue1:
             case GreatPalaceObject.CrystalReturnStatue2:
             case GreatPalaceObject.LockedDoor:
