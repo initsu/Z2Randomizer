@@ -52,13 +52,13 @@ public class Program
         paletteBlue[0] = 0;
         paletteGpBricks = rom.GetBytes(ROM.RomHdrSize + 0x10062, 4);
 
-        PrintRoomsForFileAndGroup("PalaceRooms.json", RoomGroup.V4_4);
+        PrintRoomsForFileAndGroup("PalaceRooms.json", PrintRooms.IncludeGroups);
         PrintRequirements();
 
         return 0;
     }
 
-    public static void PrintRoomsForFileAndGroup(string jsonFilename, RoomGroup? roomGroup)
+    public static void PrintRoomsForFileAndGroup(string jsonFilename, RoomGroup[]? roomGroup)
     {
         Console.WriteLine("Scanning \"" + jsonFilename + "\"...");
         var json = RandomizerCore.Util.ReadAllTextFromFile(jsonFilename);
@@ -67,7 +67,7 @@ public class Program
 
         foreach (Room room in palaceRooms!.Where(r => r.Enabled))
         {
-            if (roomGroup != null && room.Group != roomGroup) { continue; }
+            if (roomGroup != null && !roomGroup.Contains(room.Group)) { continue; }
             if (PrintRoom(room))
             {
                 Room? linkedRoom = room.LinkedRoomName is { } name ? palaceRooms!.Find(r => r.Name == name) : null;
@@ -734,6 +734,8 @@ public class Program
 
 internal class PrintRooms
 {
+    internal readonly static RoomGroup[] IncludeGroups = [RoomGroup.VANILLA, RoomGroup.STUBS, RoomGroup.V4_0, RoomGroup.V4_4];
+
     internal static string GetName(Room room)
     {
         return room.Name.Length > 0 ? room.Name : Convert.ToHexString(room.SideView);

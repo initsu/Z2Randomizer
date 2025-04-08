@@ -60,16 +60,16 @@ class RoomsHtml
         string requirementsStr = reqSB.ToString();
 
         string roomHtml = $"""
-<div class="room">
-    <img class="room-img" src="{imageName}" />
-    <p>
-      <span class="room-name">{PrintRooms.GetName(room)}</span>
-      <span class="room-author">by {room.Author}</span>
-    </p>
-    {tagsStr}
-    {connectionsStr}
-    {requirementsStr}
-</div>
+    <div class="room {room.Group.ToString()} {(room.PalaceNumber != 7 ? "RegularPalace" : "GreatPalace")}">
+      <img class="room-img" src="{imageName}" loading="lazy" />
+      <p>
+        <span class="room-name">{PrintRooms.GetName(room)}</span>
+        <span class="room-author">by {room.Author}</span>
+      </p>
+      {tagsStr}
+      {connectionsStr}
+      {requirementsStr}
+    </div>
 """;
         roomHtmlList.Add(roomHtml);
 
@@ -104,98 +104,168 @@ class RoomsHtml
         sb.AppendLine("""
 <!DOCTYPE html>
 <html>
+
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes">
-    <title>Zelda II Randomizer 4.4 Beta Rooms</title>
-</head>
-<style>
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes">
+  <title>Zelda II Randomizer 4.4 Beta Rooms</title>
+  <style>
     body {
-        margin: 4px;
-        font-family: monospace;
-    }
-    @media (prefers-color-scheme: dark) {
-      body {
+      margin: 4px;
+      font-family: monospace;
+      overflow-y: scroll;
+
+      @media (prefers-color-scheme: dark) {
         color: #fff;
         background: #181818;
       }
     }
 
+    #room-group-toggles {
+      position: relative;
+      top: 0;
+      right: 0;
+      padding: 2px 4px 4px;
+      display: flex;
+      gap: 16px;
+      font-size: 1.2em;
+      background: #ccc;
+
+      @media (prefers-color-scheme: dark) {
+        background: #333;
+      }
+    }
+
     .rooms {
-        display: flex;
-        flex-wrap: wrap;
+      display: flex;
+      flex-wrap: wrap;
     }
 
     .room {
-        flex: 400px;
-        margin: 4px 4px 20px;
+      flex: 400px;
+      margin: 4px 4px 20px;
 
-        @media screen and (max-width:540.9px) {
-            height: 78.24vh;
-        }
+      @media screen and (max-width:540.9px) {
+        height: 78.24vh;
+      }
     }
 
     .room p {
-        margin: 0;
-        font-size: 1.2em;
-        @media screen and (max-width:800px) {
-            font-size: 0.70em;
-        }
-        @media screen and (max-width:600px) {
-            font-size: 0.60em;
-        }
-        @media screen and (max-width:540.9px) {
-            font-size: 0.33em;
-        }
+      margin: 0;
+      font-size: 1.2em;
+
+      @media screen and (max-width:800px) {
+        font-size: 0.70em;
+      }
+
+      @media screen and (max-width:600px) {
+        font-size: 0.60em;
+      }
+
+      @media screen and (max-width:540.9px) {
+        font-size: 0.33em;
+      }
     }
 
     .room-name {
-        display: inline-block;
-        font-style: italic;
+      display: inline-block;
+      font-style: italic;
+      overflow: hidden;
+      vertical-align: top;
+      text-overflow: ellipsis;
+      max-width: 400px;
     }
 
     .room-author {
-        display: inline-block;
-        opacity: 0.4;
+      display: inline-block;
+      opacity: 0.4;
     }
 
     .room-img {
-        width: 100%;
-        @media screen and (max-width:800px) {
-            image-rendering: pixelated;
-        }
+      width: 100%;
+
+      @media screen and (max-width:800px) {
+        image-rendering: pixelated;
+      }
     }
 
     .room-tags {
-        display: block;
+      display: block;
     }
 
     .room-connections {
-        display: block;
+      display: block;
     }
 
     .room-requirements {
-        display: block;
+      display: block;
     }
 
     .requirement-img {
-        height: 1.6em;
-        vertical-align: middle;
-        image-rendering: pixelated;
+      height: 1.6em;
+      vertical-align: middle;
+      image-rendering: pixelated;
     }
-</style>
-
+  </style>
+</head>
+<style id="room-group-dynamic-style"></style>
 <body>
+  <div id="room-group-toggles"></div>
 
-    <div class="rooms">
+  <script>
+    const dynamicStyle = document.getElementById('room-group-dynamic-style');
+    const toggleDiv = document.getElementById('room-group-toggles');
+    const checkboxes = [];
+
+    const updateDynamicStyle = () => {
+      let cssRules = '';
+
+      checkboxes.forEach(checkbox => {
+        const labelText = checkbox.parentElement.textContent.trim();
+        const className = `.${labelText}`;
+
+        if (!checkbox.checked) {
+          cssRules += `${className} { display: none; }\n`;
+        }
+      });
+
+      dynamicStyle.textContent = cssRules;
+    };
+
+    const createCheckBox = (name, enabled) => {
+      const label = document.createElement('label');
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = enabled;
+      label.appendChild(checkbox);
+      label.appendChild(document.createTextNode(name));
+      toggleDiv.appendChild(label);
+      checkbox.addEventListener('change', updateDynamicStyle);
+      return checkbox;
+    }
+
+""");
+        foreach (var group in PrintRooms.IncludeGroups)
+        {
+            sb.AppendLine($"    checkboxes.push(createCheckBox(\"{group.ToString()}\", {(group == RoomGroup.V4_4 ? "true" : "false")}));");
+        }
+        sb.AppendLine($$"""
+    toggleDiv.appendChild(document.createTextNode('-'));
+    checkboxes.push(createCheckBox("RegularPalace", true));
+    checkboxes.push(createCheckBox("GreatPalace", true));
+
+    updateDynamicStyle();
+  </script>
+
+  <div class="rooms">
 """);
         foreach (var roomHtml in roomHtmlList)
         {
             sb.AppendLine(roomHtml);
         }
         sb.AppendLine("""
-    </div>
-
+  </div>
 </body>
+
 </html>
 """);
         return sb.ToString();
