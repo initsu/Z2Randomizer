@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -69,6 +70,12 @@ public class SideviewEditable<T> where T : Enum
     }
 
     public byte Length { get => Header[0]; }
+
+    public byte ObjectSet
+    {
+        get => (byte)((Header[1] & 0b10000000) >> 7);
+        set { Header[1] = (byte)((Header[1] & 0b01111111) | (((value) << 7) & 0b10000000)); }
+    }
 
     public byte PageCount {
         get => (byte)(((Header[1] & 0b01100000) >> 5) + 1);
@@ -242,17 +249,100 @@ public class SideviewEditable<T> where T : Enum
         return result;
     }
 
-    public static bool AreaIsOpen(bool[,] solidGrid, int x1, int x2, int y1, int y2)
+    /// <summary>
+    /// Check if solidGrid has a w x h opening at x, y.
+    /// </summary>
+    public static bool AreaIsOpen(bool[,] solidGrid, int x, int y, int w, int h)
     {
-        for (int x = x1; x <= x2; x++)
+        var xEnd = Math.Min(x + w, solidGrid.GetLength(0));
+        var yEnd = Math.Min(y + h, solidGrid.GetLength(1));
+        for (int i = x; i < xEnd; i++)
         {
-            if (x >= solidGrid.GetLength(0)) { return false; }
-            for (int y = y1; y <= y2; y++)
+            for (int j = y; j < yEnd; j++)
             {
-                if (y >= solidGrid.GetLength(1)) { return false; }
-                if (solidGrid[x, y]) { return false; }
+                if (solidGrid[i, j]) { return false; }
             }
         }
         return true;
+    }
+
+    /// <summary>
+    /// Find the best floor y position that has a w x h opening. Optimally
+    /// such that y + h will end on top of the floor.
+    /// </summary>
+    public static int FindFloor(bool[,] solidGrid, int x, int y, int w, int h)
+    {
+        Debug.Assert(y < 13);
+        Debug.Assert(solidGrid.GetLength(1) == 13);
+
+        var xEnd = Math.Min(x + w, solidGrid.GetLength(0));
+
+        bool RowIsOpen(int j)
+        {
+            for (int i = x; i < xEnd; i++)
+            {
+                if (solidGrid[i, j])
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // first try to find a floor close to the original position
+        int consecutiveOpens = 0;
+        int j;
+        // try scanning down
+        for (j = y; j < 13; j++)
+        {
+            if (RowIsOpen(j))
+            {
+                consecutiveOpens++;
+            }
+            else
+            {
+                break;
+            }
+        }
+        if (consecutiveOpens >= h)
+        {
+            return j - 1 - h;
+        }
+        // try moving up
+        for (j = y - 1; j >= 0; j--)
+        {
+            if (RowIsOpen(j))
+            {
+                consecutiveOpens++;
+                if (consecutiveOpens == h)
+                {
+                    return j;
+                }
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        // no luck, instead try to find the lowest floor possible
+        consecutiveOpens = 0;
+        for (j = 12; j >= 0; j--)
+        {
+            if (RowIsOpen(j))
+            {
+                consecutiveOpens++;
+                if (consecutiveOpens == h)
+                {
+                    return j;
+                }
+            }
+            else
+            {
+                consecutiveOpens = 0;
+            }
+        }
+
+        return 0;
     }
 }
