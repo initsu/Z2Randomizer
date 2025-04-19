@@ -3,6 +3,78 @@
 namespace RandomizerCore.Sidescroll;
 
 /// <summary>
+/// IDs for overworld forest sideviews. Overworld sideviews with ObjectSet bit set to 0 in the header, to be exact.
+/// </summary>
+public enum ForestObject
+{
+    Headstone = 0x00,
+    Cross = 0x01,
+    AngledCross = 0x02,
+    TreeStump = 0x03,
+    Stonehenge = 0x04,
+    LockedDoor = 0x05,
+    SleepingZelda1 = 0x06,
+    SleepingZelda2 = 0x07,
+    VerticalPit = 0x08,
+    LargeCloud = 0x09,
+    SmallCloud0A = 0x0A,
+    SmallCloud0B = 0x0B,
+    SmallCloud0C = 0x0C,
+    SmallCloud0D = 0x0D,
+    SmallCloud0E = 0x0E,
+    ForestCeiling = 0x20,
+    ForestCeiling2 = 0x30,
+    Curtains2High = 0x40,
+    Curtains1High = 0x50,
+    BreakableBlock = 0x60,
+    HorizontalPit = 0x70,
+    SingleWeed = 0x80,
+    DoubleWeed = 0x90,
+    NorthCastleSteps = 0xA0,
+    NorthCastleBricks = 0xB0,
+    VolcanoBackground = 0xC0,
+    BreakableBlockVertical = 0xD0,
+    TreeTrunk = 0xE0,
+    Pillar = 0xF0
+}
+
+/// <summary>
+/// IDs for overworld cave sideviews. Overworld sideviews with ObjectSet bit set to 1 in the header, to be exact.
+/// </summary>
+public enum CaveObject
+{
+    Headstone = 0x00,
+    Cross = 0x01,
+    AngledCross = 0x02,
+    TreeStump = 0x03,
+    Stonehenge = 0x04,
+    LockedDoor = 0x05,
+    SleepingZelda1 = 0x06,
+    SleepingZelda2 = 0x07,
+    VerticalPit = 0x08,
+    LargeCloud = 0x09,
+    SmallCloud0A = 0x0A,
+    SmallCloud0B = 0x0B,
+    SmallCloud0C = 0x0C,
+    SmallCloud0D = 0x0D,
+    SmallCloud0E = 0x0E,
+    RockFloor = 0x20,
+    RockCeiling = 0x30,
+    Bridge = 0x40,
+    CavePlatform = 0x50,
+    BreakableBlock = 0x60,
+    CrumbleBridge = 0x70,
+    SingleWeed = 0x80,
+    DoubleWeed = 0x90,
+    HorizontalPit = 0xA0,
+    NorthCastleBricks = 0xB0,
+    VolcanoBackground = 0xC0,
+    BreakableBlockVertical = 0xD0,
+    RockFloorVertical = 0xE0,
+    StoneSpire = 0xF0
+}
+
+/// <summary>
 /// IDs that are shared in all palaces.
 /// 
 /// It's a class of constants and not an enum, so that
@@ -103,6 +175,207 @@ public enum GreatPalaceObject
     Pillar = 0xF0
 }
 
+public static class ForestObjectExtensions
+{
+    public static int Width(SideviewMapCommand<ForestObject> command)
+    {
+        switch (command.Id)
+        {
+            case ForestObject.ForestCeiling:
+            case ForestObject.ForestCeiling2:
+            case ForestObject.Curtains2High:
+            case ForestObject.Curtains1High:
+            case ForestObject.BreakableBlock:
+            case ForestObject.HorizontalPit:
+            case ForestObject.SingleWeed:
+            case ForestObject.DoubleWeed:
+            case ForestObject.NorthCastleSteps:
+            case ForestObject.NorthCastleBricks:
+            case ForestObject.VolcanoBackground:
+                return 1 + command.Param;
+            case ForestObject.SleepingZelda1:
+            case ForestObject.SleepingZelda2:
+            case ForestObject.LargeCloud:
+            case ForestObject.SmallCloud0A:
+            case ForestObject.SmallCloud0B:
+            case ForestObject.SmallCloud0C:
+            case ForestObject.SmallCloud0D:
+            case ForestObject.SmallCloud0E:
+                return 2;
+            case ForestObject.Stonehenge:
+                return 4;
+            default:
+                return 1;
+        }
+    }
+
+    public static int Height(SideviewMapCommand<ForestObject> command)
+    {
+        switch (command.Id)
+        {
+            case ForestObject.BreakableBlockVertical:
+            case ForestObject.TreeTrunk:
+            case ForestObject.Pillar:
+                return 1 + command.Param;
+            case ForestObject.VerticalPit:
+                return 13 - command.Y;
+            case ForestObject.TreeStump:
+            case ForestObject.ForestCeiling:
+            case ForestObject.ForestCeiling2:
+            case ForestObject.Curtains2High:
+                return 2;
+            case ForestObject.Stonehenge:
+            case ForestObject.LockedDoor:
+                return 3;
+            default:
+                return 1;
+        }
+    }
+
+    public static bool IsSolid(SideviewMapCommand<ForestObject> command)
+    {
+        switch (command.Id)
+        {
+            case ForestObject.TreeStump:
+            case ForestObject.Stonehenge:
+            case ForestObject.ForestCeiling:
+            case ForestObject.ForestCeiling2:
+            case ForestObject.BreakableBlock:
+            case ForestObject.BreakableBlockVertical:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    public static bool IsBreakable(SideviewMapCommand<ForestObject> command)
+    {
+        switch (command.Id)
+        {
+            case ForestObject.BreakableBlock:
+            case ForestObject.BreakableBlockVertical:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    public static bool IsPit(SideviewMapCommand<ForestObject> command)
+    {
+        switch (command.Id)
+        {
+            case ForestObject.HorizontalPit:
+            case ForestObject.VerticalPit:
+                return true;
+            default:
+                return false;
+        }
+    }
+}
+
+public static class CaveObjectExtensions
+{
+    public static int Width(SideviewMapCommand<CaveObject> command)
+    {
+        switch (command.Id)
+        {
+            case CaveObject.RockFloor:
+            case CaveObject.RockCeiling:
+            case CaveObject.Bridge:
+            case CaveObject.CavePlatform:
+            case CaveObject.BreakableBlock:
+            case CaveObject.CrumbleBridge:
+            case CaveObject.SingleWeed:
+            case CaveObject.DoubleWeed:
+            case CaveObject.HorizontalPit:
+            case CaveObject.NorthCastleBricks:
+            case CaveObject.VolcanoBackground:
+                return 1 + command.Param;
+            case CaveObject.SleepingZelda1:
+            case CaveObject.SleepingZelda2:
+            case CaveObject.LargeCloud:
+            case CaveObject.SmallCloud0A:
+            case CaveObject.SmallCloud0B:
+            case CaveObject.SmallCloud0C:
+            case CaveObject.SmallCloud0D:
+            case CaveObject.SmallCloud0E:
+                return 2;
+            case CaveObject.Stonehenge:
+                return 4;
+            default:
+                return 1;
+        }
+    }
+
+    public static int Height(SideviewMapCommand<CaveObject> command)
+    {
+        switch (command.Id)
+        {
+            case CaveObject.BreakableBlockVertical:
+            case CaveObject.RockFloorVertical:
+            case CaveObject.StoneSpire:
+                return 1 + command.Param;
+            case CaveObject.VerticalPit:
+                return 13 - command.Y;
+            case CaveObject.TreeStump:
+            case CaveObject.RockFloor:
+            case CaveObject.RockCeiling:
+            case CaveObject.Bridge:
+                return 2;
+            case CaveObject.Stonehenge:
+            case CaveObject.LockedDoor:
+                return 3;
+            default:
+                return 1;
+        }
+    }
+
+    public static bool IsSolid(SideviewMapCommand<CaveObject> command)
+    {
+        switch (command.Id)
+        {
+            case CaveObject.TreeStump:
+            case CaveObject.Stonehenge:
+            case CaveObject.RockFloor:
+            case CaveObject.RockCeiling:
+            case CaveObject.Bridge: // actually top half of the bridge is not solid :D
+            case CaveObject.CavePlatform:
+            case CaveObject.CrumbleBridge:
+            case CaveObject.BreakableBlock:
+            case CaveObject.BreakableBlockVertical:
+            case CaveObject.RockFloorVertical:
+            case CaveObject.StoneSpire:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    public static bool IsBreakable(SideviewMapCommand<CaveObject> command)
+    {
+        switch (command.Id)
+        {
+            case CaveObject.BreakableBlock:
+            case CaveObject.BreakableBlockVertical:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    public static bool IsPit(SideviewMapCommand<CaveObject> command)
+    {
+        switch (command.Id)
+        {
+            case CaveObject.HorizontalPit:
+            case CaveObject.VerticalPit:
+                return true;
+            default:
+                return false;
+        }
+    }
+}
+
 public static class PalaceObjectExtensions
 {
     public static int Width(SideviewMapCommand<PalaceObject> command)
@@ -197,7 +470,7 @@ public static class PalaceObjectExtensions
             case PalaceObject.BreakableBlock1:
             case PalaceObject.SteelBrick:
             case PalaceObject.CrumbleBridgeOrElevator:
-            case PalaceObject.Bridge:
+            case PalaceObject.Bridge: // actually top half of the bridge is not solid :D
             case PalaceObject.PalaceBricks:
             case PalaceObject.BreakableBlock2:
             case PalaceObject.BreakableBlockVertical:
@@ -331,7 +604,7 @@ public static class GreatPalaceObjectExtensions
             case GreatPalaceObject.NorthCastleBricksOrElevator:
             case GreatPalaceObject.NorthCastleSteps:
             case GreatPalaceObject.CrumbleBridge:
-            case GreatPalaceObject.Bridge:
+            case GreatPalaceObject.Bridge: // actually top half of the bridge is not solid :D
             case GreatPalaceObject.Bricks:
             case GreatPalaceObject.BreakableBlock2:
             case GreatPalaceObject.BreakableBlockVertical:
