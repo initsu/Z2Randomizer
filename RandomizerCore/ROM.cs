@@ -2127,7 +2127,7 @@ ResetRedPalettePayload:
         a.Byt(dash);
     }
 
-    public void CombineFireSpell(Assembler asm, List<Collectable>? customSpellOrder, Random RNG)
+    public int CombineFireSpell(Assembler asm, List<Collectable>? customSpellOrder, Random RNG)
     {
         // These are the bit flags for each spell.  The old implementation
         // changed this table directly. However as this table is also used in
@@ -2156,6 +2156,8 @@ ResetRedPalettePayload:
         // When a spell is cast, load from our new table instead
         a.Org(0x8dfb);
         a.Code("lda CombinedSpellTable,Y");
+
+        return linkedSpellIndex;
     }
 
     public void MoveAfterGem()

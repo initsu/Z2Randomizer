@@ -90,6 +90,7 @@ public class Hyrule
     private int kasutoJars;
 
     //private Character character;
+    private bool fireUsable;
 
     public Dictionary<Collectable, bool> ItemGet { get; set; }
     //private bool[] spellGet;
@@ -375,7 +376,12 @@ public class Hyrule
                         //This makes the assumption that is currently true that each "town" has exactly one item.
                         //If we later restructure towns to be omni-towns to get rid of fake towns, this will be untrue
                         .Select(l => l.Collectables[0]).ToList();
-                ROMData.CombineFireSpell(assembler, customSpellOrder, r);
+                int linkedSpellIndex = ROMData.CombineFireSpell(assembler, customSpellOrder, r);
+                fireUsable = linkedSpellIndex != 3;
+            }
+            else
+            {
+                fireUsable = !props.ReplaceFireWithDash;
             }
 
             Dictionary<Town, Collectable> spellMap = new()
@@ -2866,7 +2872,15 @@ public class Hyrule
         const int SWORD_IMMUNE_BIT = 0b00100000;
         const int XP_STEAL_BIT =     0b00010000;
 
-        if (props.ShuffleSwordImmunity)
+        if (!fireUsable)
+        {
+            // Fire is not usable, remove sword immunities
+            for (int i = 0; i < allEnemies.Count; i++)
+            {
+                enemyBytes1[i] &= SWORD_IMMUNE_BIT ^ 0xFF;
+            }
+        }
+        else if (props.ShuffleSwordImmunity)
         {
             RandomizeBits(r, enemyBytes1, SWORD_IMMUNE_BIT);
         }
