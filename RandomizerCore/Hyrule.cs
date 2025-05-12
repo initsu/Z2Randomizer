@@ -339,6 +339,9 @@ public class Hyrule
             if (props.DashAlwaysOn)
             {
                 ROMData.Put(0x13C3, [0x30, 0xD0]);
+                ROMData.Put(0x12BB, new byte[] { 0x24, 0xDC }); // Fairy right, left velocities
+                ROMData.Put(0x12BF, new byte[] { 0x24, 0xDC }); // Fairy down-right, down-left horizontal velocities
+                ROMData.Put(0x12C3, new byte[] { 0x24, 0xDC }); // Fairy up-right, up-left horizontal velocities
             }
 
             if (props.PermanentBeam)
