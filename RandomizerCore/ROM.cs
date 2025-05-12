@@ -2401,9 +2401,11 @@ DetermineFacing:
         }
     }
 
-    public void DashSpell(Assembler asm)
+    public void DashSpell(Assembler asm, bool fasterDashFairy)
     {
         var a = asm.Module();
+
+        a.Set("FasterDashFairy", fasterDashFairy ? 1 : 0);
         a.Code(Util.ReadResource("Z2Randomizer.RandomizerCore.Asm.DashSpell.s"), "dash_spell.s");
 
         byte[] dash = Util.ToGameText("DASH", false).Select(x => (byte)x).ToArray();
