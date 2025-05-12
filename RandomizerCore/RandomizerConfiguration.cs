@@ -734,6 +734,11 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
     private bool dashAlwaysOn = false;
 
     [Reactive]
+    [ConditionallyIncludeInFlags]
+    private bool fasterDashFairy = false;
+    public bool fasterDashFairyIncluded() => fireOption.CanBeDash() || dashAlwaysOn != false;
+
+    [Reactive]
     private bool permanentBeamSword = false;
 
     [Reactive]
@@ -1448,6 +1453,7 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
         };
         properties.JumpAlwaysOn = jumpAlwaysOn;
         properties.DashAlwaysOn = dashAlwaysOn;
+        properties.FasterDashFairy = fasterDashFairy;
         properties.FluteWarpMode = fluteWarpMode;
         properties.FastCast = fastSpellCasting;
         properties.BeamSprite = beamSprite;

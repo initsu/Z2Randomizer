@@ -1061,6 +1061,9 @@ be available, but it does nothing.</value>
 <value>Link always runs fast, like he was affected by the Dash spell. If fire is replaced with
 dash, the Dash spell will still appear, but do nothing.</value>
 	</data>
+	<data name="FasterDashFairyToolTip" xml:space="preserve">
+<value>Make Fairy move 50% faster horizontally if you also cast Dash.</value>
+	</data>
 	<data name="PermanentBeamSwordToolTip" xml:space="preserve">
 <value>Link will always shoot beams from his sword, regardless of life.</value>
 	</data>
@@ -1275,6 +1278,9 @@ This is a wildly different gameplay experience, so be warned when setting this f
 	</data>
 	<data name="DashAlwaysOn" xml:space="preserve">
 		<value>Dash Always On</value>
+	</data>
+	<data name="FasterDashFairy" xml:space="preserve">
+		<value>Faster Dash Fairy</value>
 	</data>
 	<data name="DisableHUDLag" xml:space="preserve">
 		<value>Disable HUD Flash on Lag</value>

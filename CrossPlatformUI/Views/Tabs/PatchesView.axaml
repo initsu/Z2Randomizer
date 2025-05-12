@@ -23,6 +23,7 @@
             <StackPanel Margin="0">
                 <TextBlock Text="Utility" Classes="SectionHeader" />
                 <z:Z2ComboBox Flag="FireOption" />
+                <z:Z2CheckBox Flag="FasterDashFairy" />
                 <z:Z2ComboBox Flag="FluteWarpMode" />
             </StackPanel>
 
