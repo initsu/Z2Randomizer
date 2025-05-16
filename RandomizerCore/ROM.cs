@@ -1447,9 +1447,13 @@ Exit:
 """, "instant_text.s");
     }
 
-    public void BuffCarrock(Assembler a)
+    public void BuffCarrock(Assembler asm)
     {
-        a.Module().Code(Util.ReadResource("RandomizerCore.Asm.BuffCarock.s"), "buff_carock.s");
+        var a = asm.Module();
+        a.Code(Util.ReadResource("RandomizerCore.Asm.BuffCarock.s"), "buff_carock.s");
+        a.Segment("PRG4");
+        a.Org(0xa9f7);
+        a.Byt(0x8C); // set Carock's palette bits to 0b10 (and keep vanilla XP)
     }
 
     public void DashSpell(Assembler asm)

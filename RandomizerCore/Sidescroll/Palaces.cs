@@ -215,6 +215,14 @@ public class Palaces
         }
 
         palaces[3].BossRoom!.Requirements = palaces[3].BossRoom!.Requirements.AddHardRequirement(RequirementType.REFLECT);
+        if (props.HardBosses)
+        {
+            var hardBossRoom = palaces[3].BossRoom!;
+            var sv = new SideviewEditable<PalaceObject>(hardBossRoom.SideView);
+            sv.SpritePalette = 3;
+            hardBossRoom.SideView = sv.Finalize();
+            logger.Info("carock room: " + Convert.ToHexString(hardBossRoom.SideView));
+        }
 
         if (!ValidatePalaces(props, raftIsRequired, palaces))
         {
