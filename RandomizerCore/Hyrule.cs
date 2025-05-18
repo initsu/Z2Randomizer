@@ -3759,6 +3759,7 @@ FREE_UNTIL $c2ca
         rom.AllowForChangingDoorYPosition(engine);
         rom.AllowForChangingElevatorYPosition(engine);
         rom.InstantText(engine);
+        rom.AdjustGpAcheman(engine);
         StatTracking(engine);
 
         if (props.Global5050JarDrop)

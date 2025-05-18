@@ -1578,6 +1578,45 @@ Exit:
         Put(0x1F350, new byte[] { 0xa9, 0x01, 0x4d, 0x28, 0x07, 0x8d, 0x28, 0x07, 0xa9, 0x13, 0xc5, 0xa1, 0xd0, 0x0a, 0xa9, 0x01, 0x45, 0xb6, 0x85, 0xb6, 0xa9, 0xa0, 0x85, 0x2a, 0x60 });
     }
 
+    public void AdjustGpAcheman(Assembler asm)
+    {
+        var a = asm.Module();
+        a.Code("""
+.segment "PRG5", "PRG7"
+
+bank7_Enemy_Stops_when_Hit = $da02
+bank7_Ache = $db79
+bank7_Spawn_New_Projectile = $dbce
+bank7_Acheman_Continue = $db73
+
+.reloc
+GP_Acheman:
+    jsr bank7_Enemy_Stops_when_Hit  ; Enemy Stops when Hit
+    lda $af,x
+    beq GP_Acheman_Continue_As_Ache
+    dec $af,x
+    cmp #$18                        ; Delay before flying back
+    bne GP_Acheman_Continue
+    jsr bank7_Spawn_New_Projectile
+    bcs GP_Acheman_Continue         ; Carry Set = max number of projectiles reached
+    lda #$03                        ; Set projectile type to Fire Bago Bago
+    sta $87,y
+    lda $30,y
+    adc #$02                        ; Add relative Y position of projectile
+    sta $30,y
+GP_Acheman_Continue:
+    jmp bank7_Acheman_Continue
+GP_Acheman_Continue_As_Ache:
+    jmp bank7_Ache
+
+.org $94a1
+    .word GP_Acheman                ; Set Acheman's enemy routine 1 pointer
+
+;.org $94df
+    ; .byte $40                       ; Make him orange?
+""", "gp_acheman.s");
+    }
+
     public string Z2BytesToString(byte[] data)
     {
         return new string(data.Select(letter => {
