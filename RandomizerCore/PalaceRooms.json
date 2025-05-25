@@ -21160,5 +21160,31 @@
     "linkedRoomName": null,
     "isUpDownReversed": false,
     "suppressWarning": ["DropTilesInNonDropRoom"]
+  },
+  {
+    "name": "Inverse Inverse T Junction",
+    "group": "V4_4",
+    "author": "initsu",
+    "enabled": true,
+    "map": 4,
+    "bitmask": "0F",
+    "palaceGroup": null,
+    "memoryAddress": 75645,
+    "connections": "0FA8FD14",
+    "hasDrop": false,
+    "elevatorScreen": 1,
+    "requirements": [],
+    "isDropZone": false,
+    "hasItem": false,
+    "enemies": "0578187798",
+    "sideviewData": "47400E08D200420012C9420012C99193410012C7420012C5702B80C242001273607380C2F15070D571D581C2420012C580C2420012C99093310F0B405213C9420012C94200D30E",
+    "hasBoss": false,
+    "isBossRoom": false,
+    "isThunderBirdRoom": false,
+    "isEntrance": false,
+    "palaceNumber": null,
+    "linkedRoomName": null,
+    "isUpDownReversed": false,
+    "suppressWarning": []
   }
 ]
