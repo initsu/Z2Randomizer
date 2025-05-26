@@ -174,6 +174,7 @@ RESV PreviousFrameMetasprite
 RESV StatDisplayState
 RESV InternalState
 RESV GameComplete ; set when you beat the game to stop the timers
+RESV SideViewPageStart
 RESV ElevatorYStart
 RESV DripperRedCounter
 RESV PpuCtrlForIrq

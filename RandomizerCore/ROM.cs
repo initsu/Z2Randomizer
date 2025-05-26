@@ -1440,6 +1440,8 @@ SetElevatorYPosition:
         // position. We pull this off by setting $0705 to `2` instead of `1` when falling
         // and checking for exactly 1 when updating the elevator position
         a.Module().Code("""
+.include "z2r.inc"
+
 .segment "PRG0", "PRG7"
 
 .org $C68D
@@ -1462,6 +1464,39 @@ bne $9188
 CheckIfElevatorEntrance:
     lda $0705
     cmp #1
+    rts
+
+
+.segment "PRG0"
+.org $907e
+SideViewInitSetPage:
+    jsr LoadSideViewPageStart
+
+.reloc
+LoadSideViewPageStart:
+    lda $0705
+    cmp #2
+    bne ElevatorPageStart
+DropPageStart:
+    lda SideViewPageStart
+    rts
+ElevatorPageStart:
+    lda $05CC,y ; For elevators SideViewPageStart is set after this, so just use the old method
+    rts
+
+
+.segment "PRG7"
+.org $cfb8
+SideViewExitInject:
+    and #$03                     ; just moved this earlier
+    jsr StoreSideViewPageStart
+    bne $cfc2                    ; don't run next line for drop
+    sta $075c                    ; unchanged
+
+.reloc
+StoreSideViewPageStart:
+    sta SideViewPageStart
+    ldx $0704
     rts
 """, "fix_elevator_position_in_fall_rooms.s");
     }
