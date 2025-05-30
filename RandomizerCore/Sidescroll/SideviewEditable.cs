@@ -20,7 +20,9 @@ namespace Z2Randomizer.RandomizerCore.Sidescroll;
 /// </summary>
 public class SideviewEditable<T> where T : Enum
 {
-    private byte[] Header;
+    private byte[] header;
+    public byte[] Header { get => header; }
+
     public List<SideviewMapCommand<T>> Commands { get; set; } 
 
     /// <summary>
@@ -30,7 +32,7 @@ public class SideviewEditable<T> where T : Enum
     public SideviewEditable(byte[] bytes)
     {
         if(bytes.Length < 4) { throw new ArgumentException("Sideview data has no header."); }
-        Header = bytes[0..4];
+        header = bytes[0..4];
         if (bytes.Length != Length) { throw new ArgumentException("Sideview data has bad length in header."); }
         var bgMap = BackgroundMap;
         // (bg maps in the overworld are never solid)
@@ -103,47 +105,47 @@ public class SideviewEditable<T> where T : Enum
         }
     }
 
-    public byte Length { get => Header[0]; }
+    public byte Length { get => header[0]; }
 
     public byte ObjectSet
     {
-        get => (byte)((Header[1] & 0b10000000) >> 7);
-        set { Header[1] = (byte)((Header[1] & 0b01111111) | (((value) << 7) & 0b10000000)); }
+        get => (byte)((header[1] & 0b10000000) >> 7);
+        set { header[1] = (byte)((header[1] & 0b01111111) | (((value) << 7) & 0b10000000)); }
     }
 
     public byte PageCount {
-        get => (byte)(((Header[1] & 0b01100000) >> 5) + 1);
-        set { Header[1] = (byte)((Header[1] & 0b10011111) | (((value - 1) << 5) & 0b01100000)); }
+        get => (byte)(((header[1] & 0b01100000) >> 5) + 1);
+        set { header[1] = (byte)((header[1] & 0b10011111) | (((value - 1) << 5) & 0b01100000)); }
     }
 
     public byte FloorHeader
     {
-        get { return (byte)(Header[2] & 0b10001111); }
-        set { Header[2] = (byte)((Header[2] & 0b01110000) | (value & 0b10001111)); }
+        get { return (byte)(header[2] & 0b10001111); }
+        set { header[2] = (byte)((header[2] & 0b01110000) | (value & 0b10001111)); }
     }
 
     public byte TilesHeader
     {
-        get { return (byte)((Header[2] & 0b01110000) >> 4); }
-        set { Header[2] = (byte)((Header[2] & 0b10001111) | ((value & 0b0111) << 4)); }
+        get { return (byte)((header[2] & 0b01110000) >> 4); }
+        set { header[2] = (byte)((header[2] & 0b10001111) | ((value & 0b0111) << 4)); }
     }
 
     public byte SpritePalette
     {
-        get { return (byte)((Header[3] & 0b11000000) >> 6); }
-        set { Header[3] = (byte)((Header[3] & 0b00111111) | ((value & 0b11) << 6)); }
+        get { return (byte)((header[3] & 0b11000000) >> 6); }
+        set { header[3] = (byte)((header[3] & 0b00111111) | ((value & 0b11) << 6)); }
     }
 
     public byte BackgroundPalette
     {
-        get { return (byte)((Header[3] & 0b00111000) >> 3); }
-        set { Header[3] = (byte)((Header[3] & 0b11000111) | ((value & 0b111) << 3)); }
+        get { return (byte)((header[3] & 0b00111000) >> 3); }
+        set { header[3] = (byte)((header[3] & 0b11000111) | ((value & 0b111) << 3)); }
     }
 
     public byte BackgroundMap
     {
-        get { return (byte)(Header[3] & 0b00000111); }
-        set { Header[3] = (byte)((Header[3] & 0b11111000) + (value & 0b00000111)); }
+        get { return (byte)(header[3] & 0b00000111); }
+        set { header[3] = (byte)((header[3] & 0b11111000) + (value & 0b00000111)); }
     }
 
     public SideviewMapCommand<T>? Find(Predicate<SideviewMapCommand<T>> match)
@@ -236,7 +238,7 @@ public class SideviewEditable<T> where T : Enum
             i++;
         }
         byte[] bytes = [
-            .. Header, 
+            .. header, 
             .. Commands.SelectMany(o => o.Bytes)
         ];
         bytes[0] = (byte)bytes.Length;
@@ -288,7 +290,7 @@ public class SideviewEditable<T> where T : Enum
     public String DebugString()
     {
         StringBuilder sb = new StringBuilder("");
-        var headerBytes = Convert.ToHexString(Header);
+        var headerBytes = Convert.ToHexString(header);
         var floor = SideviewMapCommand<T>.CreateNewFloor(0, FloorHeader);
         sb.AppendLine($"{headerBytes}       {"Floor",-26}{FloorHeader}");
 
@@ -348,6 +350,91 @@ public class SideviewEditable<T> where T : Enum
         return result;
     }
 }
+
+/// <summary>
+/// A class meant to compare if sideviews are perceptibly equal, meaning
+/// we ignore items. (This means the lengths can vary.)
+/// </summary>
+public class SideviewEqualityComparer<T> : IEqualityComparer<SideviewEditable<T>> where T : Enum
+{
+    public bool Equals(SideviewEditable<T>? x, SideviewEditable<T>? y)
+    {
+        if (ReferenceEquals(x, y))
+        {
+            return true;
+        }
+        if (x == null)
+        {
+            return y == null;
+        }
+        if (y == null)
+        {
+            return false;
+        }
+
+        // compare non-length header bytes
+        for (int i = 1; i < 4; i++)
+        {
+            if (x.Header[i] != y.Header[i]) { return false; }
+        }
+        // compare map commands
+        var xIter = x.Commands.GetEnumerator();
+        var yIter = y.Commands.GetEnumerator();
+
+        bool xHasNext = xIter.MoveNext();
+        bool yHasNext = yIter.MoveNext();
+
+        while (xHasNext || yHasNext)
+        {
+            SideviewMapCommand<T>? xCmd = xHasNext ? xIter.Current : null;
+            while (xHasNext && xCmd != null &&
+                (xCmd.IdByte == PalaceObjectShared.COLLECTABLE ||
+                 xCmd.IdByte == PalaceObjectShared.LOCKED_DOOR)
+            )
+            {
+                xHasNext = xIter.MoveNext();
+                xCmd = xHasNext ? xIter.Current : null;
+            }
+
+            SideviewMapCommand<T>? yCmd = yHasNext ? yIter.Current : null;
+            while (yHasNext && yCmd != null &&
+                (yCmd.IdByte == PalaceObjectShared.COLLECTABLE ||
+                 yCmd.IdByte == PalaceObjectShared.LOCKED_DOOR)
+            )
+            {
+                yHasNext = yIter.MoveNext();
+                yCmd = yHasNext ? yIter.Current : null;
+            }
+
+            if (!xHasNext && !yHasNext) { break; }
+            if (!xHasNext || !yHasNext) { return false; }
+            if (!xCmd!.Bytes.SequenceEqual(yCmd!.Bytes)) { return false; }
+
+            xHasNext = xIter.MoveNext();
+            yHasNext = yIter.MoveNext();
+        }
+        return true;
+    }
+
+    public int GetHashCode(SideviewEditable<T> obj)
+    {
+        int result = 17;
+        for (int i = 1; i < 4; i++)
+        {
+            result = result * 23 + obj.Header[i];
+        }
+        foreach (var cmd in obj.Commands)
+        {
+            if (cmd.IdByte == PalaceObjectShared.COLLECTABLE) { continue; }
+            foreach (var b in cmd.Bytes)
+            {
+                result = result * 23 + b;
+            }
+        }
+        return result;
+    }
+}
+
 
 public static class SolidGridHelper
 {

@@ -58,7 +58,7 @@ void ValidateRoomsForFile(string filename)
 
     // REGULAR PALACE ROOMS
     var enabledRegularPalaceRooms = enabledRooms.Where(r => r.PalaceNumber != 7);
-    var regularPalaceGroupedSideviews = palaceRooms!.Where(r => r.PalaceNumber != 7).GroupBy(x => x.SideView, sideviewComparer);
+    var regularPalaceGroupedSideviews = palaceRooms!.Where(r => r.PalaceNumber != 7).GroupBy(x => new SideviewEditable<PalaceObject>(x.SideView), new SideviewEqualityComparer<PalaceObject>());
     foreach (var room in enabledRegularPalaceRooms)
     {
         var sv = new SideviewEditable<PalaceObject>(room.SideView);

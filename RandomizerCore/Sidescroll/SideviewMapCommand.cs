@@ -104,6 +104,15 @@ public class SideviewMapCommand<T> where T : Enum
     }
 
     /// <summary>
+    /// Access the map command ID as a byte
+    /// </summary>
+    public byte IdByte
+    {
+        get => (Bytes[1] < 0x10) ? Bytes[1] : (byte)(Bytes[1] & 0xF0);
+        set { Bytes[1] = value; }
+    }
+
+    /// <summary>
     /// Access the second 4 bits of the 2nd byte. Typically it's the length of platforms.
     /// </summary>
     public int Param
