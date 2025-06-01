@@ -61,6 +61,24 @@ public abstract class PalaceGenerator
         return true;
     }
 
+/*
+            palace.AllRooms.Add(newRoom);
+            if (props.NoDuplicateRoomsBySideview && AllowDuplicatePrevention(props, palaceNumber))
+            {
+                roomPool.NormalRooms.RemoveAt(roomIndex);
+                var duplicateGroup = newRoom.DuplicateGroup;
+                if (!string.IsNullOrEmpty(duplicateGroup))
+                {
+                    roomPool.NormalRooms.RemoveAll(r => r.DuplicateGroup == duplicateGroup);
+                }
+            }
+
+            else if (props.NoDuplicateRooms && AllowDuplicatePrevention(props, palaceNumber))
+            {
+                roomPool.NormalRooms.RemoveAt(roomIndex);
+            }
+*/
+
     protected static void RemoveDuplicatesFromPool(RandomizerProperties props, ICollection<Room> rooms, Room roomThatWasUsed)
     {
         if (props.NoDuplicateRoomsBySideview)
