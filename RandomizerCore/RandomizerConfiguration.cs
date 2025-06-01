@@ -1192,8 +1192,7 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
         }
         properties.BossRoomsExitToPalace[6] = false;
 
-        properties.NoDuplicateRooms = noDuplicateRoomsByEnemies;
-        properties.NoDuplicateRoomsBySideview = noDuplicateRoomsByLayout;
+        properties.NoDuplicateRooms = NoDuplicateRooms;
         properties.GeneratorsAlwaysMatch = generatorsAlwaysMatch;
         properties.HardBosses = hardBosses;
         properties.RevealWalkthroughWalls = revealWalkthroughWalls;
