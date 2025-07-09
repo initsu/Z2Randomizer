@@ -40,6 +40,15 @@ public class SideviewMapCommand<T> where T : Enum
         Array.Copy(data, Bytes, data.Length);
     }
 
+    public SideviewMapCommand(byte[] data, int absX)
+    {
+        Debug.Assert(data != null, "data cannot be null.");
+        Debug.Assert(data.Length == 2 || data.Length == 3, "data array must be 2 or 3 long.");
+        Bytes = new byte[data.Length];
+        Array.Copy(data, Bytes, data.Length);
+        AbsX = absX;
+    }
+
     public SideviewMapCommand(int x, int y, T id)
     {
         Bytes = new byte[2];
@@ -74,6 +83,29 @@ public class SideviewMapCommand<T> where T : Enum
         obj.Y = y;
         obj.Bytes[1] = 0x0F;
         obj.Extra = extra;
+        return obj;
+    }
+
+    public static SideviewMapCommand<T> CreateLava(int x, int param)
+    {
+        byte[] bytes;
+        if (typeof(T) == typeof(ForestObject) || typeof(T) == typeof(CaveObject))
+        {
+            bytes = [0x00, 0x20];
+        }
+        else if (typeof(T) == typeof(PalaceObject) || typeof(T) == typeof(GreatPalaceObject))
+        {
+            bytes = [0x00, 0x10];
+        }
+        else
+        {
+            throw new NotImplementedException();
+        }
+        var obj = new SideviewMapCommand<T>(bytes);
+        obj.RelX = x;
+        obj.AbsX = x;
+        obj.Y = 15;
+        obj.Param = param;
         return obj;
     }
 
@@ -406,6 +438,23 @@ public class SideviewMapCommand<T> where T : Enum
         if ((Y + Height <= y1) || Y > y2) { return false; }
         if ((AbsX + Width) <= x1 || AbsX > x2) { return false; }
         return true;
+    }
+
+    public SideviewMapCommand<O>[] ConvertTo<O>() where O : struct, Enum
+    {
+        switch (this)
+        {
+            case SideviewMapCommand<ForestObject>:
+                return ForestObjectExtensions.ConvertTo<O>((this as SideviewMapCommand<ForestObject>)!);
+            case SideviewMapCommand<CaveObject>:
+                return CaveObjectExtensions.ConvertTo<O>((this as SideviewMapCommand<CaveObject>)!);
+            case SideviewMapCommand<PalaceObject>:
+                return PalaceObjectExtensions.ConvertTo<O>((this as SideviewMapCommand<PalaceObject>)!);
+            case SideviewMapCommand<GreatPalaceObject>:
+                return GreatPalaceObjectExtensions.ConvertTo<O>((this as SideviewMapCommand<GreatPalaceObject>)!);
+            default:
+                throw new NotImplementedException();
+        }
     }
 
     public String DebugString()
