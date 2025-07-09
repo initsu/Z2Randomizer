@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace Z2Randomizer.RandomizerCore.Sidescroll;
 
@@ -278,6 +279,11 @@ public static class ForestObjectExtensions
                 return false;
         }
     }
+
+    public static SideviewMapCommand<O>[] ConvertTo<O>(SideviewMapCommand<ForestObject> command) where O : struct, Enum
+    {
+        throw new NotImplementedException();    
+    }
 }
 
 public static class CaveObjectExtensions
@@ -391,6 +397,11 @@ public static class CaveObjectExtensions
             default:
                 return false;
         }
+    }
+
+    public static SideviewMapCommand<O>[] ConvertTo<O>(SideviewMapCommand<CaveObject> command) where O : struct, Enum
+    {
+        throw new NotImplementedException();
     }
 }
 
@@ -553,6 +564,44 @@ public static class PalaceObjectExtensions
                 return false;
         }
     }
+
+    public static SideviewMapCommand<O>[] ConvertTo<O>(SideviewMapCommand<PalaceObject> command) where O : struct, Enum
+    {
+        if (typeof(O) == typeof(PalaceObject))
+        {
+            return [(SideviewMapCommand<O>)(object)command];
+        }
+        else if (typeof(O) == typeof(GreatPalaceObject))
+        {
+            return (SideviewMapCommand<O>[])(object)ConvertToGreatPalace(command);
+        }
+        else
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public static SideviewMapCommand<GreatPalaceObject>[] ConvertToGreatPalace(SideviewMapCommand<PalaceObject> command)
+    {
+        switch (command.Id)
+        {
+            case PalaceObject.IRON_KNUCKLE_STATUE:
+                return [new SideviewMapCommand<GreatPalaceObject>(command.AbsX, command.Y, GreatPalaceObject.FOKKA_STATUE)];
+            case PalaceObject.PIT_OR_LAVA:
+                if (command.Y + command.Height < 13) { return []; }
+                return Enumerable.Range(command.AbsX, command.Width)
+                    .Select(x => new SideviewMapCommand<GreatPalaceObject>(x, command.Y, GreatPalaceObject.PIT_VERTICAL))
+                    .ToArray();
+            case PalaceObject.PIT:
+                return Enumerable.Range(command.AbsX, command.Width)
+                    .Select(x => new SideviewMapCommand<GreatPalaceObject>(x, command.Y, GreatPalaceObject.PIT_VERTICAL))
+                    .ToArray();
+            case PalaceObject.SMALL_CLOUD_0A:
+                return [new SideviewMapCommand<GreatPalaceObject>(command.AbsX, command.Y, GreatPalaceObject.SMALL_CLOUD_08)];
+            default:
+                throw new NotImplementedException();
+        }
+    }
 }
 
 public static class GreatPalaceObjectExtensions
@@ -694,5 +743,10 @@ public static class GreatPalaceObjectExtensions
             default:
                 return false;
         }
+    }
+
+    public static SideviewMapCommand<O>[] ConvertTo<O>(SideviewMapCommand<GreatPalaceObject> command) where O : struct, Enum
+    {
+        throw new NotImplementedException();
     }
 }
