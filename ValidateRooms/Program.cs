@@ -686,7 +686,48 @@ void DebugPalaceRoomHex<T>(String hex) where T : Enum
     var sv = new SideviewEditable<T>(bytes);
     sb.AppendLine(sv.DebugString());
 }
-#pragma warning restore CS8321 // Local function is declared but never used
+
+void MirrorRoom<T>(String hex) where T : Enum
+{
+    byte[] bytes = Convert.FromHexString(hex);
+    var sv = new SideviewEditable<T>(bytes);
+    sb.AppendLine(sv.DebugString());
+    sv.Mirror();
+    byte[] mirrored = sv.Finalize();
+    sb.AppendLine("Mirrored:");
+    sb.AppendLine(sv.DebugString());
+    sb.AppendLine(Convert.ToHexString(mirrored));
+}
+
+void MirrorEnemies<T>(String hex) where T : Enum
+{
+    byte[] bytes = Convert.FromHexString(hex);
+    var ee = new EnemiesEditable<T>(bytes);
+    sb.AppendLine(ee.DebugString());
+    ee.Mirror();
+    byte[] mirrored = ee.Finalize();
+    sb.AppendLine(ee.DebugString());
+    sb.AppendLine(Convert.ToHexString(mirrored));
+}
+
+void MirrorConnections(String hex)
+{
+    byte[] bytes = Convert.FromHexString(hex);
+    byte[] mirrored = [(byte)(bytes[3] | 0b00000011), .. bytes[1..3], (byte)(bytes[0] & 0b11111100)];
+    sb.AppendLine(Convert.ToHexString(mirrored));
+}
+
+
+void ConvertRoom<I,O>(String hex) where I : Enum where O : struct, Enum
+{
+    byte[] bytes = Convert.FromHexString(hex);
+    var sv = new SideviewEditable<I>(bytes);
+    SideviewEditable<O> sv2 = sv.ConvertTo<O>();
+    byte[] converted = sv2.Finalize();
+    sb.AppendLine("Converted:");
+    sb.AppendLine(sv.DebugString());
+    sb.AppendLine(Convert.ToHexString(converted));
+}
 
 ValidateRoomsForFile("PalaceRooms.json");
 sb.AppendLine();
@@ -694,6 +735,13 @@ sb.AppendLine();
 sb.AppendLine();
 
 //DebugPalaceRoomHex<GreatPalaceObject>("32600808102F23F8D50123F7D502102F23F694069106D10323F5D404102F23F4D50522F3F3500006B0910106B091D10F112F");
+//ConvertRoom<PalaceObject, GreatPalaceObject>("");
+
+// Palace 1 item room re-created without the background map:
+//MirrorRoom<PalaceObject>("4C600E08DC08440024D831306030903021D821305030803021D841307030A03021D845004500F35000060106430024D841307030A03021D821305030803021D831306030903021D84400D50E");
+//MirrorEnemies<EnemiesPalace125>("096551795164D176D8");
+//MirrorConnections("FCFFFF24");
+
 
 var result = sb.ToString();
 File.WriteAllText("ValidationOutput.txt", result);
