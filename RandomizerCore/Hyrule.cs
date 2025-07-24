@@ -228,6 +228,7 @@ public class Hyrule
 
             palaces = [];
             ItemGet = [];
+            logger.Info("ItemGet reset");
             foreach (Collectable item in Enum.GetValues(typeof(Collectable)))
             {
                 if (item.IsItemGetItem())
@@ -755,6 +756,7 @@ public class Hyrule
         {
             ItemGet[item] = false;
         }
+        logger.Info("ItemGet reset");
 
         //TODO: Refactor these puts out of this class
         ROMData.Put(RomMap.START_CANDLE, props.StartCandle ? (byte)1 : (byte)0);
@@ -1297,6 +1299,24 @@ public class Hyrule
         return true;
     }
 
+    [Conditional("DEBUG")]
+    public static void LogItemGetChanges(String continent, ref Dictionary<Collectable, bool> itemGet, ref Dictionary<Collectable, bool> lastItemGet)
+    {
+        bool changed = false;
+        foreach (var kvp in itemGet)
+        {
+            if (lastItemGet.GetValueOrDefault(kvp.Key) != kvp.Value)
+            {
+                changed = true;
+                logger.Info($"Picked up in {kvp.Key} in {continent}");
+            }
+        }
+        if (changed)
+        {
+            lastItemGet = new Dictionary<Collectable, bool>(itemGet);
+        }
+    }
+
     private bool IsEverythingReachable(Dictionary<Collectable, bool> itemGet)
     {
         totalReachableCheck++;
@@ -1318,10 +1338,31 @@ public class Hyrule
         {
             previousReachableLocationsCount = reachableLocationsCount;
             previousGettableItemsCount = gettableItemsCount;
+#if DEBUG
+            Dictionary<Collectable, bool> lastItemGet = new Dictionary<Collectable, bool>(itemGet);
+            UpdateItemGets();
+            logger.Info("Start of item journey:");
+#endif
             westHyrule.UpdateVisit(itemGet);
+#if DEBUG
+            UpdateItemGets();
+            LogItemGetChanges("The West", ref itemGet, ref lastItemGet);
+#endif
             deathMountain.UpdateVisit(itemGet);
+#if DEBUG
+            UpdateItemGets();
+            LogItemGetChanges("Death Mountain", ref itemGet, ref lastItemGet);
+#endif
             eastHyrule.UpdateVisit(itemGet);
+#if DEBUG
+            UpdateItemGets();
+            LogItemGetChanges("The East", ref itemGet, ref lastItemGet);
+#endif
             mazeIsland.UpdateVisit(itemGet);
+#if DEBUG
+            UpdateItemGets();
+            LogItemGetChanges("In Maze Island", ref itemGet, ref lastItemGet);
+#endif
 
             foreach (World world in worlds)
             {
@@ -1329,29 +1370,60 @@ public class Hyrule
                 {
                     worlds.ForEach(i => i.VisitRaft());
                 }
+#if DEBUG
+                UpdateItemGets();
+                LogItemGetChanges($"{world.GetName()} using Raft", ref itemGet, ref lastItemGet);
+#endif
 
                 if (world.bridge != null && CanGet(world.bridge))
                 {
                     worlds.ForEach(i => i.VisitBridge());
                 }
+#if DEBUG
+                UpdateItemGets();
+                LogItemGetChanges($"{world.GetName()} via Bridge", ref itemGet, ref lastItemGet);
+#endif
 
                 if (world.cave1 != null && CanGet(world.cave1))
                 {
                     worlds.ForEach(i => i.VisitCave1());
                 }
+#if DEBUG
+                UpdateItemGets();
+                LogItemGetChanges($"{world.GetName()} via Cave1", ref itemGet, ref lastItemGet);
+#endif
 
                 if (world.cave2 != null && CanGet(world.cave2))
                 {
                     worlds.ForEach(i => i.VisitCave2());
                 }
+#if DEBUG
+                UpdateItemGets();
+                LogItemGetChanges($"{world.GetName()} via Cave2", ref itemGet, ref lastItemGet);
+#endif
             }
             gettableItemsCount = UpdateItemGets();
+#if DEBUG
+            LogItemGetChanges("???", ref itemGet, ref lastItemGet);
+#endif
 
             //This 2nd pass is weird and may not need to exist, eventually I should run some stats on whether it helps or not
             westHyrule.UpdateVisit(itemGet);
+#if DEBUG
+            LogItemGetChanges("The West (2nd pass)", ref itemGet, ref lastItemGet);
+#endif
             deathMountain.UpdateVisit(itemGet);
+#if DEBUG
+            LogItemGetChanges("Death Mountain (2nd pass)", ref itemGet, ref lastItemGet);
+#endif
             eastHyrule.UpdateVisit(itemGet);
+#if DEBUG
+            LogItemGetChanges("The East (2nd pass)", ref itemGet, ref lastItemGet);
+#endif
             mazeIsland.UpdateVisit(itemGet);
+#if DEBUG
+            LogItemGetChanges("In Maze Island (2nd pass)", ref itemGet, ref lastItemGet);
+#endif
 
             gettableItemsCount = UpdateItemGets();
 
