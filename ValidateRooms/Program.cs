@@ -242,6 +242,14 @@ void CheckPageOverflow<T,U>(Room room, SideviewEditable<T> sv, EnemiesEditable<U
 void CheckDoorsAndItems<T,U>(Room room, SideviewEditable<T> sv, EnemiesEditable<U> ee) where T : Enum where U : Enum
 {
     var lockedDoorCmds = sv.FindAll(o =>  o.Y < 12 && (int)(object)o.Id == (int)PalaceObjectShared.LOCKED_DOOR);
+
+    var xEnd = sv.PageCount * 16 - 5;
+    foreach (var door in lockedDoorCmds)
+    {
+        if (door.AbsX < 4) { Warning(room, "LockedDoorTooCloseToEntrance", $"Room has a locked door too close to the left entrance: {door.DebugString()}"); }
+        if (door.AbsX > xEnd) { Warning(room, "LockedDoorTooCloseToEntrance", $"Room has a locked door too close to the right entrance: {door.DebugString()}"); }
+    }
+
     var itemCmds = sv.Commands.Where(o => o.HasExtra());
 
     var lockedDoorEnemies = ee.Enemies.Where(o => (int)(object)o.Id == (int)EnemiesShared.LOCKED_DOOR);

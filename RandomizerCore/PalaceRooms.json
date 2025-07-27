@@ -8399,6 +8399,7 @@
     "palaceGroup": null,
     "palaceNumber": 7,
     "requirements": ["GLOVE"],
+    "suppressWarning": ["EnemyTooCloseToEntrance"],
     "duplicateGroup": "gtmNewgpRooms M9",
     "sideviewData": "52600D08D5088033A035903470326031AA2C23D7F01631306030903021D75130803021D731306030903021D7AC2CF31620D731306030903021D74130803021D76130903021D7A83191C481C371326131D20D"
   },
@@ -8709,6 +8710,7 @@
     "palaceGroup": null,
     "palaceNumber": 7,
     "requirements": ["GLOVE"],
+    "suppressWarning": ["EnemyTooCloseToEntrance"],
     "duplicateGroup": "gtmNewgpRooms M9",
     "sideviewData": "52600D08D5088033A035903470326031AA2C23D7F01631306030903021D75130803021D731306030903021D7AC2CF31620D731306030903021D74130803021D76130903021D7A83191C481C371326131D20D"
   },
@@ -10244,6 +10246,7 @@
     "palaceGroup": null,
     "palaceNumber": null,
     "requirements": [],
+    "tags": ["Jank"],
     "duplicateGroup": "triforceOfCourage M5",
     "sideviewData": "24600E08D20892737473F01F5473543FF81F583FD808F01FD808507374739473D60E8005"
   },
@@ -10270,6 +10273,7 @@
     "palaceGroup": null,
     "palaceNumber": null,
     "requirements": [],
+    "tags": ["Jank"],
     "duplicateGroup": "triforceOfCourage M5",
     "sideviewData": "24600E08D20892737473F01F5473543FF81F583FD808F01FD808507374739473D60E8005"
   },
@@ -10324,6 +10328,7 @@
     "palaceGroup": null,
     "palaceNumber": null,
     "requirements": [],
+    "tags": ["Jank"],
     "duplicateGroup": "triforceOfCourage M5",
     "sideviewData": "24600E08D20892737473F01F5473543FF81F583FD808F01FD808507374739473D60E8005"
   },
@@ -11314,7 +11319,7 @@
     "palaceNumber": null,
     "requirements": [
     ],
-    "sideviewData": "2D600E088305D308208F23C85200570023C82182D30CA245910F0083C1D808208223C8218F5200570023C8D40E"
+    "sideviewData": "2D600E088405D208208F23C85200570023C82182D30CA245910F0083C1D808208223C8218F5200570023C8D40E"
   },
   {
     "author": "throughItemRooms",
@@ -18743,7 +18748,7 @@
     "isDropZone": false,
     "hasItem": false,
     "enemies": "0B7D1D1963719D7E9D12E3",
-    "sideviewData": "29608010D00E8305D280773583C2453553C57535630F0B80C2453553C5753583C2D80EF050B0F1D20F",
+    "sideviewData": "29608010D00E8405D180773583C2453553C57535630F0B80C2453553C5753583C2D80EF050B0F1D20F",
     "hasBoss": false,
     "isBossRoom": false,
     "name": "SW mushroom pillars dropzone",
