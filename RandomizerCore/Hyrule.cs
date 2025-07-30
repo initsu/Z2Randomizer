@@ -503,6 +503,11 @@ public class Hyrule
             ));
 
             UpdateRom();
+            if (config.GenerateSpoiler)
+            {
+                // Change start selection screen to red if generated with spoiler
+                ROMData.Put(0x17c09, [0x30, 0x06, 0x06]);
+            }
 
             var z2Hash = ConvertHash(hash);
             ROMData.Put(0x17C2C, z2Hash);
