@@ -1517,7 +1517,211 @@ public partial class Palace
                 return condensed.ToString();
             }
         }
+        else if (style is not PalaceStyle.CHAOS)
+        {
+            CreateCoordinates();
+            int minX = AllRooms.Min(room => room.coords.X);
+            int maxX = AllRooms.Max(room => room.coords.X);
+            int minY = AllRooms.Min(room => room.coords.Y);
+            int maxY = AllRooms.Max(room => room.coords.Y);
+            int rowCount = maxY - minY + 1;
+            string[] rows = new string[rowCount];
+            for (int y = minY; y <= maxY; y++)
+            {
+                StringBuilder rowSb = new();
+                rowSb.Append("   ");
+                for (int x = minX; x <= maxX; x++)
+                {
+                    Room? room = AllRooms.FirstOrDefault(room => room.coords == new Coord(x, y));
+                    if (room == null || !room.HasUpExit)
+                    {
+                        rowSb.Append("   ");
+                    }
+                    else
+                    {
+                        bool connectsUp = false;
+                        for (int j = y + 1; j <= maxY; ++j)
+                        {
+                            Room? roomAbove = AllRooms.FirstOrDefault(room => room.coords == new Coord(x, j));
+                            if (roomAbove != null)
+                            {
+                                connectsUp = room.Up == roomAbove;
+                                break;
+                            }
+                        }
+                        rowSb.Append(" " + (connectsUp ? "|" : "¦") + " ");
+                    }
+                }
+                rowSb.Append("\n");
+                rowSb.Append("   ");
+                bool connectsRight = false;
+                for (int x = minX; x <= maxX; x++)
+                {
+                    Room? room = AllRooms.FirstOrDefault(room => room.coords == new Coord(x, y));
+                    if (room == null)
+                    {
+                        rowSb.Append(connectsRight ? "---" : "   ");
+                    }
+                    else
+                    {
+                        if (room.HasLeftExit)
+                        {
+                            rowSb.Append(connectsRight ? "-" : "~"); // symbol should be 0x27f3
+                        }
+                        else
+                        {
+                            rowSb.Append(' ');
+                        }
+
+                        if (room.IsEntrance)
+                        {
+                            rowSb.Append('E');
+                        }
+                        else if (room.HasItem)
+                        {
+                            rowSb.Append('I');
+                        }
+                        else if (room.IsBossRoom)
+                        {
+                            rowSb.Append('B');
+                        }
+                        else if (room.IsThunderBirdRoom)
+                        {
+                            rowSb.Append('T');
+                        }
+                        else
+                        {
+                            rowSb.Append('X');
+                        }
+
+                        connectsRight = false;
+                        if (room.HasRightExit)
+                        {
+                            for (int i = x + 1; i <= maxX; ++i)
+                            {
+                                Room? roomToTheRight = AllRooms.FirstOrDefault(room => room.coords == new Coord(i, y));
+                                if (roomToTheRight != null)
+                                {
+                                    connectsRight = room.Right == roomToTheRight;
+                                    break;
+                                }
+                            }
+                            rowSb.Append(connectsRight ? "-" : "~"); // × 
+                        }
+                        else
+                        {
+                            rowSb.Append(' ');
+                        }
+                    }
+                }
+                rowSb.Append('\n');
+                rowSb.Append("   ");
+                for (int x = minX; x <= maxX; x++)
+                {
+                    Room? room = AllRooms.FirstOrDefault(i => i.coords == new Coord(x, y));
+                    if (room == null)
+                    {
+                        rowSb.Append("   ");
+                    }
+                    else if (room.HasDownExit)
+                    {
+                        bool connectsDown = false;
+                        for (int j = y - 1; j >= minY; --j)
+                        {
+                            Room? roomBelow = AllRooms.FirstOrDefault(room => room.coords == new Coord(x, j));
+                            if (roomBelow != null)
+                            {
+                                connectsDown = room.Down == roomBelow;
+                                break;
+                            }
+                        }
+                        string c = room.HasDrop ? "v" : (connectsDown ? "|" : "¦");
+                        rowSb.Append(" " + c + " ");
+                        if (connectsDown)
+                        {
+                            var col = rowSb.Length - 2;
+                            for (int j = y - 1; j > room.Down!.coords.Y; --j)
+                            {
+                                var s = rows[j - minY];
+                                s = s.Remove(col, 1);
+                                s = s.Insert(col, c);
+                                rows[j - minY] = s;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        rowSb.Append("   ");
+                    }
+                }
+                rows[y - minY] = rowSb.ToString();
+            }
+            for (int j = rowCount - 1; j >= 0; --j)
+            {
+                sb.AppendLine(rows[j]);
+            }
+
+        }
         return sb.ToString();
+    }
+
+    private void CreateCoordinates()
+    {
+        if (Entrance == null) { throw new Exception("Palace Entrance is missing"); }
+        HashSet<Room> reachedRooms = [];
+        Queue<(Room, int, int, int)> roomsToCheck = [];
+        roomsToCheck.Enqueue((Entrance, 0, 0, 3));
+        while (roomsToCheck.Count > 0)
+        {
+            var (room, x, y, directionEntered) = roomsToCheck.Dequeue();
+
+            // This will return false if the room is already added
+            if (!reachedRooms.Add(room)) { continue; }
+
+            static bool CoordConflict(HashSet<Room> reachedRooms, int directionEntered, Coord coords)
+            {
+                if (reachedRooms.Any(room => room.coords == coords)) { return true; }
+                if ((directionEntered == 0 || directionEntered == 3)) // Horizontal entrance
+                {
+                    var perpendicularRooms = reachedRooms.Where(rr => rr.coords.X == coords.X);
+                    return perpendicularRooms.Count() > 0;
+                    //return parallelRooms.Any(room => room.coords.Y < coords.Y) && parallelRooms.Any(room => room.coords.Y > coords.Y);
+                } 
+                else
+                {
+                    var perpendicularRooms = reachedRooms.Where(rr => rr.coords.Y == coords.Y);
+                    return perpendicularRooms.Count() > 0;
+                    //return parallelRooms.Any(room => room.coords.X < coords.X) && parallelRooms.Any(room => room.coords.X > coords.X);
+                }
+            }
+
+            Coord coords = new(x, y);
+            if (CoordConflict(reachedRooms, directionEntered, coords))
+            {
+                // Problem. We have a coordinate overlap
+                switch (directionEntered)
+                {
+                    case 0: // Left
+                        foreach (var r in reachedRooms.Where(rr => rr.coords.X <= x).ToList()) { r.coords.X--; }
+                        break;
+                    case 1: // Down
+                        foreach (var r in reachedRooms.Where(rr => rr.coords.Y <= y).ToList()) { r.coords.Y--; }
+                        break;
+                    case 2: // Up
+                        foreach (var r in reachedRooms.Where(rr => rr.coords.Y >= y).ToList()) { r.coords.Y++; }
+                        break;
+                    case 3: // Right
+                        foreach (var r in reachedRooms.Where(rr => rr.coords.X >= x).ToList()) { r.coords.X++; }
+                        break;
+                }
+            }
+            room.coords = coords;
+
+            if (room.Down != null) { roomsToCheck.Enqueue((room.Down, x, y - 1, 1)); }
+            if (room.Up != null) { roomsToCheck.Enqueue((room.Up, x, y + 1, 2)); }
+            if (room.Right != null) { roomsToCheck.Enqueue((room.Right, x + 1, y, 3)); }
+            if (room.Left != null) { roomsToCheck.Enqueue((room.Left, x - 1, y, 0)); }
+        }
     }
 
     [GeneratedRegex(@"^[ \t\f\r\n]+$")]
