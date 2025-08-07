@@ -45,6 +45,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PrintRooms", "PrintRooms\Pr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpriteEdit", "SpriteEdit\SpriteEdit.csproj", "{8C4C208C-42AA-7A93-C10F-D90FA4C0E6EA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToolTipUpdater", "ToolTipUpdater\ToolTipUpdater.csproj", "{C391E88B-2D8B-EED2-2740-B58E6F8EBD24}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -235,6 +237,18 @@ Global
 		{8C4C208C-42AA-7A93-C10F-D90FA4C0E6EA}.Unsafe Debug|Any CPU.Build.0 = Unsafe Debug|Any CPU
 		{8C4C208C-42AA-7A93-C10F-D90FA4C0E6EA}.Unsafe Debug|x64.ActiveCfg = Unsafe Debug|x64
 		{8C4C208C-42AA-7A93-C10F-D90FA4C0E6EA}.Unsafe Debug|x64.Build.0 = Unsafe Debug|x64
+		{C391E88B-2D8B-EED2-2740-B58E6F8EBD24}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C391E88B-2D8B-EED2-2740-B58E6F8EBD24}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C391E88B-2D8B-EED2-2740-B58E6F8EBD24}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C391E88B-2D8B-EED2-2740-B58E6F8EBD24}.Debug|x64.Build.0 = Debug|Any CPU
+		{C391E88B-2D8B-EED2-2740-B58E6F8EBD24}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C391E88B-2D8B-EED2-2740-B58E6F8EBD24}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C391E88B-2D8B-EED2-2740-B58E6F8EBD24}.Release|x64.ActiveCfg = Release|Any CPU
+		{C391E88B-2D8B-EED2-2740-B58E6F8EBD24}.Release|x64.Build.0 = Release|Any CPU
+		{C391E88B-2D8B-EED2-2740-B58E6F8EBD24}.Unsafe Debug|Any CPU.ActiveCfg = Release|Any CPU
+		{C391E88B-2D8B-EED2-2740-B58E6F8EBD24}.Unsafe Debug|Any CPU.Build.0 = Release|Any CPU
+		{C391E88B-2D8B-EED2-2740-B58E6F8EBD24}.Unsafe Debug|x64.ActiveCfg = Release|Any CPU
+		{C391E88B-2D8B-EED2-2740-B58E6F8EBD24}.Unsafe Debug|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
