@@ -104,6 +104,145 @@ public class SequentialPlacementCoordinatePalaceGenerator() : CoordinatePalaceGe
             UpdateRoom(bestFit);
             if (duplicateProtection) { RemoveDuplicatesFromPool(props, roomPool.NormalRooms, newRoom); }
         }
+        // End-to-end loops
+        // If a straight sequence of rooms has open dead ends at both ends, consider forming a loop
+        // Only rooms that form a straight line are evaluated
+        int CheckHorizontalLoop(int x, int y, Room? left, Room? right, out Room? loopRoomHorizontal)
+        {
+            loopRoomHorizontal = null;
+            if (right is { HasLeftExit: true })
+            {
+                if (left is { HasRightExit: true }) { return -1; }
+                Room? loopRoom = right;
+                int i = x + 2;
+                bool loop = loopRoom.HasRightExit;
+                while (loop)
+                {
+                    loopRoomHorizontal = loopRoom;
+                    loopRoom = allRooms.GetValueOrDefault(new Coord(i, y));
+                    if (loopRoom == null) { return 1; }
+                    loop = loopRoom.HasLeftExit && loopRoom.HasRightExit && !loopRoom.IsBossRoom;
+                    i++;
+                }
+                return -1;
+            }
+            return 0;
+        }
+
+        int CheckVerticalLoop(int x, int y, Room? up, Room? down, out Room? loopRoomElevator, out Room? loopRoomDrop)
+        {
+            loopRoomElevator = null;
+            loopRoomDrop = null;
+            if (up is { HasDownExit: true })
+            {
+                if (down is { HasUpExit: true }) { return -1; }
+
+                Room? loopRoom = up;
+                int j = y + 2;
+                bool loop = loopRoom.HasUpExit;
+                if (!up.HasDrop)
+                {
+                    while (loop)
+                    {
+                        loopRoomElevator = loopRoom;
+                        loopRoom = allRooms.GetValueOrDefault(new Coord(x, j));
+                        if (loopRoom == null) { return 1; }
+                        loop = loopRoom.HasDownExit && loopRoom.HasUpExit && !loopRoom.HasDrop && !loopRoom.IsBossRoom;
+                        j++;
+                    }
+                    return -1;
+                }
+
+                if (up.HasDrop && up.IsDropZone)
+                {
+                    while (loop)
+                    {
+                        loopRoomDrop = loopRoom;
+                        loopRoom = allRooms.GetValueOrDefault(new Coord(x, j));
+                        if (loopRoom == null) { return 1; }
+                        loop = loopRoom.HasDownExit && loopRoom.HasUpExit && loopRoom.HasDrop && loopRoom.IsDropZone;
+                        j++;
+                    }
+                    return -1;
+                }
+            }
+
+            return 0;
+        }
+
+        if (openCoords.Count > 0)
+        {
+            roomsByExitType = roomPool.CategorizeNormalRoomExits();
+
+            var openCoordsIter = openCoords.ToArray();
+            foreach (var openCoord in openCoordsIter)
+            {
+                var (x, y) = openCoord;
+                Room? left = allRooms.GetValueOrDefault(new Coord(x - 1, y));
+                Room? right = allRooms.GetValueOrDefault(new Coord(x + 1, y));
+                Room? up = allRooms.GetValueOrDefault(new Coord(x, y + 1));
+                Room? down = allRooms.GetValueOrDefault(new Coord(x, y - 1));
+
+                Room? loopRoomHorizontal;
+                if (CheckHorizontalLoop(x, y, left, right, out loopRoomHorizontal) == -1) { continue; }
+                Room? loopRoomElevator = null;
+                Room? loopRoomDrop = null;
+                if (CheckVerticalLoop(x, y, up, down, out loopRoomElevator, out loopRoomDrop) == -1) { continue; }
+                var loopRoomVertical = loopRoomElevator ?? loopRoomDrop;
+                if (loopRoomHorizontal == null && loopRoomVertical == null) { continue; }
+
+                if (loopRoomHorizontal != null)
+                {
+                    int x2 = loopRoomHorizontal.coords.X + 1;
+                    Room? right2 = allRooms.GetValueOrDefault(new Coord(x2 + 1, y));
+                    Room? up2 = allRooms.GetValueOrDefault(new Coord(x2, y + 1));
+                    Room? down2 = allRooms.GetValueOrDefault(new Coord(x2, y - 1));
+                    if (right2 is { HasLeftExit: true } ||
+                        up2 is { HasDownExit: true } ||
+                        down2 is { HasUpExit: true }) { continue; }
+                }
+
+                if (loopRoomVertical != null)
+                {
+                    int y3 = loopRoomVertical.coords.Y + 1;
+                    Room? left3 = allRooms.GetValueOrDefault(new Coord(x + 1, y3));
+                    Room? right3 = allRooms.GetValueOrDefault(new Coord(x + 1, y3));
+                    Room? down3 = allRooms.GetValueOrDefault(new Coord(x, y3 - 1));
+                    if (left3 is { HasRightExit: true } ||
+                        right3 is { HasLeftExit: true } ||
+                        down3 is { HasUpExit: true }) { continue; }
+                }
+
+                // loops that wrap around possible - roll if it should happen
+                //double wrapChance = loopRoomDrop != null ? 1.0 : 0.6;
+                //if (r.NextDouble() > wrapChance) { continue; }
+
+                if (loopRoomHorizontal != null)
+                {
+                    right!.Left = loopRoomHorizontal;
+                    loopRoomHorizontal.Right = right!;
+                }
+                if (loopRoomVertical != null)
+                {
+                    up!.Down = loopRoomVertical;
+                    if (!up.HasDrop)
+                    {
+                        loopRoomVertical.Up = up!;
+                    }
+                }
+                openCoords.Remove(openCoord);
+                if (loopRoomHorizontal != null)
+                {
+                    int x2 = loopRoomHorizontal.coords.X + 1;
+                    openCoords.Remove(new Coord(x2, y));
+                }
+                if (loopRoomVertical != null)
+                {
+                    int y3 = loopRoomVertical.coords.Y + 1;
+                    openCoords.Remove(new Coord(x, y3));
+                }
+            }
+        }
         //close stubs
         if (openCoords.Count > 0)
         {
@@ -243,7 +382,7 @@ public class SequentialPlacementCoordinatePalaceGenerator() : CoordinatePalaceGe
             return palace;
         }
 
-        if (allRooms.Count != roomCount)
+        if (allRooms.Count > roomCount)
         {
             throw new Exception("Generated palace has the incorrect number of rooms");
         }
