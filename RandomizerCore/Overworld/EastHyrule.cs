@@ -335,6 +335,23 @@ public sealed class EastHyrule : World
                 GetLocationByMem(RomMap.EAST_MINOR_LAVA_TILE_LOCATION2)
             ];
         }
+        if (props.RemoveTrapTiles)
+        {
+            trapTilesLocs =
+            [
+                GetLocationByMem(RomMap.EAST_TRAP_DESERT_TILE_LOCATION1),
+                GetLocationByMem(RomMap.EAST_TRAP_ROAD_TILE_LOCATION2),
+                GetLocationByMem(RomMap.EAST_TRAP_ROAD_TILE_LOCATION3),
+                GetLocationByMem(RomMap.EAST_TRAP_ROAD_TILE_TO_VOD_LOCATION),
+                GetLocationByMem(RomMap.EAST_BRIDGE_TILE_TO_P6_LOCATION),
+                GetLocationByMem(RomMap.EAST_BRIDGE_TILE_TO_KASUTO_LOCATION),
+                GetLocationByMem(RomMap.EAST_TRAP_DESERT_TILE_LOCATION1),
+                GetLocationByMem(RomMap.EAST_TRAP_DESERT_TILE_LOCATION2),
+                GetLocationByMem(RomMap.EAST_TRAP_LAVA_TILE_LOCATION1),
+                GetLocationByMem(RomMap.EAST_TRAP_LAVA_TILE_LOCATION2),
+                GetLocationByMem(RomMap.EAST_TRAP_LAVA_TILE_LOCATION3),
+            ];
+        }
 
         if (biome == Biome.VANILLA || biome == Biome.VANILLA_SHUFFLE)
         {

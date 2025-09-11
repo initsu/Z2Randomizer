@@ -286,6 +286,18 @@ public sealed class WestHyrule : World
                 unimportantLocs.Add(GetLocationByMem(RomMap.WEST_KINGS_TOMB_TILE_LOCATION));
             }
         }
+        if (props.RemoveTrapTiles)
+        {
+            trapTilesLocs =
+            [
+                GetLocationByMem(RomMap.WEST_TRAP_ROAD_TILE_LOCATION),
+                GetLocationByMem(RomMap.WEST_BRIDGE_TILE_NORTH_OF_SARIA_LOCATION),
+                GetLocationByMem(RomMap.WEST_BRIDGE_TILE_EAST_OF_SARIA_LOCATION),
+                GetLocationByMem(RomMap.WEST_BRIDGE_AFTER_DM_WEST_LOCATION),
+                GetLocationByMem(RomMap.WEST_BRIDGE_AFTER_DM_EAST_LOCATION),
+            ];
+        }
+
         biome = props.WestBiome;
 
         //Climate filtering

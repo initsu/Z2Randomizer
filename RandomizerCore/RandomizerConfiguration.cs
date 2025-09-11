@@ -189,6 +189,9 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
     private LessImportantLocationsOption lessImportantLocationsOption;
 
     [Reactive]
+    private bool removeTrapTiles;
+
+    [Reactive]
     private bool? restrictConnectionCaveShuffle;
 
     [Reactive]
@@ -1117,6 +1120,7 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
         {
             properties.LessImportantLocationsOption = LessImportantLocationsOption;
         }
+        properties.RemoveTrapTiles = RemoveTrapTiles;
         if(riverDevilBlockerOption == RiverDevilBlockerOption.RANDOM)
         {
             properties.RiverDevilBlockerOption = r.Next(3) switch

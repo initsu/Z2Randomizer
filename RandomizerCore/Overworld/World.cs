@@ -33,6 +33,7 @@ public abstract class World
     protected const int MAP_SIZE_BYTES = 1400;
     protected List<Location> unimportantLocs;
     public Biome biome { get; protected set; }
+    protected List<Location> trapTilesLocs;
     protected bool isHorizontal;
     protected int VANILLA_MAP_ADDR;
     protected SortedDictionary<(int, int), string> section;
@@ -622,6 +623,21 @@ public abstract class World
                     }
                 }
                 break;
+        }
+        if (trapTilesLocs != null && trapTilesLocs.Count > 0)
+        {
+            foreach (Location location in trapTilesLocs)
+            {
+                if (location.CanShuffle)
+                {
+                    location.ExternalWorld = 0;
+                    location.Ypos = 0;
+                    location.appear2loweruponexit = 0;
+                    location.Secondpartofcave = 0;
+                    location.Xpos = 0;
+                    location.CanShuffle = false;
+                }
+            }
         }
     }
 

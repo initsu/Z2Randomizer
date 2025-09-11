@@ -93,6 +93,7 @@ public class RandomizerProperties
     public bool CanWalkOnWaterWithBoots { get; set; }
     public bool BagusWoods { get; set; }
     public LessImportantLocationsOption LessImportantLocationsOption { get; set; }
+    public bool RemoveTrapTiles { get; set; }
     public bool SaneCaves { get; set; }
     public RiverDevilBlockerOption RiverDevilBlockerOption { get; set; }
     public bool EastRocks { get; set; }
