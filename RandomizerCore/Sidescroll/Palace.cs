@@ -1,10 +1,10 @@
-﻿using System;
+﻿using NLog;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using NLog;
 using Z2Randomizer.RandomizerCore.Enemy;
 using static Z2Randomizer.RandomizerCore.Util;
 
@@ -626,15 +626,44 @@ public partial class Palace
         }
     }
 
-    public void Shorten(Random random)
+    public static int RollPalaceLength(Random random, int vanillaLength, PalaceLengthOption length, int hardMax=63)
+    {
+        double min, max;
+        switch (length)
+        {
+            case PalaceLengthOption.SHORT:
+                min = 0.5;
+                max = 0.75;
+                break;
+            case PalaceLengthOption.MEDIUM:
+                min = 0.65;
+                max = 0.85;
+                break;
+            case PalaceLengthOption.FULL:
+                min = 0.85;
+                max = 1.15;
+                break;
+            case PalaceLengthOption.RANDOM:
+                min = 0.5;
+                max = 1.15;
+                break;
+            default:
+                throw new NotImplementedException();
+        }
+        int intMin = (int)Math.Round(min * vanillaLength);
+        int intMax = (int)(Math.Round(max * vanillaLength) + 1);
+        return Math.Min(random.Next(intMin, intMax), hardMax);
+    }
+
+    /// Only used by Vanilla & Vanilla Shuffled generators
+    public void Shorten(Random random, int roomCount)
     {
         ValidateRoomConnections();
         int numRooms = AllRooms.Count;
 
-        int target = random.Next(numRooms / 2, (numRooms * 3) / 4) + 1;
         int rooms = numRooms;
         int tries = 0;
-        while (rooms > target && tries < 1000)
+        while (rooms > roomCount && tries < 1000)
         {
             //remove rooms without bias
             //don't remove important rooms
@@ -864,7 +893,7 @@ public partial class Palace
                 }
             }
         }
-        logger.Debug("Target: " + target + " Rooms: " + rooms);
+        logger.Debug("Target: " + roomCount + " Rooms: " + rooms);
     }
 
     public void RandomizeSmallItems(Random r, bool extraKeys)

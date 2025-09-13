@@ -591,10 +591,10 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
     private bool randomizeKnockback;
 
     [Reactive]
-    private bool? shortenGP;
+    private PalaceLengthOption gpLength;
 
     [Reactive]
-    private bool? shortenNormalPalaces;
+    private PalaceLengthOption normalPalaceLength;
 
 
     [Reactive]
@@ -841,8 +841,8 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
                 }
             }
 
-            properties.ShortenGP = shortenGP ?? GetIndeterminateFlagValue(r);
-            properties.ShortenNormalPalaces = shortenNormalPalaces ?? GetIndeterminateFlagValue(r);
+            properties.GpLength = GpLength;
+            properties.NormalPalaceLength = NormalPalaceLength;
             properties.DarkLinkMinDistance = GetDarkLinkMinDistance();
 
             //Palace item counts and prerequisites.
@@ -1730,8 +1730,7 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
         {
             // limiting here based on how long it takes to generate the seeds
             if (gpStyle == PalaceStyle.RECONSTRUCTED) { return 16; }
-            if (shortenGP != false) { return 20; }
-            return 24;
+            return 20;
         }
         else
         {
