@@ -37,7 +37,6 @@ public class StatRandomizer
     protected RandomizerProperties props { get; }
 
 #if DEBUG
-    [Conditional("DEBUG")]
     private bool hasRandomized = false;
     private bool hasWritten = false;
 #endif
