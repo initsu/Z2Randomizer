@@ -588,7 +588,7 @@ TitleEnd:
         if (charSprite.Patch != null) {
             if (sanitize)
             {
-                SpritePatcher.PatchSpriteSanitized(rawdata, charSprite.Patch, true, changeItems);
+                SpritePatcher.PatchSpriteSanitized(charSprite.DisplayName, rawdata, charSprite.Patch, true, changeItems);
             }
             else
             {
