@@ -44,7 +44,7 @@ public static class RandomPercentPreset
         VanillaShuffleUsesActualTerrain = true,
 
         //Palaces
-        NormalPalaceStyle = PalaceStyle.RANDOM_PER_PALACE,
+        NormalPalaceStyle = PalaceStyle.RANDOM,
         GpStyle = PalaceStyle.RANDOM,
         NormalPalaceLength = PalaceLengthOption.RANDOM,
         GpLength = PalaceLengthOption.RANDOM,

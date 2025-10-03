@@ -771,63 +771,28 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
             ShuffleStartingCollectables(POSSIBLE_STARTING_ITEMS, startItemsLimit, shuffleStartingItems, properties, r);
             ShuffleStartingCollectables(POSSIBLE_STARTING_SPELLS, startSpellsLimit, shuffleStartingSpells, properties, r);
 
-            if (gpStyle == PalaceStyle.RANDOM)
+            if (gpStyle.IsRandomStyle())
             {
-                properties.PalaceStyles[6] = r.Next(5) switch
-                {
-                    0 => PalaceStyle.VANILLA,
-                    1 => PalaceStyle.SHUFFLED,
-                    2 => PalaceStyle.RECONSTRUCTED,
-                    3 => PalaceStyle.SEQUENTIAL,
-                    4 => PalaceStyle.RANDOM_WALK,
-                    _ => throw new Exception("Invalid PalaceStyle")
-                };
-            }
-            else if (gpStyle == PalaceStyle.RANDOM_NO_VANILLA_OR_SHUFFLE)
-            {
-                properties.PalaceStyles[6] = r.Next(3) switch
-                {
-                    0 => PalaceStyle.RECONSTRUCTED,
-                    1 => PalaceStyle.SEQUENTIAL,
-                    2 => PalaceStyle.RANDOM_WALK,
-                    _ => throw new Exception("Invalid PalaceStyle")
-                };
+                gpStyle = gpStyle.PickFromRandomGroup(r);
             }
             else
             {
                 properties.PalaceStyles[6] = gpStyle;
             }
 
-            if (normalPalaceStyle == PalaceStyle.RANDOM_ALL)
+            if (normalPalaceStyle == PalaceStyle.RANDOM_ALL_SAME)
             {
-                PalaceStyle style = r.Next(5) switch
-                {
-                    0 => PalaceStyle.VANILLA,
-                    1 => PalaceStyle.SHUFFLED,
-                    2 => PalaceStyle.RECONSTRUCTED,
-                    3 => PalaceStyle.SEQUENTIAL,
-                    4 => PalaceStyle.RANDOM_WALK,
-                    _ => throw new Exception("Invalid PalaceStyle")
-                };
+                PalaceStyle style = PalaceStyle.RANDOM.PickFromRandomGroup(r);
                 for (int i = 0; i < 6; i++)
                 {
                     properties.PalaceStyles[i] = style;
                 }
             }
-            else if (normalPalaceStyle == PalaceStyle.RANDOM_PER_PALACE)
+            else if (normalPalaceStyle.IsRandomStyle())
             {
                 for (int i = 0; i < 6; i++)
                 {
-                    PalaceStyle style = r.Next(5) switch
-                    {
-                        0 => PalaceStyle.VANILLA,
-                        1 => PalaceStyle.SHUFFLED,
-                        2 => PalaceStyle.RECONSTRUCTED,
-                        3 => PalaceStyle.SEQUENTIAL,
-                        4 => PalaceStyle.RANDOM_WALK,
-                        _ => throw new Exception("Invalid PalaceStyle")
-                    };
-                    properties.PalaceStyles[i] = style;
+                    properties.PalaceStyles[i] = normalPalaceStyle.PickFromRandomGroup(r);
                 }
             }
             else

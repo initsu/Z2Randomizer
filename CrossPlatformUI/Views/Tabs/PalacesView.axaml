@@ -25,6 +25,7 @@
             <Grid ColumnDefinitions="260,*">
                 <ComboBox Grid.Column="0"
                           Margin="0, 0" Theme="{StaticResource MaterialOutlineComboBox}"
+                          MaxDropDownHeight="500"
                           assists:ComboBoxAssist.Label="Normal Palace Style"
 						  Name="NormalPalaceStyleSelector"
                           ItemsSource="{Binding Source={x:Static rc:Enums.NormalPalaceStyleList}}"
@@ -42,6 +43,7 @@
 			<Grid ColumnDefinitions="260,*">
 				<ComboBox Grid.Column="0"
                           Margin="0, 0" Theme="{StaticResource MaterialOutlineComboBox}"
+                          MaxDropDownHeight="500"
                           assists:ComboBoxAssist.Label="GP Palace Style"
 						  Name="GPPalaceStyleSelector"
                           ItemsSource="{Binding Source={x:Static rc:Enums.GpPalaceStyleList}}"

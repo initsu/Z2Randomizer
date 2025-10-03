@@ -44,7 +44,7 @@ public static class MaxRandoPreset
         VanillaShuffleUsesActualTerrain = true,
 
         //Palaces
-        NormalPalaceStyle = PalaceStyle.RANDOM_PER_PALACE,
+        NormalPalaceStyle = PalaceStyle.RANDOM_NO_VANILLA_OR_SHUFFLE,
         GpStyle = PalaceStyle.RANDOM_NO_VANILLA_OR_SHUFFLE,
         NormalPalaceLength = PalaceLengthOption.RANDOM,
         GpLength = PalaceLengthOption.RANDOM,

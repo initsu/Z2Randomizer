@@ -236,18 +236,40 @@ public enum PalaceStyle
     RANDOM_WALK,
     [Description("Chaos")]
     CHAOS,
-    [Description("Random")]
+    [Description("Random Coordinate-Based")]
+    RANDOM_COORDINATE_BASED,
+    [Description("Random (No Chaos)")]
     RANDOM,
-    [Description("Random (No Vanilla or Shuffle)")]
+    [Description("Random (No Chaos, Vanilla or Shuffle)")]
     RANDOM_NO_VANILLA_OR_SHUFFLE,
-    [Description("Random (All Same)")]
-    RANDOM_ALL,
-    [Description("Random (Per Palace)")]
-    RANDOM_PER_PALACE
+    [Description("Random (No Chaos) [All palaces same]")]
+    RANDOM_ALL_SAME,
 }
 
 public static class PalaceStyleExtensions
 {
+    public static readonly Dictionary<PalaceStyle, PalaceStyle[]> PalaceStyleRandomGroups = new()
+    {
+        [PalaceStyle.RANDOM] = [
+            PalaceStyle.VANILLA,
+            PalaceStyle.SHUFFLED,
+            PalaceStyle.RECONSTRUCTED,
+            PalaceStyle.SEQUENTIAL,
+            PalaceStyle.RANDOM_WALK
+        ],
+
+        [PalaceStyle.RANDOM_NO_VANILLA_OR_SHUFFLE] = [
+            PalaceStyle.RECONSTRUCTED,
+            PalaceStyle.SEQUENTIAL,
+            PalaceStyle.RANDOM_WALK
+        ],
+
+        [PalaceStyle.RANDOM_COORDINATE_BASED] = [
+            PalaceStyle.SEQUENTIAL,
+            PalaceStyle.RANDOM_WALK
+        ]
+    };
+
     public static bool UsesVanillaRoomPool(this PalaceStyle style)
     {
         return style switch
@@ -265,6 +287,17 @@ public static class PalaceStyleExtensions
             PalaceStyle.RANDOM_WALK => true,
             _ => false
         };
+    }
+
+    public static bool IsRandomStyle(this PalaceStyle style) => PalaceStyleRandomGroups.ContainsKey(style);
+
+    public static PalaceStyle PickFromRandomGroup(this PalaceStyle randomGroup, Random r)
+    {
+        if (!PalaceStyleRandomGroups.TryGetValue(randomGroup, out var options))
+        {
+            throw new InvalidOperationException($"{randomGroup} is not a random palace style group");
+        }
+        return options[r.Next(options.Length)];
     }
 }
 
@@ -777,9 +810,9 @@ public static class Enums
     public static IEnumerable<EnumDescription> PalaceLengthOptionList { get; } = ToDescriptions<PalaceLengthOption>();
     public static IEnumerable<EnumDescription> PalaceItemRoomCountOptions { get; } = ToDescriptions<PalaceItemRoomCount>();
     public static IEnumerable<EnumDescription> NormalPalaceStyleList { get; }
-        = ToDescriptions<PalaceStyle>(i => i != PalaceStyle.RANDOM && i != PalaceStyle.RANDOM_NO_VANILLA_OR_SHUFFLE);
+        = ToDescriptions<PalaceStyle>();
     public static IEnumerable<EnumDescription> GpPalaceStyleList { get; } 
-        = ToDescriptions<PalaceStyle>(i => i != PalaceStyle.RANDOM_PER_PALACE && i != PalaceStyle.RANDOM_ALL);
+        = ToDescriptions<PalaceStyle>(i => i != PalaceStyle.RANDOM_ALL_SAME);
     public static IEnumerable<EnumDescription> BossRoomsExitTypeList { get; } = ToDescriptions<BossRoomsExitType>();
 
     public static IEnumerable<EnumDescription> WestBiomeList { get; } = ToDescriptions<Biome>(i => i.IsWestBiome());
