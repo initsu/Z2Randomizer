@@ -104,6 +104,11 @@ ENABLE_SCANLINE_IRQ = $80
 MulLoReg = $5205
 MulHiReg = $5206
 
+; F0-F4, F9-FB seems unused
+ZpTmp    = $F9  ; nice to have a known disposable byte in zero page
+; New RNG zero page seed (2 bytes)
+ZpRng    = $FA  ; and $FB
+
 ;; Common locations used in the code
 PpuCtrlShadow = $ff
 ScrollPosShadow = $fd

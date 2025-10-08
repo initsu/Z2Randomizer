@@ -3972,6 +3972,7 @@ EndTileComparisons = $8601
         a.Assign("PREVENT_HUD_FLASH_ON_LAG", preventFlash ? 1 : 0);
         a.Assign("ENABLE_Z2FT", enableZ2Ft ? 1 : 0);
         AssignRealPalaceLocations(a);
+        a.Set("RngSeed", 18724); // new in-game ASM rng seed (just picked a number for now)
         a.Code(Util.ReadResource("Z2Randomizer.RandomizerCore.Asm.MMC5.s"), "mmc5_conversion.s");
     }
 
@@ -4053,6 +4054,7 @@ EndTileComparisons = $8601
         
         RandomizeStartingValues(engine, rom);
         rom.FixRebonackHorseKillBug();
+        rom.BetterAsmRng(engine);
         rom.FixStaleSaveSlotData(engine);
         rom.UseExtendedBanksForPalaceRooms(engine);
         rom.ExtendMapSize(engine);

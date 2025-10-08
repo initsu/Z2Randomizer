@@ -929,6 +929,117 @@ TitleEnd:
         Put(0x1a975, 0);
     }
 
+    public void BetterAsmRng(Assembler asm)
+    {
+        var a = asm.Module();
+        a.Code("""
+.include "z2r.inc"
+
+.segment "PRG7"
+.reloc
+; From https://github.com/bbbradsmith/prng_6502
+; Returns a random 8-bit number in A (0-255), clobbers Y
+GetBetterRngByteDiscardY:
+	lda ZpRng+1
+	tay ; store copy of high byte
+	; compute ZpRng+1 ($39>>1 = %11100)
+	lsr ; shift to consume zeroes on left...
+	lsr
+	lsr
+	sta ZpRng+1 ; now recreate the remaining bits in reverse order... %111
+	lsr
+	eor ZpRng+1
+	lsr
+	eor ZpRng+1
+	eor ZpRng+0 ; recombine with original low byte
+	sta ZpRng+1
+	; compute ZpRng+0 ($39 = %111001)
+	tya ; original high byte
+	sta ZpRng+0
+	asl
+	eor ZpRng+0
+	asl
+	eor ZpRng+0
+	asl
+	asl
+	asl
+	eor ZpRng+0
+	sta ZpRng+0
+	rts
+
+.reloc
+; Returns a random 8-bit number in A (0-255)
+GetBetterRngByte:
+    sty ZpTmp
+    jsr GetBetterRngByteDiscardY
+    ldy ZpTmp
+    rts
+
+.segment "PRG1"
+; Megmat
+.org $989E
+    jsr GetBetterRngByteDiscardY
+
+; Goriya
+.org $99AB
+    jsr GetBetterRngByte ; (X would be discardable here, but not Y)
+
+; Daira
+.org $9A76
+    jsr GetBetterRngByte
+.org $9A92
+    jsr GetBetterRngByte
+
+; Moby and Moblin generator (which direction to spawn from)
+.org $9B58
+    jsr GetBetterRngByteDiscardY
+
+.segment "PRG4"
+; Stalfos
+.org $970E
+    jsr GetBetterRngByteDiscardY
+
+; Iron Knuckle
+.org $9D2E
+    jsr GetBetterRngByteDiscardY
+.org $9D58
+    jsr GetBetterRngByteDiscardY
+    ldy $df
+.org $9DC7
+    jsr GetBetterRngByteDiscardY
+.org $9DD2
+    jsr GetBetterRngByteDiscardY
+    ldy #$01
+
+; Falling Block Generator
+.org $ABB0
+    jsr GetBetterRngByteDiscardY
+
+; Dripping Column
+.org $B9EB
+    jsr GetBetterRngByte
+
+.segment "PRG7"
+; Bot -- Disabled - don't want to change how the Bot (& similar) enemies act
+;.org $DA15
+;    jsr GetBetterRngByteDiscardY
+; Bot, Bit, Myu
+;.org $DAB0
+;    jsr GetBetterRngByte
+
+; Moa
+.org $DB0D
+    jsr GetBetterRngByteDiscardY
+
+; Raising Bubbles
+.org $DC27
+    jsr GetBetterRngByte ; (X would be discardable here, but not Y)
+    adc $072c    ; add scrolling offset low byte
+    and #$fc     ; allow slightly finer x positioning (snap to every 4th pixel instead of every 16th pixel)
+
+""");
+    }
+
     /// The vanilla game sets up all 3 save slots from PRG in the
     /// title screen.  If there is already valid data in a save slot,
     /// it will keep it.  Note: this includes keeping save slots

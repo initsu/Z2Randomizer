@@ -594,14 +594,32 @@ ClearPartialDevRAM:
 
 
 .org $a69c
-    jsr SetSoftEnableNmiWithSta
-.org $a6d5
-    jsr SetSoftEnableNmiWithSta
+    jmp SetSoftEnableNmiWithSta
+FREE_UNTIL $a6a0
+
 .reloc
-SetSoftEnableNmiWithSta:
+SetSoftEnableNmiWithSta: ; ends with RTI
     sta PPUCTRL
     lda #0
     sta SoftDisableNmi
+    rti
+
+.org $a6d5
+    jmp ResetMemoryEntryPoint
+FREE_UNTIL $a6d9
+
+.reloc
+; extending this as a point where we hook into "on reset memory"
+ResetMemoryEntryPoint: ; ends with RTS
+    sta PPUCTRL
+    lda #0
+    sta SoftDisableNmi
+
+    lda #.lobyte(RngSeed)
+    sta ZpRng
+    lda #.hibyte(RngSeed)
+    sta ZpRng+1
+
     rts
 
 .segment "PRG5","PRG7"
