@@ -381,6 +381,16 @@ public class Room : IJsonOnDeserialized
             var ik = new SideviewMapCommand<PalaceObject>(x, y, id);
             edit.Add(ik);
         }
+        // add empty space in-place of IK for 0 items
+        if (palaceItemRoomCount == 0)
+        {
+            var id = PalaceObject.PIT_VERTICAL_D0;
+            int x = 42;
+            int y = 2;
+            var space = new SideviewMapCommand<PalaceObject>(x, y, id);
+            space.Param = 1;
+            edit.Add(space);
+        }
         SideView = edit.Finalize();
     }
 
