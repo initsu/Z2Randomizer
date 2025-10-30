@@ -18,6 +18,7 @@ public abstract class ShapeFirstCoordinatePalaceGenerator() : CoordinatePalaceGe
         Palace palace = new(palaceNumber);
         Dictionary<RoomExitType, List<Room>> roomsByExitType;
         RoomPool roomPool = new(rooms);
+        ILookup<string, Room>? duplicateRoomLookup = CreateRoomVariantsLookupOrNull(props, palaceNumber, roomPool);
         // var palaceGroup = Util.AsPalaceGrouping(palaceNumber);
 
         Dictionary<Coord, RoomExitType> shape;
@@ -36,6 +37,10 @@ public abstract class ShapeFirstCoordinatePalaceGenerator() : CoordinatePalaceGe
 
         //Add rooms
         roomsByExitType = roomPool.CategorizeNormalRoomExits(true);
+        foreach (var roomsForExitType in roomsByExitType.Values)
+        {
+            DetermineRoomVariants(r, duplicateRoomLookup, roomsForExitType);
+        }
         Dictionary<RoomExitType, bool> stubOnlyExitTypes = new();
         foreach (KeyValuePair<Coord, RoomExitType> item in shape.OrderBy(i => i.Key.X).ThenByDescending(i => i.Key.Y))
         {
@@ -65,6 +70,8 @@ public abstract class ShapeFirstCoordinatePalaceGenerator() : CoordinatePalaceGe
                 if (duplicateProtection && roomCandidates!.Count == 0)
                 {
                     roomCandidates = roomPool.GetNormalRoomsForExitType(roomExitType, true);
+                    // as the pool is re-used for this shape, determine variants to include again
+                    DetermineRoomVariants(r, duplicateRoomLookup, roomCandidates);
                     Debug.Assert(roomCandidates.Count() > 0);
                     roomsByExitType[roomExitType] = roomCandidates;
                     logger.Debug($"RandomWalk ran out of rooms of exit type: {roomExitType} in palace {palaceNumber}. Starting to use duplicate rooms.");
@@ -80,7 +87,7 @@ public abstract class ShapeFirstCoordinatePalaceGenerator() : CoordinatePalaceGe
                         break;
                     }
                 }
-                if (newRoom != null && duplicateProtection) { RemoveDuplicatesFromPool(props, roomCandidates!, newRoom); }
+                if (newRoom != null && duplicateProtection) { RemoveDuplicatesFromPool(roomCandidates!, newRoom); }
             }
 
             if (newRoom == null)
