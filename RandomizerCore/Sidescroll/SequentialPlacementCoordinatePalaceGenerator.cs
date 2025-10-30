@@ -34,6 +34,8 @@ public class SequentialPlacementCoordinatePalaceGenerator : CoordinatePalaceGene
         openCoords = new();
         Dictionary<RoomExitType, List<Room>> roomsByExitType;
         roomPool = new(rooms);
+        ILookup<string, Room>? duplicateRoomLookup = CreateRoomVariantsLookupOrNull(props, palaceNumber, roomPool);
+        DetermineRoomVariants(r, duplicateRoomLookup, roomPool.NormalRooms);
         // var palaceGroup = Util.AsPalaceGrouping(palaceNumber);
         Room entrance = new(roomPool.Entrances[r.Next(roomPool.Entrances.Count)])
         {
@@ -110,10 +112,7 @@ public class SequentialPlacementCoordinatePalaceGenerator : CoordinatePalaceGene
             UpdateRoom(newRooms, mergedRoom);
             palace.AllRooms.AddRange(newRooms);
             //Debug.WriteLine(palace.GetLayoutDebug(PalaceStyle.SEQUENTIAL, false));
-            if (duplicateProtection)
-            { 
-                RemoveDuplicatesFromPool(props, roomPool.NormalRooms, baseRoom); 
-            }
+            if (duplicateProtection) { RemoveDuplicatesFromPool(roomPool.NormalRooms, baseRoom); }
         }
         //Debug.WriteLine(palace.GetLayoutDebug(PalaceStyle.SEQUENTIAL));
         //close stubs
@@ -222,7 +221,7 @@ public class SequentialPlacementCoordinatePalaceGenerator : CoordinatePalaceGene
 
                     if (newRoom.Group != RoomGroup.STUBS)
                     {
-                        if (duplicateProtection) { RemoveDuplicatesFromPool(props, roomsByExitType[exitType], newRoom); }
+                        if (duplicateProtection) { RemoveDuplicatesFromPool(roomsByExitType[exitType], newRoom); }
                     }
                 } while (placed == false);
             }
