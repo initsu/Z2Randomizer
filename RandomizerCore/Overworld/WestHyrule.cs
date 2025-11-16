@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using NLog;
@@ -258,8 +259,6 @@ public sealed class WestHyrule : World
             56,             // RED_JAR_CEM
         ];
 
-        MAP_ROWS = 75;
-        MAP_COLS = 64;
         baseAddr = RomMap.WEST_NORTH_PALACE_TILE_LOCATION;
         continentId = Continent.WEST;
         VANILLA_MAP_ADDR = 0x506C;
@@ -288,6 +287,26 @@ public sealed class WestHyrule : World
             }
         }
         biome = props.WestBiome;
+        if (biome == Biome.VANILLA || biome == Biome.VANILLA_SHUFFLE || props.OverworldSize == OverworldSizeOption.HUGE)
+        {
+            MAP_ROWS = 75;
+            MAP_COLS = 64;
+        }
+        else if (props.OverworldSize == OverworldSizeOption.SMALL)
+        {
+            MAP_ROWS = 42;
+            MAP_COLS = 42;
+            AllLocations.Remove(fairyCave);
+            AllLocations.Remove(fairyCave2);
+            Locations[Terrain.CAVE].Remove(fairyCave);
+            Locations[Terrain.CAVE].Remove(fairyCave2);
+            connections.Remove(fairyCave);
+            connections.Remove(fairyCave2);
+        }
+        else
+        {
+            throw new NotImplementedException();
+        }
 
         //Climate filtering
         climate = props.Climate.Clone();
@@ -360,8 +379,8 @@ public sealed class WestHyrule : World
         }
         if (biome == Biome.VANILLA || biome == Biome.VANILLA_SHUFFLE)
         {
-            MAP_ROWS = 75;
-            MAP_COLS = 64;
+            Debug.Assert(MAP_ROWS == 75);
+            Debug.Assert(MAP_COLS == 64);
             map = rom.ReadVanillaMap(rom, VANILLA_MAP_ADDR, MAP_ROWS, MAP_COLS);
             if (biome == Biome.VANILLA_SHUFFLE)
             {
@@ -872,18 +891,29 @@ public sealed class WestHyrule : World
             water = Terrain.WALKABLEWATER;
         }
 
+        int mapCenterX = MAP_COLS / 2; // 32
+        int mapCenterY = MAP_ROWS / 2; // 37
+        int tries = 0;
         bool placeable;
         do
         {
             if (isHorizontal)
             {
-                calderaCenterX = RNG.Next(27, 37);
-                calderaCenterY = RNG.Next(22, 52);
+                int minX = mapCenterX - 5;
+                int maxX = mapCenterX + 5;
+                calderaCenterX = RNG.Next(minX, maxX);
+                int minY = Math.Max(7, mapCenterY - 15);
+                int maxY = Math.Min(mapCenterY + 15, MAP_ROWS - 8);
+                calderaCenterY = RNG.Next(minY, maxY);
             }
             else
             {
-                calderaCenterX = RNG.Next(21, 41);
-                calderaCenterY = RNG.Next(32, 42);
+                int minX = Math.Max(7, mapCenterX - 11);
+                int maxX = Math.Min(mapCenterX + 9, MAP_COLS - 8);
+                calderaCenterX = RNG.Next(minX, maxX);
+                int minY = mapCenterY - 3;
+                int maxY = mapCenterY + 5;
+                calderaCenterY = RNG.Next(minY, maxY);
             }
             placeable = true;
             for (int i = calderaCenterY - 7; i < calderaCenterY + 8; i++)
@@ -893,8 +923,17 @@ public sealed class WestHyrule : World
                     if (map[i, j] != Terrain.MOUNTAIN)
                     {
                         placeable = false;
+                        break; // end inner for
                     }
                 }
+                if (!placeable)
+                {
+                    break; // end outer for
+                }
+            }
+            if (++tries == 1000)
+            {
+                return false;
             }
         } while (!placeable);
 
@@ -1075,8 +1114,15 @@ public sealed class WestHyrule : World
             cave1l = fairyCave; //fairy cave
             cave1r = fairyCave2;
         }
-        map[cave1l.Y, cave1l.Xpos] = Terrain.MOUNTAIN;
-        map[cave1r.Y, cave1r.Xpos] = Terrain.MOUNTAIN;
+        if (cave1l.Y < MAP_ROWS && cave1l.Xpos < MAP_COLS)
+        {
+            map[cave1l.Y, cave1l.Xpos] = Terrain.MOUNTAIN;
+        }
+        if (cave1r.Y < MAP_ROWS && cave1r.Xpos < MAP_COLS)
+        {
+            map[cave1r.Y, cave1r.Xpos] = Terrain.MOUNTAIN;
+        }
+
         if (caveCount > 1)
         {
             int cavenum2 = RNG.Next(availableConnectorCount);
@@ -1099,8 +1145,14 @@ public sealed class WestHyrule : World
                 cave2l = fairyCave; //fairy cave
                 cave2r = fairyCave2;
             }
-            map[cave2l.Y, cave2l.Xpos] = Terrain.MOUNTAIN;
-            map[cave2r.Y, cave2r.Xpos] = Terrain.MOUNTAIN;
+            if (cave2l.Y < MAP_ROWS && cave2l.Xpos < MAP_COLS)
+            {
+                map[cave2l.Y, cave2l.Xpos] = Terrain.MOUNTAIN;
+            }
+            if (cave2r.Y < MAP_ROWS && cave2r.Xpos < MAP_COLS)
+            {
+                map[cave2r.Y, cave2r.Xpos] = Terrain.MOUNTAIN;
+            }
         }
         int caveOrientation = RNG.Next(2);
         if (isHorizontal)

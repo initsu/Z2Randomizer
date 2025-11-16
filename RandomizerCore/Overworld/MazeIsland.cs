@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Z2Randomizer.RandomizerCore.Enemy;
@@ -75,14 +76,35 @@ sealed class MazeIsland : World
         magicContainerDrop = GetLocationByMem(RomMap.MI_MAGIC_CONTAINER_DROP_TILE);
         locationAtPalace4 = GetLocationByMem(RomMap.MI_PALACE_TILE);
         locationAtPalace4.PalaceNumber = 4;
-        MAP_ROWS = 23;
-        MAP_COLS = 23;
 
         baseAddr = 0xA10c;
         continentId = Continent.MAZE;
         VANILLA_MAP_ADDR = 0xa65c;
 
         biome = props.MazeBiome;
+        if (biome == Biome.VANILLA || biome == Biome.VANILLA_SHUFFLE)
+        {
+            MAP_ROWS = 75;
+            MAP_COLS = 64;
+        }
+        else if (props.OverworldSize == OverworldSizeOption.SMALL)
+        {
+            MAP_ROWS = 19;
+            MAP_COLS = 19;
+            int trapTilesToRemove = 2;
+            for (int i = 0; i < trapTilesToRemove; i++)
+            {
+                var j = r.Next(trapLocations.Count);
+                var removeLoc = trapLocations[j];
+                AllLocations.Remove(removeLoc);
+                trapLocations.Remove(removeLoc);
+            }
+        }
+        else
+        {
+            MAP_ROWS = 23;
+            MAP_COLS = 23;
+        }
         SetVanillaCollectables(props.ReplaceFireWithDash);
     }
 
@@ -90,8 +112,8 @@ sealed class MazeIsland : World
     {
         if (biome == Biome.VANILLA || biome == Biome.VANILLA_SHUFFLE)
         {
-            MAP_ROWS = 75;
-            MAP_COLS = 64;
+            Debug.Assert(MAP_ROWS == 75);
+            Debug.Assert(MAP_COLS == 64);
             map = rom.ReadVanillaMap(rom, VANILLA_MAP_ADDR, MAP_ROWS, MAP_COLS);
             if (biome == Biome.VANILLA_SHUFFLE)
             {
@@ -126,8 +148,6 @@ sealed class MazeIsland : World
         }
         else
         {
-            MAP_ROWS = 23;
-            MAP_COLS = 23;
             int bytesWritten = 2000;
             foreach (Location location in AllLocations)
             {
@@ -316,14 +336,17 @@ sealed class MazeIsland : World
                 }
                 while (riverStartY == starty);
 
-                int riverEndY = RNG.Next(10) * 2 + 1;
+                int riverEndY = Math.Min(MAP_ROWS - 2, RNG.Next(10) * 2 + 1);
                 bool openWest, openEast;
                 do
                 {
                     openWest = RNG.Next(2) == 1;
                     openEast = RNG.Next(2) == 1;
                 } while (!openWest && !openEast);
-                DrawRiver(riverStartY, 1, riverEndY, 21, openWest, openEast);
+                int riverEndX = Math.Min(MAP_COLS - 2, 21);
+                Debug.Assert(riverEndX % 2 == 1); // even number loops forever
+                Debug.Assert(riverEndY % 2 == 1);
+                DrawRiver(riverStartY, 1, riverEndY, riverEndX, openWest, openEast);
 
                 //Place raft
                 Direction raftDirection = Direction.EAST;
@@ -666,13 +689,10 @@ sealed class MazeIsland : World
                 }
 
                 //check bytes and adjust
-                MAP_COLS = 64;
                 bytesWritten = WriteMapToRom(rom, false, MAP_ADDR, MAP_SIZE_BYTES, 0, 0, props.HiddenPalace, props.HiddenKasuto);
-                MAP_COLS = 23;
                 
             }
         }
-        MAP_COLS = 64;
         WriteMapToRom(rom, true, MAP_ADDR, MAP_SIZE_BYTES, 0, 0, props.HiddenPalace, props.HiddenKasuto);
         for (int i = RomMap.MI_UNUSED_INDEX0_TILE; i < RomMap.MI_TRAP_TILE7; i++)
         {

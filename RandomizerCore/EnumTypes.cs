@@ -429,6 +429,15 @@ public enum ContinentConnectionType
     ANYTHING_GOES
 }
 
+[DefaultValue(HUGE)]
+public enum OverworldSizeOption
+{
+    [Description("Huge")]
+    HUGE,
+    [Description("Small")]
+    SMALL,
+}
+
 [DefaultValue(NO_LIMIT)]
 public enum StartingResourceLimit
 {
@@ -798,6 +807,7 @@ public static class Enums
     public static IEnumerable<EnumDescription> MazeBiomeList { get; } = ToDescriptions<Biome>(i => i.IsMazeBiome());
     public static IEnumerable<EnumDescription> DMBiomeList { get; } = ToDescriptions<Biome>(i => i.IsDMBiome());
     public static IEnumerable<EnumDescription> ContinentConnectionTypeList { get; } = ToDescriptions<ContinentConnectionType>();
+    public static IEnumerable<EnumDescription> OverworldSizeList { get; } = ToDescriptions<OverworldSizeOption>();
     public static IEnumerable<EnumDescription> LessImportantLocationsOptionList { get; } = ToDescriptions<LessImportantLocationsOption>();
 
     public static IEnumerable<EnumDescription> EncounterRateList { get; } = ToDescriptions<EncounterRate>();
