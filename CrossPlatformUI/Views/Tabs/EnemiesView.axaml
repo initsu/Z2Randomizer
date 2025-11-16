@@ -63,7 +63,47 @@
             >
                 <ToolTip.Tip><TextBlock Text="{x:Static lang:Resources.GeneratorsAlwaysMatchToolTip}"/></ToolTip.Tip>
             </CheckBox>
-            <Separator></Separator>
+            <Separator />
+            <CheckBox
+                IsThreeState="True"
+                IsChecked="{Binding Config.ShuffleEncounters}"
+                Content="Shuffle Encounters"
+                >
+                <ToolTip.Tip>
+                    <TextBlock Text="{x:Static lang:Resources.ShuffleEncountersToolTip}"/>
+                </ToolTip.Tip>
+            </CheckBox>
+            <CheckBox
+                Name="AllowUnsafePathEncountersCheckbox"
+                IsEnabled="{Binding Config.ShuffleEncounters}"
+                IsChecked="{Binding Config.AllowUnsafePathEncounters}"
+                Content="Allow Unsafe Path Encounters"
+                >
+                <ToolTip.Tip>
+                    <TextBlock Text="{x:Static lang:Resources.AllowUnsafePathEncountersToolTip}"/>
+                </ToolTip.Tip>
+            </CheckBox>
+            <CheckBox
+                Name="AllowLavaInShuffleCheckbox"
+                IsEnabled="{Binding Config.ShuffleEncounters}"
+                IsChecked="{Binding Config.IncludeLavaInEncounterShuffle}"
+                Content="Include Lava in Shuffle"
+                >
+                <ToolTip.Tip>
+                    <TextBlock Text="{x:Static lang:Resources.IncludeLavainShuffleToolTip}"/>
+                </ToolTip.Tip>
+            </CheckBox>
+            <ComboBox
+                Theme="{StaticResource MaterialOutlineComboBox}"
+                assists:ComboBoxAssist.Label="Encounter Rate"
+                ItemsSource="{Binding Source={x:Static rc:Enums.EncounterRateList}}"
+                SelectedItem="{Binding Config.EncounterRate, Converter={x:Static ui:Util.EnumConvert}}"
+                >
+                <ToolTip.Tip>
+                    <TextBlock Text="{x:Static lang:Resources.EncounterRateToolTip}"/>
+                </ToolTip.Tip>
+            </ComboBox>
+            <Separator />
             <CheckBox
                 IsChecked="{Binding Config.RandomizeKnockback}"
                 Content="Randomize Knockback"
