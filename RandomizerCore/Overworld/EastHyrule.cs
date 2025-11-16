@@ -281,7 +281,7 @@ public sealed class EastHyrule : World
             {
                 var j = r.Next(roadTrapLocations.Count);
                 var removeLoc = roadTrapLocations[j];
-                AllLocations.Remove(removeLoc);
+                RemoveLocations([removeLoc]);
                 roadTrapLocations.Remove(removeLoc);
             }
 
@@ -290,15 +290,11 @@ public sealed class EastHyrule : World
             {
                 var j = r.Next(passthroughCaveLocations.Count);
                 var removeLoc = passthroughCaveLocations[j];
-                var removeConnected = connections[removeLoc];
-                AllLocations.Remove(removeLoc);
-                Locations[Terrain.CAVE].Remove(removeLoc);
-                connections.Remove(removeLoc);
+                var removeLocConnected = connections[removeLoc];
+
+                RemoveLocations([removeLoc, removeLocConnected]);
                 passthroughCaveLocations.Remove(removeLoc);
-                AllLocations.Remove(removeConnected);
-                Locations[Terrain.CAVE].Remove(removeConnected);
-                connections.Remove(removeConnected);
-                passthroughCaveLocations.Remove(removeConnected);
+                passthroughCaveLocations.Remove(removeLocConnected);
             }
         }
         else
@@ -457,7 +453,7 @@ public sealed class EastHyrule : World
                 //Issue #2: Desert tile passthrough causes the wrong screen to load, making the item unobtainable.
                 desertTile.PassThrough = 0;
 
-                desertTile.MapPage = 64;
+                desertTile.MapPage = 1;
 
                 Location? desert = GetLocationByMem(RomMap.EAST_MINOR_DESERT_TILE_LOCATION1);
                 Location? swamp = GetLocationByMem(RomMap.EAST_MINOR_SWAMP_TILE_LOCATION);

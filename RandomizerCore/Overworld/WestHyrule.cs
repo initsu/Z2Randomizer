@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -42,18 +43,13 @@ public sealed class WestHyrule : World
     private Location parapaCave2;
     private Location jumpCave2;
     private Location fairyCave2;
-    //private int bridgeCount;
 
     private int calderaCenterX, calderaCenterY;
 
     private const int CALDERA_DEAD_ZONE_X = 7;
     private const int CALDERA_DEAD_ZONE_Y = 7;
 
-    private Dictionary<Location, Location> bridgeConn;
-    private Dictionary<Location, Location> cityConn;
-    private Dictionary<Location, Location> caveConn;
-    private Dictionary<Location, Location> graveConn;
-
+    private List<(Location, Location)> caveConnections;
     private static int debug = 0;
 
     private List<Location> lostWoods;
@@ -112,18 +108,18 @@ public sealed class WestHyrule : World
     public WestHyrule(RandomizerProperties props, Random r, ROM rom) : base(r)
     {
         isHorizontal = props.WestIsHorizontal;
-        List<Location> locations =
+        List<Location> loadedLocations =
         [
-            .. rom.LoadLocations(RomMap.WEST_CAVE_PARAPA_NORTH_TILE_LOCATION, 4, terrains, Continent.WEST),
-            .. rom.LoadLocations(RomMap.WEST_FAIRY_CAVE_DROP_TILE_LOCATION, 2, terrains, Continent.WEST),
             .. rom.LoadLocations(RomMap.WEST_NORTH_PALACE_TILE_LOCATION, 10, terrains, Continent.WEST),
+            .. rom.LoadLocations(RomMap.WEST_CAVE_PARAPA_NORTH_TILE_LOCATION, 4, terrains, Continent.WEST),
             .. rom.LoadLocations(RomMap.WEST_CAVE_PBAG_TILE_LOCATION, 3, terrains, Continent.WEST),
+            .. rom.LoadLocations(RomMap.WEST_FAIRY_CAVE_DROP_TILE_LOCATION, 2, terrains, Continent.WEST),
             .. rom.LoadLocations(RomMap.WEST_BRIDGE_TILE_NORTH_OF_SARIA_LOCATION, 12, terrains, Continent.WEST),
             .. rom.LoadLocations(RomMap.WEST_MINOR_DESERT_TILE_LOCATION, 1, terrains, Continent.WEST),
             .. rom.LoadLocations(RomMap.WEST_KINGS_TOMB_TILE_LOCATION, 2, terrains, Continent.WEST),
             .. rom.LoadLocations(RomMap.WEST_TOWN_RUTO_TILE_LOCATION, 8, terrains, Continent.WEST),
         ];
-        locations.ForEach(AddLocation);
+        loadedLocations.ForEach(AddLocation);
 
         northPalace = GetLocationByMem(RomMap.WEST_NORTH_PALACE_TILE_LOCATION); //0x462f
         jumpCave = GetLocationByMem(RomMap.WEST_CAVE_JUMP_NORTH_TILE_LOCATION); //0x463b
@@ -187,40 +183,26 @@ public sealed class WestHyrule : World
         locationAtMido.Children.Add(midoChurch);
         AddLocation(midoChurch);
 
+        caveConnections = []; // (left,right)
+        caveConnections.Add((parapaCave1, parapaCave2));
+        caveConnections.Add((jumpCave, jumpCave2));
+
         if (props.SaneCaves)
         {
             fairyCave.TerrainType = Terrain.CAVE;
+            caveConnections.Add((fairyCave, fairyCave2));
         }
 
-        caveConn = [];
-        bridgeConn = [];
-        cityConn = [];
-        graveConn = [];
-
-        //connections.Add(hammerEnter, hammerExit);
-        //connections.Add(hammerExit, hammerEnter);
-        //caveConn.Add(hammerEnter, hammerExit);
-        //caveConn.Add(hammerExit, hammerEnter);
         connections.Add(parapaCave1, parapaCave2);
         connections.Add(parapaCave2, parapaCave1);
-        caveConn.Add(parapaCave1, parapaCave2);
-        caveConn.Add(parapaCave2, parapaCave1);
         connections.Add(jumpCave, jumpCave2);
         connections.Add(jumpCave2, jumpCave);
-        caveConn.Add(jumpCave, jumpCave2);
-        caveConn.Add(jumpCave2, jumpCave);
         connections.Add(fairyCave, fairyCave2);
         connections.Add(fairyCave2, fairyCave);
-        caveConn.Add(fairyCave2, fairyCave);
-        graveConn.Add(fairyCave, fairyCave2);
         connections.Add(locationAtSariaNorth, locationAtSariaSouth);
         connections.Add(locationAtSariaSouth, locationAtSariaNorth);
-        cityConn.Add(locationAtSariaSouth, locationAtSariaNorth);
-        cityConn.Add(locationAtSariaNorth, locationAtSariaSouth);
         connections.Add(bridge1, bridge2);
         connections.Add(bridge2, bridge1);
-        bridgeConn.Add(bridge1, bridge2);
-        bridgeConn.Add(bridge2, bridge1);
 
         sideviewPtrTable = 0x4533;
         sideviewBank = 1;
@@ -296,12 +278,8 @@ public sealed class WestHyrule : World
         {
             MAP_ROWS = 42;
             MAP_COLS = 42;
-            AllLocations.Remove(fairyCave);
-            AllLocations.Remove(fairyCave2);
-            Locations[Terrain.CAVE].Remove(fairyCave);
-            Locations[Terrain.CAVE].Remove(fairyCave2);
-            connections.Remove(fairyCave);
-            connections.Remove(fairyCave2);
+            RemoveLocations([fairyCave, fairyCave2]);
+            caveConnections.Remove((fairyCave, fairyCave2));
         }
         else
         {
@@ -1093,27 +1071,9 @@ public sealed class WestHyrule : World
         int caveCount = RNG.Next(2) + 1;
         Location cave1l, cave1r;
         Location? cave2l = null, cave2r = null;
-        int availableConnectorCount = 2;
-        if(useSaneCaves)
-        {
-            availableConnectorCount++;
-        }
-        int cavenum1 = RNG.Next(availableConnectorCount);
-        if(cavenum1 == 0)
-        {
-            cave1l = jumpCave;//jump cave
-            cave1r = jumpCave2;
-        }
-        else if (cavenum1 == 1)
-        {
-            cave1l = parapaCave1; //parapa
-            cave1r = parapaCave2;
-        }
-        else
-        {
-            cave1l = fairyCave; //fairy cave
-            cave1r = fairyCave2;
-        }
+
+        int cavenum1 = RNG.Next(caveConnections.Count);
+        (cave1l, cave1r) = caveConnections[cavenum1];
         if (cave1l.Y < MAP_ROWS && cave1l.Xpos < MAP_COLS)
         {
             map[cave1l.Y, cave1l.Xpos] = Terrain.MOUNTAIN;
@@ -1125,26 +1085,12 @@ public sealed class WestHyrule : World
 
         if (caveCount > 1)
         {
-            int cavenum2 = RNG.Next(availableConnectorCount);
-            while(cavenum2 == cavenum1)
+            int cavenum2;
+            do
             {
-                cavenum2 = RNG.Next(availableConnectorCount);
-            }
-            if (cavenum2 == 0)
-            {
-                cave2l = jumpCave;//jump cave
-                cave2r = jumpCave2;
-            }
-            else if (cavenum2 == 1)
-            {
-                cave2l = parapaCave1; //parapa
-                cave2r = parapaCave2;
-            }
-            else
-            {
-                cave2l = fairyCave; //fairy cave
-                cave2r = fairyCave2;
-            }
+                cavenum2 = RNG.Next(caveConnections.Count);
+            } while (cavenum2 == cavenum1);
+            (cave2l, cave2r) = caveConnections[cavenum2];
             if (cave2l.Y < MAP_ROWS && cave2l.Xpos < MAP_COLS)
             {
                 map[cave2l.Y, cave2l.Xpos] = Terrain.MOUNTAIN;

@@ -172,19 +172,13 @@ sealed class DeathMountain : World
             int elevatorConnectorsRemoved = 0;
             for (int i = 0; i < connectorPairsToRemove; i++)
             {
-                KeyValuePair<Location, List<Location>> removeLoc;
+                KeyValuePair<Location, List<Location>> removeLocPair;
                 do
                 {
                     var j = r.Next(connectionsDM.Count);
-                    removeLoc = connectionsDM.ElementAt(j);
-                } while (removeLoc.Value.Count > 1 && elevatorConnectorsRemoved++ >= maxElevatorConnectorsToRemove);
-                AllLocations.Remove(removeLoc.Key);
-                connectionsDM.Remove(removeLoc.Key);
-                foreach (var connected in removeLoc.Value)
-                {
-                    AllLocations.Remove(connected);
-                    connectionsDM.Remove(connected);
-                }
+                    removeLocPair = connectionsDM.ElementAt(j);
+                } while (removeLocPair.Value.Count > 1 && elevatorConnectorsRemoved++ >= maxElevatorConnectorsToRemove);
+                RemoveLocationsDM([removeLocPair.Key, ..removeLocPair.Value]);
             }
         }
         else
@@ -200,6 +194,15 @@ sealed class DeathMountain : World
 
         climate.SeedTerrainCount = Math.Min(climate.SeedTerrainCount, biome.SeedTerrainLimit());
         SetVanillaCollectables(props.ReplaceFireWithDash);
+    }
+
+    private void RemoveLocationsDM(ICollection<Location> locations)
+    {
+        RemoveLocations(locations);
+        foreach (var loc in locations)
+        {
+            connectionsDM.Remove(loc);
+        }
     }
 
     public override bool Terraform(RandomizerProperties props, ROM rom)

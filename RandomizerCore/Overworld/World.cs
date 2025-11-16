@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using NLog;
@@ -112,6 +114,7 @@ public abstract class World
 
 
     public List<Location> AllLocations { get; }
+    public List<Location> RemovedLocations { get; }
     public Dictionary<Terrain, List<Location>> Locations { get; set; }
 
     public bool AllReached { get; set; }
@@ -131,6 +134,7 @@ public abstract class World
             Locations.Add(Terrain, new List<Location>());
         }
         AllLocations = [];
+        RemovedLocations = [];
         locsByCoords = [];
         unimportantLocs = [];
         areasByLocation = [];
@@ -191,6 +195,22 @@ public abstract class World
             child.Xpos = l2.Xpos;
             child.Y = l2.Y;
             child.PassThrough = l2.PassThrough;
+        }
+    }
+
+    protected void RemoveLocations(ICollection<Location> locationsToRemove)
+    {
+        foreach (var loc in locationsToRemove)
+        {
+            loc.Clear();
+
+            AllLocations.Remove(loc);
+            RemovedLocations.Add(loc);
+            foreach (List<Location> ls in Locations.Values)
+            {
+                ls.Remove(loc);
+            }
+            connections.Remove(loc);
         }
     }
 
@@ -588,12 +608,7 @@ public abstract class World
                 {
                     if (location.CanShuffle)
                     {
-                        location.ExternalWorld = 0;
-                        location.YRaw = 0;
-                        location.appear2loweruponexit = 0;
-                        location.Secondpartofcave = 0;
-                        location.Xpos = 0;
-                        location.CanShuffle = false;
+                        location.Clear();
                     }
                 }
                 break;

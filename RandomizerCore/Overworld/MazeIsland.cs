@@ -96,7 +96,7 @@ sealed class MazeIsland : World
             {
                 var j = r.Next(trapLocations.Count);
                 var removeLoc = trapLocations[j];
-                AllLocations.Remove(removeLoc);
+                RemoveLocations([removeLoc]);
                 trapLocations.Remove(removeLoc);
             }
         }
