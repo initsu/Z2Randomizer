@@ -109,7 +109,7 @@ public abstract class World
     public static int PlaceCaveCount = 0;
 
 
-    public List<Location> AllLocations { get; }
+    public DebugListLocation<Location> AllLocations { get; }
     public Dictionary<Terrain, List<Location>> Locations { get; set; }
 
     public bool AllReached { get; set; }
@@ -160,7 +160,7 @@ public abstract class World
         AllLocations.Add(location);
     }
 
-    protected void ShuffleLocations(List<Location> locationsToShuffle)
+    protected void ShuffleLocations(IList<Location> locationsToShuffle)
     {
         List<Location> shufflableLocations = locationsToShuffle.Where(i => i.CanShuffle && i.AppearsOnMap).ToList();
         for (int i = shufflableLocations.Count - 1; i > 0; i--)

@@ -3052,7 +3052,7 @@ public class Hyrule
     {
         foreach (World world in worlds)
         {
-            List<Location> locs = world.AllLocations;
+            IList<Location> locs = world.AllLocations;
             foreach (Location location in locs.Where(i => i.AppearsOnMap))
             {
                 byte[] locationBytes = location.GetLocationBytes();

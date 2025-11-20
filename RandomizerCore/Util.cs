@@ -1,10 +1,14 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
+using YamlDotNet.Core.Tokens;
 using Z2Randomizer.RandomizerCore.Overworld;
 using Z2Randomizer.RandomizerCore.Sidescroll;
 
@@ -263,5 +267,112 @@ public static class AssemblyExtensions
         }
         using var reader = new BinaryReader(stream);
         return reader.ReadBytes((int)stream.Length);
+    }
+}
+
+/// <summary>
+/// Useful to put in place of regular Lists when you need breakpoints as the contents are changed
+/// </summary>
+
+public abstract class DebugList<T> : IList<T>
+{
+    protected readonly List<T> _inner = new();
+
+    protected abstract bool BreakConditional(T item);
+
+    public T this[int index]
+    {
+        get => _inner[index];
+        set
+        {
+            if (BreakConditional(value))
+            {
+                Debugger.Break();
+            }
+            _inner[index] = value;
+        }
+    }
+
+    public int Count => _inner.Count;
+    public bool IsReadOnly => false;
+
+    public void Add(T item)
+    {
+        if (BreakConditional(item))
+        {
+            Debugger.Break();
+        }
+        _inner.Add(item);
+    }
+
+    public void Insert(int index, T item)
+    {
+        if (BreakConditional(item))
+        {
+            Debugger.Break();
+        }
+        _inner.Insert(index, item);
+    }
+
+    public bool Remove(T item)
+    {
+        return _inner.Remove(item);
+    }
+
+    public void RemoveAt(int index)
+    {
+        _inner.RemoveAt(index);
+    }
+
+    public void Clear()
+    {
+        _inner.Clear();
+    }
+
+    public bool Contains(T item) => _inner.Contains(item);
+    public int IndexOf(T item) => _inner.IndexOf(item);
+    public void CopyTo(T[] array, int arrayIndex) => _inner.CopyTo(array, arrayIndex);
+    public IEnumerator<T> GetEnumerator() => _inner.GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => _inner.GetEnumerator();
+
+    public void ForEach(Action<T> action)
+    {
+        _inner.ForEach(action);
+    }
+}
+
+public class DebugListLocation<T> : DebugList<T>
+{
+    protected override bool BreakConditional(T item)
+    {
+        if (item is Location)
+        {
+            Location loc = (item as Location)!;
+            if (loc.ActualTown != null)
+            {
+                if (loc.ActualTown == Town.DARUNIA_WEST)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+}
+
+public class DebugListCollectable<T> : DebugList<T>
+{
+    protected override bool BreakConditional(T item)
+    {
+        if (item is Collectable.MAGIC_CONTAINER)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    public void FisherYatesShuffle(Random r)
+    {
+        _inner.FisherYatesShuffle(r);
     }
 }

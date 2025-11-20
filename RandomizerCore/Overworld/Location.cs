@@ -11,7 +11,7 @@ public class Location
 {
     Logger logger = LogManager.GetCurrentClassLogger();
     public int appear2loweruponexit;
-    public List<Collectable> Collectables { get; set; }
+    public DebugListCollectable<Collectable> Collectables { get; set; }
     public Collectable VanillaCollectable { get; set; }
     public bool AppearsOnMap { get; set; }
 
