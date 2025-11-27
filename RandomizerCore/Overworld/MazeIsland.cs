@@ -87,10 +87,16 @@ sealed class MazeIsland : World
             MAP_ROWS = 75;
             MAP_COLS = 64;
         }
-        else if (props.OverworldSize == OverworldSizeOption.SMALL)
+        else if (props.OverworldSize == OverworldSizeOption.LARGE)
         {
-            MAP_ROWS = 19;
-            MAP_COLS = 19;
+            // TODO: add MiOverworldSize property
+            MAP_ROWS = 23;
+            MAP_COLS = 23;
+        }
+        else
+        {
+            MAP_ROWS = 17;
+            MAP_COLS = 17;
             int trapTilesToRemove = 2;
             for (int i = 0; i < trapTilesToRemove; i++)
             {
@@ -99,11 +105,6 @@ sealed class MazeIsland : World
                 RemoveLocations([removeLoc]);
                 trapLocations.Remove(removeLoc);
             }
-        }
-        else
-        {
-            MAP_ROWS = 23;
-            MAP_COLS = 23;
         }
         SetVanillaCollectables(props.ReplaceFireWithDash);
     }
@@ -332,7 +333,7 @@ sealed class MazeIsland : World
                 int riverStartY;
                 do
                 {
-                    riverStartY = RNG.Next(10) * 2 + 1;
+                    riverStartY = RNG.Next((MAP_ROWS - 1) / 2) * 2 + 1;
                 }
                 while (riverStartY == starty);
 

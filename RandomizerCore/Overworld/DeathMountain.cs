@@ -155,7 +155,13 @@ sealed class DeathMountain : World
             MAP_ROWS = 75;
             MAP_COLS = 64;
         }
-        else if (props.OverworldSize == OverworldSizeOption.SMALL)
+        else if (props.OverworldSize == OverworldSizeOption.LARGE)
+        {
+            // TODO: add DmOverworldSize property
+            MAP_ROWS = 45;
+            MAP_COLS = 64;
+        }
+        else
         {
             if (biome == Biome.CALDERA)
             {
@@ -178,13 +184,8 @@ sealed class DeathMountain : World
                     var j = r.Next(connectionsDM.Count);
                     removeLocPair = connectionsDM.ElementAt(j);
                 } while (removeLocPair.Value.Count > 1 && elevatorConnectorsRemoved++ >= maxElevatorConnectorsToRemove);
-                RemoveLocationsDM([removeLocPair.Key, ..removeLocPair.Value]);
+                RemoveLocationsDM([removeLocPair.Key, .. removeLocPair.Value]);
             }
-        }
-        else
-        {
-            MAP_ROWS = 45;
-            MAP_COLS = 64;
         }
 
         walkableTerrains = new List<Terrain>() { Terrain.DESERT, Terrain.FOREST, Terrain.GRAVE };

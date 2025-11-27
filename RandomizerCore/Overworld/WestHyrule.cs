@@ -269,21 +269,19 @@ public sealed class WestHyrule : World
             }
         }
         biome = props.WestBiome;
-        if (biome == Biome.VANILLA || biome == Biome.VANILLA_SHUFFLE || props.OverworldSize == OverworldSizeOption.HUGE)
+        if (biome == Biome.VANILLA || biome == Biome.VANILLA_SHUFFLE || props.OverworldSize == OverworldSizeOption.LARGE)
         {
             MAP_ROWS = 75;
             MAP_COLS = 64;
         }
-        else if (props.OverworldSize == OverworldSizeOption.SMALL)
-        {
-            MAP_ROWS = 42;
-            MAP_COLS = 42;
-            RemoveLocations([fairyCave, fairyCave2]);
-            caveConnections.Remove((fairyCave, fairyCave2));
-        }
         else
         {
-            throw new NotImplementedException();
+            var meta = props.OverworldSize.GetMeta();
+            MAP_ROWS = meta.Width;
+            MAP_COLS = meta.Height;
+            // TODO: use metadata for num caves to remove etc.
+            RemoveLocations([fairyCave, fairyCave2]);
+            caveConnections.Remove((fairyCave, fairyCave2));
         }
 
         //Climate filtering

@@ -267,15 +267,17 @@ public sealed class EastHyrule : World
         randomTerrainFilter = [Terrain.DESERT, Terrain.GRASS, Terrain.FOREST, Terrain.SWAMP, Terrain.GRAVE, Terrain.MOUNTAIN, Terrain.WALKABLEWATER];
 
         biome = props.EastBiome;
-        if (biome == Biome.VANILLA || biome == Biome.VANILLA_SHUFFLE || props.OverworldSize == OverworldSizeOption.HUGE)
+        if (biome == Biome.VANILLA || biome == Biome.VANILLA_SHUFFLE || props.OverworldSize == OverworldSizeOption.LARGE)
         {
             MAP_ROWS = 75;
             MAP_COLS = 64;
         }
-        else if (props.OverworldSize == OverworldSizeOption.SMALL)
+        else
         {
-            MAP_ROWS = 42;
-            MAP_COLS = 42;
+            var meta = props.OverworldSize.GetMeta();
+            MAP_ROWS = meta.Width;
+            MAP_COLS = meta.Height;
+            // TODO: use metadata for num trap tiles to remove etc.
             int trapTilesToRemove = 2; // should be even
             for (int i = 0; i < trapTilesToRemove; i++)
             {
@@ -296,10 +298,6 @@ public sealed class EastHyrule : World
                 passthroughCaveLocations.Remove(removeLoc);
                 passthroughCaveLocations.Remove(removeLocConnected);
             }
-        }
-        else
-        {
-            throw new NotImplementedException();
         }
 
         section = new SortedDictionary<(int, int), string>()

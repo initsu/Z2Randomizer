@@ -429,13 +429,27 @@ public enum ContinentConnectionType
     ANYTHING_GOES
 }
 
-[DefaultValue(HUGE)]
+[AttributeUsage(AttributeTargets.Field)]
+public class OverworldSizeMetaAttribute : Attribute
+{
+    public int Width { get; init; }
+    public int Height { get; init; }
+}
+public static class OverworldSizeExtensions
+{
+    public static OverworldSizeMetaAttribute GetMeta(this OverworldSizeOption size)
+    {
+        var member = typeof(OverworldSizeOption).GetMember(size.ToString()).FirstOrDefault();
+        return member?.GetCustomAttribute<OverworldSizeMetaAttribute>() ?? new OverworldSizeMetaAttribute();
+    }
+}
+[DefaultValue(LARGE)]
 public enum OverworldSizeOption
 {
-    [Description("Huge")]
-    HUGE,
-    [Description("Small")]
-    SMALL,
+    [Description("Large (75x60)"), OverworldSizeMeta(Width = 75, Height = 60)]
+    LARGE,
+    [Description("Small (44x44)"), OverworldSizeMeta(Width = 44, Height = 44)]
+    SMALL1,
 }
 
 [DefaultValue(NO_LIMIT)]
