@@ -7,12 +7,11 @@ namespace Z2Randomizer.RandomizerCore.Overworld;
 public class Climate
 {
     public float[] DistanceCoefficients { get; }
-    private readonly int[] TerrainWeights;
+    public string Name { get; init; }
     public int SeedTerrainCount { get; set; }
-    private List<Terrain> terrainWeightTable;
-    public string Name { get; set; }
+    private IWeightedSampler<Terrain> weightedSampler;
 
-    public Climate(string name, Dictionary<Terrain, float> distanceCoefficients, Dictionary<Terrain, int> terrainWeights, int seedTerrainCount, bool providedDistancesAreInverted = false)
+    public Climate(string name, Dictionary<Terrain, float> distanceCoefficients, IWeightedSampler<Terrain> terrainWeights, int seedTerrainCount, bool providedDistancesAreInverted = false)
     {
         Name = name;
         // Precompute distance coefficients into a inverse list
@@ -21,23 +20,8 @@ public class Climate
         {
             DistanceCoefficients[(int)pair.Key] = providedDistancesAreInverted ? pair.Value : (1f / pair.Value);
         }
-        TerrainWeights = new int[(int)Terrain.NONE];
-        foreach (var pair in terrainWeights)
-        {
-            TerrainWeights[(int)pair.Key] = pair.Value;
-        }
+        weightedSampler = terrainWeights;
         SeedTerrainCount = seedTerrainCount;
-        //This is a lazy, not very efficient lookup method, but it has very fast lookups, and since terrain generation
-        //is one of the most expensive operations and we're going to do tens of thousands of lookups easily,
-        //this is probably good for now.
-        terrainWeightTable = new();
-        for (int terrain = 0; terrain < (int)Terrain.NONE; terrain++)
-        {
-            for (int i = 0; i < TerrainWeights[(int)terrain]; i++)
-            {
-                terrainWeightTable.Add((Terrain)terrain);
-            }
-        }
     }
 
     public Terrain GetRandomTerrain(Random r, IEnumerable<Terrain> whitelist)
@@ -45,7 +29,7 @@ public class Climate
         Terrain result;
         do
         {
-            result = terrainWeightTable[r.Next(terrainWeightTable.Count)];
+            result = weightedSampler.Next(r);
         }
         while (whitelist == null || !whitelist.Contains(result));
 
@@ -56,18 +40,14 @@ public class Climate
     {
         if (filter == null)
         {
-            return terrainWeightTable.Distinct();
+            return weightedSampler.Keys();
         }
-        return filter.Intersect(terrainWeightTable.Distinct());
-
+        return filter.Intersect(weightedSampler.Keys());
     }
 
     public void DisallowTerrain(Terrain terrain)
     {
-        for (int i = 0; i < TerrainWeights[(int)terrain]; i++)
-        {
-            terrainWeightTable.RemoveAll(i => i == terrain);
-        }
+        weightedSampler = weightedSampler.Remove(terrain);
     }
 
     public Climate Clone()
@@ -76,31 +56,8 @@ public class Climate
             new Dictionary<Terrain, float>(DistanceCoefficients
                 .Select((value, index) => new { value, index })
                 .ToDictionary(pair => (Terrain)pair.index, pair => pair.value)),
-            new Dictionary<Terrain, int>(TerrainWeights
-                .Select((value, index) => new { value, index })
-                .ToDictionary(pair => (Terrain)pair.index, pair => pair.value)),
+            weightedSampler.Clone(),
             SeedTerrainCount, providedDistancesAreInverted: true);
-    }
-
-    public override bool Equals(object? obj)
-    {
-        if (obj is Climate climate)
-            return Equals(climate);
-        return false;
-    }
-
-    protected bool Equals(Climate other)
-    {
-        return TerrainWeights.SequenceEqual(other.TerrainWeights)
-               && terrainWeightTable.SequenceEqual(other.terrainWeightTable)
-               && DistanceCoefficients.SequenceEqual(other.DistanceCoefficients)
-               && SeedTerrainCount == other.SeedTerrainCount
-               && Name == other.Name;
-    }
-
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(TerrainWeights, terrainWeightTable, DistanceCoefficients, SeedTerrainCount, Name);
     }
 
     /// <summary>
@@ -129,8 +86,9 @@ public class Climate
         float totalWalkableTerrainWeight = 0f;
         foreach (Terrain terrain in walkableTerrains)
         {
-            totalRandomGrowthFactors += TerrainWeights[(int)terrain] / DistanceCoefficients[(int)terrain];
-            totalWalkableTerrainWeight += TerrainWeights[(int)terrain];
+            var w = weightedSampler.Weight(terrain);
+            totalRandomGrowthFactors += w / DistanceCoefficients[(int)terrain];
+            totalWalkableTerrainWeight += w;
         }
         float aggregateWalkableTerrainGrowth = totalRandomGrowthFactors / totalWalkableTerrainWeight;
         float mountainTerrainGrowth = 1 / DistanceCoefficients[(int)Terrain.MOUNTAIN];
