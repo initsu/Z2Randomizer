@@ -764,6 +764,21 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
             Seed = seed
         };
 
+        LinearWeightedRandom<PalaceStyle> weightsAll = new([
+            (PalaceStyle.VANILLA, 8),
+            (PalaceStyle.SHUFFLED, 8),
+            (PalaceStyle.RECONSTRUCTED, 32),
+            (PalaceStyle.SEQUENTIAL, 8),
+            (PalaceStyle.RANDOM_WALK, 8),
+            (PalaceStyle.VANILLA_WEIGHTED, 16),
+        ]);
+        LinearWeightedRandom<PalaceStyle> weightsNoVanilla = new([
+            (PalaceStyle.RECONSTRUCTED, 32),
+            (PalaceStyle.SEQUENTIAL, 8),
+            (PalaceStyle.RANDOM_WALK, 8),
+            (PalaceStyle.VANILLA_WEIGHTED, 16),
+        ]);
+
         //Properties that can affect available minor item replacements
         do // while (!properties.HasEnoughSpaceToAllocateItems())
         {
@@ -773,25 +788,11 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
 
             if (gpStyle == PalaceStyle.RANDOM)
             {
-                properties.PalaceStyles[6] = r.Next(5) switch
-                {
-                    0 => PalaceStyle.VANILLA,
-                    1 => PalaceStyle.SHUFFLED,
-                    2 => PalaceStyle.RECONSTRUCTED,
-                    3 => PalaceStyle.SEQUENTIAL,
-                    4 => PalaceStyle.RANDOM_WALK,
-                    _ => throw new Exception("Invalid PalaceStyle")
-                };
+                properties.PalaceStyles[6] = weightsAll.Next(r);
             }
             else if (gpStyle == PalaceStyle.RANDOM_NO_VANILLA_OR_SHUFFLE)
             {
-                properties.PalaceStyles[6] = r.Next(3) switch
-                {
-                    0 => PalaceStyle.RECONSTRUCTED,
-                    1 => PalaceStyle.SEQUENTIAL,
-                    2 => PalaceStyle.RANDOM_WALK,
-                    _ => throw new Exception("Invalid PalaceStyle")
-                };
+                properties.PalaceStyles[6] = weightsNoVanilla.Next(r);
             }
             else
             {
@@ -800,15 +801,7 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
 
             if (normalPalaceStyle == PalaceStyle.RANDOM_ALL)
             {
-                PalaceStyle style = r.Next(5) switch
-                {
-                    0 => PalaceStyle.VANILLA,
-                    1 => PalaceStyle.SHUFFLED,
-                    2 => PalaceStyle.RECONSTRUCTED,
-                    3 => PalaceStyle.SEQUENTIAL,
-                    4 => PalaceStyle.RANDOM_WALK,
-                    _ => throw new Exception("Invalid PalaceStyle")
-                };
+                PalaceStyle style = weightsAll.Next(r);
                 for (int i = 0; i < 6; i++)
                 {
                     properties.PalaceStyles[i] = style;
@@ -818,16 +811,7 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
             {
                 for (int i = 0; i < 6; i++)
                 {
-                    PalaceStyle style = r.Next(5) switch
-                    {
-                        0 => PalaceStyle.VANILLA,
-                        1 => PalaceStyle.SHUFFLED,
-                        2 => PalaceStyle.RECONSTRUCTED,
-                        3 => PalaceStyle.SEQUENTIAL,
-                        4 => PalaceStyle.RANDOM_WALK,
-                        _ => throw new Exception("Invalid PalaceStyle")
-                    };
-                    properties.PalaceStyles[i] = style;
+                    properties.PalaceStyles[i] = weightsAll.Next(r);
                 }
             }
             else
