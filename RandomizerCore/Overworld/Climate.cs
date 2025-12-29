@@ -7,6 +7,8 @@ namespace Z2Randomizer.RandomizerCore.Overworld;
 public class Climate
 {
     public float[] DistanceCoefficients { get; }
+    /// pre-compute the square for GrowTerrain optimization
+    public float[] DistanceCoefficientsSquared { get; }
     public string Name { get; init; }
     public int SeedTerrainCount { get; set; }
     private IWeightedSampler<Terrain> weightedSampler;
@@ -20,6 +22,7 @@ public class Climate
         {
             DistanceCoefficients[(int)pair.Key] = providedDistancesAreInverted ? pair.Value : (1f / pair.Value);
         }
+        DistanceCoefficientsSquared = DistanceCoefficients.Select(d => d * d).ToArray();
         weightedSampler = terrainWeights;
         SeedTerrainCount = seedTerrainCount;
     }

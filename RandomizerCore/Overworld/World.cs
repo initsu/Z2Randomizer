@@ -1316,7 +1316,8 @@ public abstract class World
                 }
             }
         }
-
+        Debug.Assert(placed.Count > 0);
+        const double EPSILON = 1e-9;
         int dy, dx;
         double distance;
         List<Terrain> choices = new List<Terrain>();
@@ -1324,32 +1325,37 @@ public abstract class World
         {
             for (int x = 0; x < MAP_COLS; x++)
             {
-                if (map[y, x] == Terrain.NONE)
-                {
-                    choices.Clear();
-                    double mindistance = double.MaxValue;
+                if (map[y, x] != Terrain.NONE) { continue; }
+                choices.Clear();
+                double minDistance = double.MaxValue;
 
-                    foreach ((int, int)t in placed)
+                foreach (var (py, px) in placed)
+                {
+                    Terrain t = map[py, px];
+                    dy = py - y;
+                    dx = px - x;
+
+                    float coefSquared = climate.DistanceCoefficientsSquared[(int)t];
+                    // optimize by having the coefficients pre-squared because
+                    // the minimum distance will also be the minimum distance squared
+                    distance = coefSquared * (dy * dy + dx * dx);
+                    if (distance > minDistance + EPSILON) // most likely case first
                     {
-                        dy = t.Item1 - y;
-                        dx = t.Item2 - x;
-                        distance = (climate.DistanceCoefficients[(int)map[t.Item1, t.Item2]]) * Math.Sqrt(dy * dy + dx * dx);
-                        //distance = ((tx + (tx >> 31)) ^ (tx >> 31)) + ((ty + (ty >> 31)) ^ (ty >> 31));
-                        //distance = Math.Abs(tx) + Math.Abs(ty);
-                        if (distance < mindistance)
-                        {
-                            choices.Clear();
-                            choices.Add(map[t.Item1, t.Item2]);
-                            mindistance = distance;
-                        }
-                        else if (distance == mindistance)
-                        {
-                            choices.Add(map[t.Item1, t.Item2]);
-                        }
+                        continue;
                     }
-                    mapCopy[y, x] = choices[RNG.Next(choices.Count)];
-                    //mapCopy[y, x] = Terrain.ROAD;
+                    else if (distance + EPSILON < minDistance)
+                    {
+                        choices.Clear();
+                        choices.Add(t);
+                        minDistance = distance;
+                    }
+                    else
+                    {
+                        choices.Add(t);
+                    }
                 }
+                Debug.Assert(choices.Count > 0);
+                mapCopy[y, x] = choices[RNG.Next(choices.Count)];
             }
         }
 
@@ -1364,7 +1370,7 @@ public abstract class World
                 }
             }
         }
-        map = (Terrain[,])mapCopy.Clone();
+        map = mapCopy; // no need to clone as we just created this array
         return true;
     }
 
