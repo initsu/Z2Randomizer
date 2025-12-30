@@ -57,6 +57,7 @@ public sealed partial class App : Application // , IDisposable
 
     public static string Version = "";
     public static string Title = "";
+    public const string SETTINGS_FILENAME = "Settings_v5_1.json";
 
     public static TopLevel? TopLevel { get; private set; }
 
@@ -73,7 +74,7 @@ public sealed partial class App : Application // , IDisposable
         var files = FileSystemService!;
         try
         {
-            var json = files.OpenFileSync(IFileSystemService.RandomizerPath.Settings, "Settings.json");
+            var json = files.OpenFileSync(IFileSystemService.RandomizerPath.Settings, SETTINGS_FILENAME);
             main = JsonSerializer.Deserialize(json, new SerializationContext(true).MainViewModel)!;
         }
         catch (System.IO.FileNotFoundException) { /* No settings file exists */ }
@@ -153,7 +154,7 @@ public sealed partial class App : Application // , IDisposable
         {
             var files = Current?.Services?.GetService<IFileSystemService>()!;
             var json = JsonSerializer.Serialize(main!, SerializationContext.Default.MainViewModel);
-            await files.SaveFile(IFileSystemService.RandomizerPath.Settings, "Settings.json", json);
+            await files.SaveFile(IFileSystemService.RandomizerPath.Settings, SETTINGS_FILENAME, json);
         });
     }
 
