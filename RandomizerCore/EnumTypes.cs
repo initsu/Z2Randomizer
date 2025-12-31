@@ -132,25 +132,41 @@ public enum LifeEffectiveness
     INVINCIBLE
 }
 
+[AttributeUsage(AttributeTargets.Field)]
+public class XPMetaAttribute : Attribute
+{
+    public int Low { get; init; }
+    public int High { get; init; }
+}
 //I removed no XP drops because literally nobody played it and it saved a bit in the flag string
 //If anyone complains I can put it back but... nobody will.
 [DefaultValue(VANILLA)]
 public enum XPEffectiveness
 {
-    [Description("Vanilla")]
+    [Description("Vanilla (No Randomization)"), XPMeta(Low = 0, High = 0)]
     VANILLA,
-    [Description("Low")]
+    [Description("Low [-3 to +1]"), XPMeta(Low = -3, High = 1)]
     RANDOM_LOW,
-    [Description("Average")]
+    [Description("Average [-2 to +2]"), XPMeta(Low = -2, High = 2)]
     RANDOM,
-    [Description("High")]
+    [Description("Average (Low Variance) [-1 to +1]"), XPMeta(Low = -1, High = 1)]
+    LESS_VARIANCE,
+    [Description("Above Average (Low Variance) [0 to +1]"), XPMeta(Low = 0, High = 1)]
+    SLIGHTLY_HIGH,
+    [Description("High [-1 to +3]"), XPMeta(Low = -1, High = 3)]
     RANDOM_HIGH,
-    [Description("None")]
+    [Description("None"), XPMeta(Low = -15, High = -15)]
     NONE
 }
 
 public static class XPEffectivenessExtensions
 {
+    public static XPMetaAttribute GetMeta(this XPEffectiveness size)
+    {
+        var member = typeof(XPEffectiveness).GetMember(size.ToString()).FirstOrDefault();
+        return member?.GetCustomAttribute<XPMetaAttribute>() ?? new XPMetaAttribute();
+    }
+
     public static bool IsRandom(this XPEffectiveness effectiveness)
     {
         return effectiveness switch

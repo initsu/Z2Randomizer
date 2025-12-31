@@ -611,32 +611,17 @@ public class StatRandomizer
 
     protected void RandomizeEnemyExp(Random r, byte[] bytes, XPEffectiveness effectiveness)
     {
+        var meta = effectiveness.GetMeta();
+
         for (int i = 0; i < bytes.Length; i++)
         {
-            int b = bytes[i];
-            int low = b & 0x0f;
+            int byt = bytes[i];
+            int nibble = byt & 0x0f;
 
-            if (effectiveness == XPEffectiveness.RANDOM_HIGH)
-            {
-                low++;
-            }
-            else if (effectiveness == XPEffectiveness.RANDOM_LOW)
-            {
-                low--;
-            }
-            else if (effectiveness == XPEffectiveness.NONE)
-            {
-                low = 0;
-            }
+            nibble = r.Next(nibble - meta.Low, nibble + meta.High + 1);
+            nibble = Math.Min(Math.Max(nibble, 0), 15);
 
-            if (effectiveness.IsRandom())
-            {
-                low = r.Next(low - 2, low + 3);
-            }
-
-            low = Math.Min(Math.Max(low, 0), 15);
-
-            bytes[i] = (byte)((b & 0xf0) | low);
+            bytes[i] = (byte)((byt & 0xf0) | nibble);
         }
     }
 
