@@ -617,7 +617,7 @@ public class StatRandomizer
             int byt = bytes[i];
             int nibble = byt & 0x0f;
 
-            nibble = r.Next(nibble - meta.Low, nibble + meta.High + 1);
+            nibble = r.Next(nibble + meta.Low, nibble + meta.High + 1);
             nibble = Math.Min(Math.Max(nibble, 0), 15);
 
             bytes[i] = (byte)((byt & 0xf0) | nibble);
