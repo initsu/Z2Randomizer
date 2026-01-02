@@ -19,7 +19,7 @@ public static class MaxRando2025Preset
 
         //Overworld
         PalacesCanSwapContinents = true,
-        ShuffleGP = true,
+        ShuffleGp = true,
         ShuffleEncounters = true,
         AllowUnsafePathEncounters = true,
         IncludeLavaInEncounterShuffle = true,
@@ -34,13 +34,15 @@ public static class MaxRando2025Preset
         HidePalace = null,
         HideKasuto = null,
         ShuffleWhichLocationIsHidden = true,
-        ContinentConnectionType = ContinentConnectionType.ANYTHING_GOES,
-
-        Climate = Climates.Classic,
         WestBiome = Biome.RANDOM_NO_VANILLA,
         EastBiome = Biome.RANDOM_NO_VANILLA,
         MazeBiome = Biome.VANILLALIKE,
         DmBiome = Biome.RANDOM_NO_VANILLA,
+        WestClimate = ClimateEnum.RANDOM,
+        EastClimate = ClimateEnum.RANDOM,
+        DmClimate = ClimateEnum.RANDOM,
+        MazeClimate = ClimateEnum.RANDOM,
+        ContinentConnectionType = ContinentConnectionType.ANYTHING_GOES,
         VanillaShuffleUsesActualTerrain = true,
 
         //Palaces
