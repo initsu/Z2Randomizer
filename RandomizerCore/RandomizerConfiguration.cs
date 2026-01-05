@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -239,6 +241,9 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
     private Biome mazeBiome;
 
     [Reactive]
+    private ImmutableDictionary<Biome, int> biomeWeights = new Dictionary<Biome, int>().ToImmutableDictionary();
+
+    [Reactive]
     private ClimateEnum westClimate;
 
     [Reactive]
@@ -255,13 +260,14 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
     [DefaultValue(true)]
     private bool vanillaShuffleUsesActualTerrain;
     public bool vanillaShuffleUsesActualTerrainIsIncluded() {
-        foreach (var biome in (List<Biome>)[westBiome, eastBiome, dmBiome, mazeBiome])
+        List<Biome> biomes = [westBiome, eastBiome, dmBiome, mazeBiome];
+        foreach (var biome in biomes)
         {
             switch (biome)
             {
                 case Biome.VANILLA_SHUFFLE:
                 case Biome.RANDOM:
-                case Biome.RANDOM_NO_VANILLA:
+                case Biome.RANDOM_NO_VANILLA: /* still includes shuffle */
                     return true;
             }
         }
@@ -828,6 +834,23 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
         return GetEnumFromIndex<T>(index)!;
     }
 
+    private ImmutableDictionary<T, int> DeserializeWeightedEnum<T>(FlagReader flags, string name, Func<T, bool> includeValueFunc) where T : Enum
+    {
+        Dictionary<T, int> val = new();
+        int enumCount = GetEnumCount<T>();
+        for (int enumIndex = 0; enumIndex < enumCount; enumIndex++)
+        {
+            T enumOption = GetEnumFromIndex<T>(enumIndex)!;
+            if (includeValueFunc(enumOption))
+            {
+                int enumWeight = flags.ReadInt(4);
+                Debug.Assert(0 <= enumWeight && enumWeight <= 3);
+                val[enumOption] = enumWeight;
+            }
+        }
+        return val.ToImmutableDictionary();
+    }
+
     private void SerializeBool(FlagBuilder flags, string name, bool? val, bool isNullable)
     {
         if (isNullable)
@@ -854,7 +877,7 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
         }
         else
         {
-            var value = val!.Value;
+            int value = val!.Value;
             if (value < minimum || value > minimum + limit)
             {
                 logger.Warn($"Property ({name}) was out of range.");
@@ -868,6 +891,21 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
         var index = GetEnumIndex<T>(val);
         var limit = GetEnumCount<T>();
         flags.Append(index, limit);
+    }
+
+    private void SerializeWeightedEnum<T>(FlagBuilder flags, string name, ImmutableDictionary<T, int> val, Func<T, bool> includeValueFunc) where T : Enum
+    {
+        int enumCount = GetEnumCount<T>();
+        for (int enumIndex = 0; enumIndex < enumCount; enumIndex++)
+        {
+            T enumOption = GetEnumFromIndex<T>(enumIndex)!;
+            if (includeValueFunc(enumOption))
+            {
+                int enumWeight = val.GetValueOrDefault(enumOption);
+                Debug.Assert(0 <= enumWeight && enumWeight <= 3);
+                flags.Append(enumWeight, 4);
+            }
+        }
     }
 
     private void SerializeCustom<Serializer, T>(FlagBuilder flags, string name, T? val) where Serializer : IFlagSerializer where T : class
