@@ -198,6 +198,11 @@ public class LinearWeightedRandom<T> : IWeightedSampler<T>
         return new LinearWeightedRandom<T>(values.ToArray(), cumulativeWeights.ToArray(), _totalWeight - removedWeight); ;
     }
 
+    public bool HasPositiveWeight()
+    {
+        return _totalWeight > 0;
+    }
+
     public int Weight(T t)
     {
         throw new NotImplementedException();
