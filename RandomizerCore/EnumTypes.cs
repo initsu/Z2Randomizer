@@ -276,30 +276,32 @@ public enum BossRoomsExitType
 [DefaultValue(VANILLA)]
 public enum Biome
 {
-    [Description("Vanilla")]
+    [Description("Vanilla"), CanHaveWeight]
     VANILLA,
-    [Description("Vanilla Shuffle")]
+    [Description("Vanilla Shuffle"), CanHaveWeight]
     VANILLA_SHUFFLE,
-    [Description("Vanilla Like")]
+    [Description("Vanilla Like"), CanHaveWeight]
     VANILLALIKE,
-    [Description("Islands")]
+    [Description("Islands"), CanHaveWeight]
     ISLANDS,
-    [Description("Canyon")]
+    [Description("Canyon"), CanHaveWeight]
     CANYON,
     [Description("Dry Canyon")]
     DRY_CANYON,
-    [Description("Mountainous")]
+    [Description("Mountainous"), CanHaveWeight]
     MOUNTAINOUS,
-    [Description("Volcano")]
+    [Description("Volcano"), CanHaveWeight]
     VOLCANO,
-    [Description("Caldera")]
+    [Description("Caldera"), CanHaveWeight]
     CALDERA,
     [Description("Random (No Vanilla or Shuffle)"), IsRandom]
     RANDOM_NO_VANILLA_OR_SHUFFLE,
     [Description("Random (No Vanilla)"), IsRandom]
     RANDOM_NO_VANILLA,
     [Description("Random"), IsRandom]
-    RANDOM
+    RANDOM,
+    [Description("Random (Custom)"), IsRandom]
+    RANDOM_CUSTOM,
 }
 
 static class BiomeExtensions
@@ -335,6 +337,7 @@ static class BiomeExtensions
             Biome.RANDOM => true,
             Biome.RANDOM_NO_VANILLA => true,
             Biome.RANDOM_NO_VANILLA_OR_SHUFFLE => true,
+            Biome.RANDOM_CUSTOM => true,
             _ => false
         };
     }
@@ -353,11 +356,12 @@ static class BiomeExtensions
             Biome.RANDOM => true,
             Biome.RANDOM_NO_VANILLA => true,
             Biome.RANDOM_NO_VANILLA_OR_SHUFFLE => true,
+            Biome.RANDOM_CUSTOM => true,
             _ => false
         };
     }
 
-    public static bool IsDMBiome(this Biome biome)
+    public static bool IsDmBiome(this Biome biome)
     {
         return biome switch
         {
@@ -371,6 +375,7 @@ static class BiomeExtensions
             Biome.RANDOM => true,
             Biome.RANDOM_NO_VANILLA => true,
             Biome.RANDOM_NO_VANILLA_OR_SHUFFLE => true,
+            Biome.RANDOM_CUSTOM => true,
             _ => false
         };
     }
@@ -383,6 +388,7 @@ static class BiomeExtensions
             Biome.VANILLA_SHUFFLE => true,
             Biome.VANILLALIKE => true,
             Biome.RANDOM => true,
+            Biome.RANDOM_CUSTOM => true,
             _ => false
         };
     }
@@ -862,6 +868,10 @@ public class StringValueAttribute(string v) : Attribute
     }
 }
 
+public class CanHaveWeightAttribute : Attribute
+{
+}
+
 public class IsRandomAttribute : Attribute
 {
 }
@@ -929,7 +939,7 @@ public static class Enums
 
     public static IEnumerable<EnumDescription> WestBiomeList { get; } = ToDescriptions<Biome>(i => i.IsWestBiome());
     public static IEnumerable<EnumDescription> EastBiomeList { get; } = ToDescriptions<Biome>(i => i.IsEastBiome());
-    public static IEnumerable<EnumDescription> DMBiomeList { get; } = ToDescriptions<Biome>(i => i.IsDMBiome());
+    public static IEnumerable<EnumDescription> DMBiomeList { get; } = ToDescriptions<Biome>(i => i.IsDmBiome());
     public static IEnumerable<EnumDescription> MazeBiomeList { get; } = ToDescriptions<Biome>(i => i.IsMazeBiome());
     public static IEnumerable<EnumDescription> WestClimateList { get; } = ToDescriptions<ClimateEnum>(i => i.IsWestClimate());
     public static IEnumerable<EnumDescription> EastClimateList { get; } = ToDescriptions<ClimateEnum>(i => i.IsEastClimate());
@@ -1001,6 +1011,16 @@ public static class Enums
         }
 
         return new EnumDescription() { Value = self, Description = description, Info = info };
+    }
+
+    public static bool CanHaveWeight(this Enum self)
+    {
+        Type type = self.GetType();
+        string? name = Enum.GetName(type, self);
+        if (name == null) { return false; }
+        FieldInfo? fieldInfo = type.GetField(name);
+        if (fieldInfo == null) { return false; }
+        return fieldInfo.IsDefined(typeof(CanHaveWeightAttribute), inherit: false);
     }
 
     public static bool IsRandom(this Enum self)

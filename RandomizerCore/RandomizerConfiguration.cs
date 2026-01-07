@@ -251,7 +251,35 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
     private Biome mazeBiome;
 
     [Reactive]
+    [ConditionallyIncludeInFlags]
     private ImmutableDictionary<Biome, int> biomeWeights = new Dictionary<Biome, int>().ToImmutableDictionary();
+    public bool biomeWeightsIsIncluded()
+    {
+        foreach (var biome in (List<Biome>)[westBiome, eastBiome, dmBiome, mazeBiome])
+        {
+            switch (biome)
+            {
+                case Biome.RANDOM_CUSTOM:
+                    return true;
+            }
+        }
+        return false;
+    }
+    public ImmutableDictionary<Biome, int> biomeWeightsDefault()
+    {
+        var builder = ImmutableDictionary.CreateBuilder<Biome, int>();
+
+        foreach (var enumValue in Enum.GetValues<Biome>().Where(b => b.CanHaveWeight()))
+        {
+            builder.Add(enumValue, enumValue switch
+            {
+                Biome.VANILLA => 0,
+                Biome.VANILLA_SHUFFLE => 0,
+                _ => 1,
+            });
+        }
+        return builder.ToImmutableDictionary();
+    }
 
     [Reactive]
     private ClimateEnum westClimate;
@@ -276,8 +304,14 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
             {
                 case Biome.VANILLA_SHUFFLE:
                 case Biome.RANDOM:
-                case Biome.RANDOM_NO_VANILLA: /* still includes shuffle */
+                case Biome.RANDOM_NO_VANILLA:
                     return true;
+                case Biome.RANDOM_CUSTOM:
+                    if (biomeWeights.GetValueOrDefault(Biome.VANILLA_SHUFFLE) > 0)
+                    {
+                        return true;
+                    }
+                    continue;
             }
         }
         return false;
@@ -889,7 +923,7 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
         flags.Append(index, limit);
     }
 
-    private void SerializeWeightedEnum<T>(FlagBuilder flags, string name, ImmutableDictionary<T, int> val, Predicate<T> includeOptionPredicate) where T : Enum
+    private void SerializeWeightedEnum<T>(FlagBuilder flags, string name, ImmutableDictionary<T, int>? val, Predicate<T> includeOptionPredicate) where T : Enum
     {
         int enumCount = GetEnumCount<T>();
         for (int enumIndex = 0; enumIndex < enumCount; enumIndex++)
@@ -897,7 +931,7 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
             T enumOption = GetEnumFromIndex<T>(enumIndex)!;
             if (includeOptionPredicate(enumOption))
             {
-                int enumWeight = val.GetValueOrDefault(enumOption);
+                int enumWeight = val?.GetValueOrDefault(enumOption) ?? 0;
                 Debug.Assert(0 <= enumWeight && enumWeight <= 3);
                 flags.Append(enumWeight, 4);
             }
@@ -1178,7 +1212,17 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
                 _ => throw new Exception("Invalid Biome")
             };
         }
-        else if(westBiome == Biome.CANYON)
+        else if (westBiome == Biome.RANDOM_CUSTOM)
+        {
+            var keys = Enum.GetValues<Biome>().Where(b => b.IsWestBiome());
+            var westWeights = keys.Select(k => (k, biomeWeights[k])).ToList();
+            var weightedRnd = new LinearWeightedRandom<Biome>(westWeights);
+            if (!weightedRnd.HasPositiveWeight()) { throw new UserFacingException("Impossible Biome Weights", "At least one West biome must be included at above zero weight."); }
+            Biome b = weightedRnd.Next(r);
+            if (b == Biome.CANYON) { b = r.Next(2) == 0 ? Biome.CANYON : Biome.DRY_CANYON; }
+            properties.WestBiome = b;
+        }
+        else if (westBiome == Biome.CANYON)
         {
             properties.WestBiome = r.Next(2) == 0 ? Biome.CANYON : Biome.DRY_CANYON;
         }
@@ -1187,9 +1231,10 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
         }
         if (eastBiome == Biome.RANDOM || eastBiome == Biome.RANDOM_NO_VANILLA || eastBiome == Biome.RANDOM_NO_VANILLA_OR_SHUFFLE)
         {
-            int shuffleLimit = eastBiome switch { 
-                Biome.RANDOM => 7, 
-                Biome.RANDOM_NO_VANILLA => 6, 
+            int shuffleLimit = eastBiome switch
+            {
+                Biome.RANDOM => 7,
+                Biome.RANDOM_NO_VANILLA => 6,
                 Biome.RANDOM_NO_VANILLA_OR_SHUFFLE => 5,
                 _ => throw new ImpossibleException()
             };
@@ -1204,6 +1249,16 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
                 6 => Biome.VANILLA,
                 _ => throw new Exception("Invalid Biome")
             };
+        }
+        else if (eastBiome == Biome.RANDOM_CUSTOM)
+        {
+            var keys = Enum.GetValues<Biome>().Where(b => b.IsEastBiome());
+            var eastWeights = keys.Select(k => (k, biomeWeights[k])).ToList();
+            var weightedRnd = new LinearWeightedRandom<Biome>(eastWeights);
+            if (!weightedRnd.HasPositiveWeight()) { throw new UserFacingException("Impossible Biome Weights", "At least one East biome must be included at above zero weight."); }
+            Biome b = weightedRnd.Next(r);
+            if (b == Biome.CANYON) { b = r.Next(2) == 0 ? Biome.CANYON : Biome.DRY_CANYON; }
+            properties.EastBiome = b;
         }
         else if (eastBiome == Biome.CANYON)
         {
@@ -1232,6 +1287,16 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
                 6 => Biome.VANILLA,
                 _ => throw new Exception("Invalid Biome")
             };
+        }
+        else if (dmBiome == Biome.RANDOM_CUSTOM)
+        {
+            var keys = Enum.GetValues<Biome>().Where(b => b.IsDmBiome());
+            var dmWeights = keys.Select(k => (k, biomeWeights[k])).ToList();
+            var weightedRnd = new LinearWeightedRandom<Biome>(dmWeights);
+            if (!weightedRnd.HasPositiveWeight()) { throw new UserFacingException("Impossible Biome Weights", "At least one Death Mountain biome must be included at above zero weight."); }
+            Biome b = weightedRnd.Next(r);
+            if (b == Biome.CANYON) { b = r.Next(2) == 0 ? Biome.CANYON : Biome.DRY_CANYON; }
+            properties.DmBiome = b;
         }
         else if (dmBiome == Biome.CANYON)
         {
