@@ -13,6 +13,7 @@ public class BiomesViewModel : ReactiveObject, IActivatableViewModel
     public MainViewModel Main { get; }
 
     public IObservable<bool> VanillaShuffleUsesActualTerrainIsIncludedObservable { get; }
+    public IObservable<bool> BiomeWeightsIsIncludedObservable { get; }
 
     public BiomesViewModel(MainViewModel main)
     {
@@ -21,6 +22,10 @@ public class BiomesViewModel : ReactiveObject, IActivatableViewModel
 
         VanillaShuffleUsesActualTerrainIsIncludedObservable = Main.FlagsChanged
             .Select(_ => Main.Config.vanillaShuffleUsesActualTerrainIsIncluded())
+            .DistinctUntilChanged();
+
+        BiomeWeightsIsIncludedObservable = Main.FlagsChanged
+            .Select(_ => Main.Config.biomeWeightsIsIncluded())
             .DistinctUntilChanged();
 
         this.WhenActivated(OnActivate);
