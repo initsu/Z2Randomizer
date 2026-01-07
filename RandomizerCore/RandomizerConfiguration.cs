@@ -245,8 +245,7 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
     private ImmutableDictionary<Biome, int> biomeWeights = new Dictionary<Biome, int>().ToImmutableDictionary();
     public bool biomeWeightsIsIncluded()
     {
-        List<Biome> biomes = [westBiome, eastBiome, dmBiome, mazeBiome];
-        foreach (var biome in biomes)
+        foreach (var biome in (List<Biome>)[westBiome, eastBiome, dmBiome, mazeBiome])
         {
             switch (biome)
             {
@@ -283,8 +282,7 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
     [DefaultValue(true)]
     private bool vanillaShuffleUsesActualTerrain;
     public bool vanillaShuffleUsesActualTerrainIsIncluded() {
-        List<Biome> biomes = [westBiome, eastBiome, dmBiome, mazeBiome];
-        foreach (var biome in biomes)
+        foreach (var biome in (List<Biome>)[westBiome, eastBiome, dmBiome, mazeBiome])
         {
             switch (biome)
             {
