@@ -239,26 +239,32 @@ public enum GPStyle
 [DefaultValue(VANILLA)]
 public enum PalaceStyle
 {
-    [Description("Vanilla")]
+    [Description("Vanilla"), CanHaveWeight]
     VANILLA,
-    [Description("Shuffled")]
+    [Description("Shuffled"), CanHaveWeight]
     SHUFFLED,
-    [Description("Reconstructed")]
+    [Description("Reconstructed"), CanHaveWeight]
     RECONSTRUCTED,
-    [Description("Sequential")]
+    [Description("Sequential"), CanHaveWeight]
     SEQUENTIAL,
-    [Description("Random Walk")]
+    [Description("Random Walk"), CanHaveWeight]
     RANDOM_WALK,
-    [Description("Chaos")]
+    [Description("Chaos"), CanHaveWeight]
     CHAOS,
-    [Description("Random")]
+    [Description("Random"), IsRandom]
     RANDOM,
-    [Description("Random (No Vanilla or Shuffle)")]
+    [Description("Random (No Vanilla or Shuffle)"), IsRandom]
     RANDOM_NO_VANILLA_OR_SHUFFLE,
-    [Description("Random (All Same)")]
-    RANDOM_ALL,
-    [Description("Random (Per Palace)")]
-    RANDOM_PER_PALACE
+    [Description("Random (Custom)"), IsRandom]
+    RANDOM_CUSTOM,
+    [Description("Random (All Same)"), IsRandom]
+    RANDOM_ALL_SAME,
+    [Description("Random (Per Palace)"), IsRandom]
+    RANDOM_PER_PALACE,
+    [Description("Random (All Same) (Custom)"), IsRandom]
+    RANDOM_ALL_SAME_CUSTOM,
+    [Description("Random (Per Palace) (Custom)"), IsRandom]
+    RANDOM_PER_PALACE_CUSTOM,
 }
 
 public static class PalaceStyleExtensions
@@ -955,9 +961,11 @@ public static class Enums
     public static IEnumerable<EnumDescription> PalaceLengthOptionList { get; } = ToDescriptions<PalaceLengthOption>();
     public static IEnumerable<EnumDescription> PalaceItemRoomCountOptions { get; } = ToDescriptions<PalaceItemRoomCount>();
     public static IEnumerable<EnumDescription> NormalPalaceStyleList { get; }
-        = ToDescriptions<PalaceStyle>(i => i != PalaceStyle.RANDOM && i != PalaceStyle.RANDOM_NO_VANILLA_OR_SHUFFLE);
+        = ToDescriptions<PalaceStyle>(i => !i.IsRandom() || i == PalaceStyle.RANDOM_PER_PALACE || i == PalaceStyle.RANDOM_ALL_SAME ||
+                                           i == PalaceStyle.RANDOM_PER_PALACE_CUSTOM || i == PalaceStyle.RANDOM_ALL_SAME_CUSTOM);
     public static IEnumerable<EnumDescription> GpPalaceStyleList { get; } 
-        = ToDescriptions<PalaceStyle>(i => i != PalaceStyle.RANDOM_PER_PALACE && i != PalaceStyle.RANDOM_ALL);
+        = ToDescriptions<PalaceStyle>(i => !i.IsRandom() || i == PalaceStyle.RANDOM || i == PalaceStyle.RANDOM_NO_VANILLA_OR_SHUFFLE ||
+                                           i == PalaceStyle.RANDOM_CUSTOM);
     public static IEnumerable<EnumDescription> BossRoomsExitTypeList { get; } = ToDescriptions<BossRoomsExitType>();
 
     public static IEnumerable<EnumDescription> WestBiomeList { get; } = ToDescriptions<Biome>(i => i.IsWestBiome());
