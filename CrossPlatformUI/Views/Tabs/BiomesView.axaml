@@ -7,6 +7,7 @@
              xmlns:ui="clr-namespace:CrossPlatformUI"
              xmlns:vm="clr-namespace:CrossPlatformUI.ViewModels"
              xmlns:vmt="clr-namespace:CrossPlatformUI.ViewModels.Tabs"
+             xmlns:views="clr-namespace:CrossPlatformUI.Views"
              xmlns:overworld="clr-namespace:Z2Randomizer.RandomizerCore.Overworld;assembly=RandomizerCore"
              xmlns:lang="clr-namespace:Z2Randomizer.CrossPlatformUI.Lang"
              mc:Ignorable="d" d:DesignWidth="940" d:DesignHeight="750"
@@ -101,15 +102,20 @@
                           Content="All Water Is Walkable With Boots">
                     <ToolTip.Tip><TextBlock Text="{x:Static lang:Resources.AllWaterIsWalkableWithBootsToolTip}"/></ToolTip.Tip>
                 </CheckBox>
-            </StackPanel>
 
-            <StackPanel Grid.Column="1" Margin="0 0">
                 <CheckBox IsThreeState="False"
                           IsVisible="{Binding VanillaShuffleUsesActualTerrainIsIncludedObservable^}"
                           IsChecked="{Binding Main.Config.VanillaShuffleUsesActualTerrain}"
                           Content="Vanilla Shuffle Shows Actual Terrain">
                     <ToolTip.Tip><TextBlock Text="{x:Static lang:Resources.VanillaShuffleShowsActualTerrainToolTip}"/></ToolTip.Tip>
                 </CheckBox>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Margin="0 0">
+                <views:WeightedEnumSelection EnumType="{x:Type rc:Biome}"
+                                             Weights="{Binding Main.Config.BiomeWeights}"
+                                             IsVisible="{Binding BiomeWeightsIsIncludedObservable^}"
+                                             Heading="Custom Biome Weights" />
             </StackPanel>
         </Grid>
     </Grid>
