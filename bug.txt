@@ -1,0 +1,21 @@
+flags: hEAAF1dALu32XBLsjL+3TpF!Sk@+Owsb0wnGRs!AABRcq
+seed: 133173993
+
+Biome is Caldera
+Climate is Chaos
+
+this fails to generate Death Mountain (generation hangs)
+
+even forcing the size magically to be 64x75 does not fix it
+
+the root problem is in
+
+> Terraforming.DrawBridge
+
+as we keep trying to find water on the east border but
+
+> FindWaterTileAtEdge
+
+keeps returning false in an endless loop
+
+this probably needs a bigger fix. like force-creating a bridge and water if all else fails?

@@ -174,8 +174,10 @@ sealed class DeathMountain : World
 
             if (biome == Biome.CALDERA) // Caldera won't work with less
             {
-                MAP_ROWS = Math.Max(MAP_ROWS, 35);
-                MAP_COLS = Math.Max(MAP_COLS, 35);
+                // 35 x 35 has worked before
+                // temporary override to rule out this being the cause
+                MAP_COLS = Math.Max(MAP_COLS, 64);
+                MAP_ROWS = Math.Max(MAP_ROWS, 75);
             }
 
             // TODO: use metadata for num caves to remove
