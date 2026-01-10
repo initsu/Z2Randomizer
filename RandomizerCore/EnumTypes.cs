@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
@@ -135,17 +136,17 @@ public enum LifeEffectiveness
 [DefaultValue(VANILLA)]
 public enum XPEffectiveness
 {
-    [Description("Vanilla (No Randomization)"), RandomRangeInt(Low = 0, High = 0)]
+    [Description("Vanilla; (No Randomization)"), RandomRangeInt(Low = 0, High = 0)]
     VANILLA,
-    [Description("Low [-3 to +1]"), RandomRangeInt(Low = -3, High = 1), IsRandom]
+    [Description("Low; [-3 to +1]"), RandomRangeInt(Low = -3, High = 1), IsRandom]
     RANDOM_LOW,
-    [Description("Average [-2 to +2]"), RandomRangeInt(Low = -2, High = 2), IsRandom]
+    [Description("Average; [-2 to +2]"), RandomRangeInt(Low = -2, High = 2), IsRandom]
     RANDOM,
-    [Description("Average (Low Variance) [-1 to +1]"), RandomRangeInt(Low = -1, High = 1), IsRandom]
-    LESS_VARIANCE,
-    [Description("Above Average (Low Variance) [0 to +1]"), RandomRangeInt(Low = 0, High = 1), IsRandom]
+    [Description("Low Variance; [-1 to +1]"), RandomRangeInt(Low = -1, High = 1), IsRandom]
+    LOW_VARIANCE,
+    [Description("Slightly High; [0 to +1]"), RandomRangeInt(Low = 0, High = 1), IsRandom]
     SLIGHTLY_HIGH,
-    [Description("High [-1 to +3]"), RandomRangeInt(Low = -1, High = 3), IsRandom]
+    [Description("High; [-1 to +3]"), RandomRangeInt(Low = -1, High = 3), IsRandom]
     RANDOM_HIGH,
     [Description("None"), RandomRangeInt(Low = -15, High = -15)]
     NONE
@@ -153,13 +154,13 @@ public enum XPEffectiveness
 
 public enum EnemyLifeOption
 {
-    [Description("Vanilla")]
+    [Description("Vanilla; (No Randomization)")]
     VANILLA,
-    [Description("Medium [-50% to +50%]"), RandomRangeDouble(Low = 0.5, High = 1.5)]
+    [Description("Medium; [-50% to +50%]"), RandomRangeDouble(Low = 0.5, High = 1.5)]
     MEDIUM,
-    [Description("High [-0% to +100%]"), RandomRangeDouble(Low = 1.0, High = 2.0)]
+    [Description("High; [-0% to +100%]"), RandomRangeDouble(Low = 1.0, High = 2.0)]
     HIGH,
-    [Description("Full Range [-50% to +100%]"), RandomRangeDouble(Low = 0.5, High = 2.0)]
+    [Description("Full Range; [-50% to +100%]"), RandomRangeDouble(Low = 0.5, High = 2.0)]
     FULL_RANGE,
 }
 
@@ -918,9 +919,9 @@ public record EnumDescription
     public object? Value { get; init; }
 
     public string? Description { get; init; }
-    
-    public string? Help { get; init; }
-    
+
+    public string? Info { get; init; }
+
     public override string ToString()
     {
         return Description ?? "";
@@ -936,7 +937,7 @@ public static class Enums
     public static IEnumerable<EnumDescription> LifeEffectivenessList { get; } = ToDescriptions<LifeEffectiveness>();
     public static IEnumerable<EnumDescription> XPEffectivenessList { get; } = ToDescriptions<XPEffectiveness>();
     public static IEnumerable<EnumDescription> DripperEnemyOptionList { get; } = ToDescriptions<DripperEnemyOption>();
-    public static IEnumerable<EnumDescription> EnemyLifeOptionList { get; } = ToDescriptions<EnemyLifeOption>();
+    public static ImmutableList<EnumDescription> EnemyLifeOptionList { get; } = ToDescriptions<EnemyLifeOption>().ToImmutableList();
     public static IEnumerable<EnumDescription> FireOptionList { get; } = ToDescriptions<FireOption>();
     public static IEnumerable<EnumDescription> BossRoomMinDistanceOptions { get; } = ToDescriptions<BossRoomMinDistance>();
     public static IEnumerable<EnumDescription> PalaceLengthOptionList { get; } = ToDescriptions<PalaceLengthOption>();
@@ -994,12 +995,16 @@ public static class Enums
         return Enum.ToObject(enumType, (attributes[0] as DefaultValueAttribute)?.Value!);
     }
 
-    public static EnumDescription ToDescription(this Enum value)
+    public static EnumDescription ToDescription(this Enum self)
     {
         string description;
-        string? help = null;
-        
-        var attributes = value.GetType().GetField(value.ToString())?.GetCustomAttributes(typeof(DescriptionAttribute), false);
+        string? info = null;
+
+        Type type = self.GetType();
+        string name = Enum.GetName(type, self)!;
+        var field = type.GetField(name);
+
+        var attributes = field?.GetCustomAttributes(typeof(DescriptionAttribute), false);
         if (attributes?.Length is > 0)
         {
             description = (attributes[0] as DescriptionAttribute)?.Description!;
@@ -1007,16 +1012,16 @@ public static class Enums
         else
         {
             var ti = CultureInfo.CurrentCulture.TextInfo;
-            description = ti.ToTitleCase(ti.ToLower(value.ToString().Replace("_", " ")));
+            description = ti.ToTitleCase(ti.ToLower(name.Replace("_", " ")));
         }
-        
+
         if (description.IndexOf(';') is var index && index != -1)
         {
-            help = description.Substring(index + 1);
+            info = description.Substring(index + 1);
             description = description.Substring(0, index);
         }
 
-        return new EnumDescription() { Value = value, Description = description, Help = help };
+        return new EnumDescription() { Value = self, Description = description, Info = info };
     }
 
     public static bool IsRandom(this Enum self)
