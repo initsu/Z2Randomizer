@@ -279,6 +279,22 @@ public class RoomPool
                 }
                 ItemRoomsByDirection[key] = new TableWeightedRandom<Room>(updatedWeights);
             }
+
+        if (!props.IncludeDropRooms)
+        {
+            RemoveRooms(room => room.HasDrop);
+        }
+        if (!props.IncludeLongDeadEnds)
+        {
+            RemoveRooms(room => room.Tags != null && room.Tags.Contains("LongDeadEnd"));
+        }
+        if (!props.IncludeEasyRooms)
+        {
+            RemoveRooms(room => room.Tags != null && room.Tags.Contains("Easy"));
+    }
+        if (!props.IncludeExpertRooms)
+        {
+            RemoveRooms(room => room.Tags != null && room.Tags.Contains("Expert"));
         }
     }
 
