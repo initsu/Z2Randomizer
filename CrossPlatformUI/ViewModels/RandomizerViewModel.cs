@@ -80,7 +80,7 @@ public class RandomizerViewModel : ReactiveValidationObject, IRoutableViewModel,
                     }
                 case "Dark":
                     {
-                        var theme = Theme.Create(Theme.Dark, Color.Parse("#ea9e22"), Color.Parse("#969696"));
+                        var theme = Theme.Create(Theme.Dark, Color.Parse("#ffbc33"), Color.Parse("#969696"));
                         theme.Paper = Color.Parse("#1a1a1a");
                         var themeBootstrap = App.Current!.LocateMaterialTheme<MaterialTheme>();
                         themeBootstrap.CurrentTheme = theme;
