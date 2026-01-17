@@ -34,6 +34,9 @@ public class Hyrule
     //This controls how many times
     private const int NON_CONTINENT_SHUFFLE_ATTEMPT_LIMIT = 10;
 
+    //This controls how many times
+    private const int TERRAIN_GENERATION_ATTEMPT_LIMIT = 2500;
+
     //private readonly Item[] SHUFFLABLE_STARTING_ITEMS = new Item[] { Item.CANDLE, Item.GLOVE, Item.RAFT, Item.BOOTS, Item.FLUTE, Item.CROSS, Item.HAMMER, Item.MAGIC_KEY };
 
     private static readonly Logger logger = LogManager.GetCurrentClassLogger();
@@ -1792,7 +1795,13 @@ public class Hyrule
                 timestamp = DateTime.Now;
                 if (!westHyrule.AllReached)
                 {
-                    while (!westHyrule.Terraform(props, ROMData)) { totalWestGenerationAttempts++; }
+                    while (!westHyrule.Terraform(props, ROMData))
+                    { 
+                        if (++totalWestGenerationAttempts == TERRAIN_GENERATION_ATTEMPT_LIMIT)
+                        {
+                            throw new Exception("Failed to generate West Continent");
+                        }
+                    }
                     totalWestGenerationAttempts++;
                 }
                 westHyrule.ResetVisitabilityState();
@@ -1804,7 +1813,13 @@ public class Hyrule
                 timestamp = DateTime.Now;
                 if (!deathMountain.AllReached)
                 {
-                    while (!deathMountain.Terraform(props, ROMData)) { totalDeathMountainGenerationAttempts++; }
+                    while (!deathMountain.Terraform(props, ROMData))
+                    { 
+                        if (++totalDeathMountainGenerationAttempts == TERRAIN_GENERATION_ATTEMPT_LIMIT)
+                        {
+                            throw new Exception("Failed to generate Death Mountain");
+                        }
+                    }
                     totalDeathMountainGenerationAttempts++;
                 }
                 deathMountain.ResetVisitabilityState();
@@ -1816,7 +1831,13 @@ public class Hyrule
                 timestamp = DateTime.Now;
                 if (!eastHyrule.AllReached)
                 {
-                    while (!eastHyrule.Terraform(props, ROMData)) { totalEastGenerationAttempts++; }
+                    while (!eastHyrule.Terraform(props, ROMData))
+                    { 
+                        if (++totalEastGenerationAttempts == TERRAIN_GENERATION_ATTEMPT_LIMIT)
+                        {
+                            throw new Exception("Failed to generate East Continent");
+                        }
+                    }
                     totalEastGenerationAttempts++;
                 }
                 eastHyrule.ResetVisitabilityState();
@@ -1828,7 +1849,13 @@ public class Hyrule
                 timestamp = DateTime.Now;
                 if (!mazeIsland.AllReached)
                 {
-                    while (!mazeIsland.Terraform(props, ROMData)) { totalMazeIslandGenerationAttempts++; }
+                    while (!mazeIsland.Terraform(props, ROMData))
+                    {
+                        if (++totalMazeIslandGenerationAttempts == TERRAIN_GENERATION_ATTEMPT_LIMIT)
+                        {
+                            throw new Exception("Failed to generate Maze Island");
+                        }
+                    }
                     totalMazeIslandGenerationAttempts++;
                 }
                 mazeIsland.ResetVisitabilityState();
