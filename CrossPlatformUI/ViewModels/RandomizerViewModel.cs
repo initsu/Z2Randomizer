@@ -92,6 +92,7 @@ public class RandomizerViewModel : ReactiveValidationObject, IRoutableViewModel,
         Main = main;
         HostScreen = Main;
         BiomesViewModel = new(Main);
+        ItemsViewModel = new(Main);
         CustomizeViewModel = new(Main);
         Activator = new ViewModelActivator();
 
@@ -314,6 +315,7 @@ public class RandomizerViewModel : ReactiveValidationObject, IRoutableViewModel,
     public MainViewModel Main { get; }
     [JsonIgnore]
     public BiomesViewModel BiomesViewModel { get; }
+    public ItemsViewModel ItemsViewModel { get; }
     public CustomizeViewModel CustomizeViewModel { get; }
     
     [JsonIgnore]
