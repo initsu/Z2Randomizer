@@ -66,6 +66,12 @@ public class Location
         }
     }
 
+    public IntVector2 Pos
+    {
+        get => new(Xpos, Y);
+        set { Xpos = value.X; Y = value.Y; }
+    }
+
     public bool NeedJump { get; set; }
 
     public bool NeedHammer { get; set; }
