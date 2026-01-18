@@ -538,6 +538,9 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
     [Reactive]
     private bool? includeQuestItemsInShuffle;
 
+    [Reactive]
+    private bool removeFairy;
+
     //Drops
     [Reactive]
     private bool shuffleItemDropFrequency;
@@ -876,6 +879,9 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
             Seed = seed
         };
 
+        properties.RemoveItems = [];
+        if (removeFairy) { properties.RemoveItems.Add(Collectable.FAIRY_SPELL); }
+
         LinearWeightedRandom<PalaceStyle> weightsAll = new([
             (PalaceStyle.VANILLA, 8),
             (PalaceStyle.SHUFFLED, 8),
@@ -896,7 +902,7 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
         {
             //Start Configuration
             ShuffleStartingCollectables(POSSIBLE_STARTING_ITEMS, startItemsLimit, shuffleStartingItems, properties, r);
-            ShuffleStartingCollectables(POSSIBLE_STARTING_SPELLS, startSpellsLimit, shuffleStartingSpells, properties, r);
+            properties.StartingSpells = ShuffleStartingCollectables(POSSIBLE_STARTING_SPELLS, startSpellsLimit, shuffleStartingSpells, properties, r).ToHashSet();
 
             if (gpStyle == PalaceStyle.RANDOM)
             {
@@ -1747,7 +1753,7 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
         };
     }
 
-    private void ShuffleStartingCollectables(Collectable[] possibleCollectables, StartingResourceLimit limit, bool shuffleRandom, 
+    private List<Collectable> ShuffleStartingCollectables(Collectable[] possibleCollectables, StartingResourceLimit limit, bool shuffleRandom, 
         RandomizerProperties properties, Random r)
     {
         int itemLimit = limit.AsInt();
@@ -1777,7 +1783,7 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
                 {
                     break;
                 }
-                if (!StartsWithCollectable(collectable))
+                if (!StartsWithCollectable(collectable) && !properties.RemoveItems.Contains(collectable))
                 {
                     if (r.Next(4) == 0)
                     {
@@ -1791,6 +1797,8 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
         {
             properties.SetStartingCollectable(collectable);
         }
+
+        return startingItems;
     }
 
     private int CountPossibleMinorItems()
