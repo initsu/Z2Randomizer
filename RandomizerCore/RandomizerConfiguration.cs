@@ -675,6 +675,13 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
     [Reactive]
     private bool? includeQuestItemsInShuffle;
 
+    [Reactive]
+    private bool? includeBagusNoteInShuffle;
+
+    [Reactive]
+    private bool? townQuestLocationsAreMinorItems;
+    public bool townQuestLocationsAreMinorItemsIsIncluded() => includeSwordTechsInShuffle != false || includeQuestItemsInShuffle != false;
+
     //Drops
     [Reactive]
     private bool shuffleItemDropFrequency;
@@ -1173,6 +1180,12 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
 
             //Not settable yet
             properties.MaxMagicContainers = 8;
+
+            // Item shuffle settings that affect item slots
+            properties.StartWithSpellItems = removeSpellItems ?? GetIndeterminateFlagValue(r);
+            properties.IncludeQuestItemsInShuffle = includeQuestItemsInShuffle ?? GetIndeterminateFlagValue(r);
+            properties.IncludeSwordTechsInShuffle = includeSwordTechsInShuffle ?? GetIndeterminateFlagValue(r);
+            properties.TownQuestLocationsAreMinorItems = TownQuestLocationsAreMinorItems ?? GetIndeterminateFlagValue(r);
         } while (!properties.HasEnoughSpaceToAllocateItems());
 
         //Handle Fire
@@ -1620,11 +1633,9 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
         properties.NewKasutoBasementRequirement = randomizeNewKasutoJarRequirements ? r.Next(5,8) : 7;
         properties.AllowImportantItemDuplicates = allowImportantItemDuplicates;
         properties.PbagItemShuffle = includePBagCavesInItemShuffle ?? GetIndeterminateFlagValue(r);
-        properties.StartWithSpellItems = removeSpellItems ?? GetIndeterminateFlagValue(r);
         properties.ShufflePbagXp = shufflePBagAmounts ?? GetIndeterminateFlagValue(r);
-        properties.IncludeQuestItemsInShuffle = includeQuestItemsInShuffle ?? GetIndeterminateFlagValue(r);
         properties.IncludeSpellsInShuffle = includeSpellsInShuffle ?? GetIndeterminateFlagValue(r);
-        properties.IncludeSwordTechsInShuffle = includeSwordTechsInShuffle ?? GetIndeterminateFlagValue(r);
+        properties.IncludeBagusNoteInShuffle = IncludeBagusNoteInShuffle ?? GetIndeterminateFlagValue(r);
 
         //Drops
         properties.ShuffleItemDropFrequency = shuffleItemDropFrequency;
