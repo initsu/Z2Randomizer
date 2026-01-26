@@ -8,13 +8,13 @@ namespace Z2Randomizer.RandomizerCore.Overworld;
 public class Terraforming
 {
     /// used for GrowTerrain optimization
-    private readonly struct PlacedTerrainPreCalc
+    private readonly struct SeedingTerrainTile
     {
-        public readonly double X;
-        public readonly double Y;
+        public readonly int X;
+        public readonly int Y;
         public readonly Terrain Terrain;
         public readonly double CoefSquared;
-        public PlacedTerrainPreCalc(int x, int y, Terrain terrain, double coefSquared)
+        public SeedingTerrainTile(int x, int y, Terrain terrain, double coefSquared)
         {
             X = x;
             Y = y;
@@ -23,8 +23,8 @@ public class Terraforming
         }
     }
 
-    /// Pre-build an array to loop over, since this used MAP_ROWS * MAP_COLS times
-    private static PlacedTerrainPreCalc[] GrowTerrainGetPlacedTerrains(Terrain[,] map, int MAP_COLS, int MAP_ROWS, Climate climate, FrozenSet<Terrain> randomTerrains)
+    /// Pre-build an array to loop over, to not do this for every tile
+    private static SeedingTerrainTile[] GrowTerrainGetPlacedTerrains(Terrain[,] map, int MAP_COLS, int MAP_ROWS, Climate climate, FrozenSet<Terrain> randomTerrains)
     {
         List<(int, int)> placedCoords = new();
         for (int y = 0; y < MAP_ROWS; y++)
@@ -39,69 +39,109 @@ public class Terraforming
             }
         }
         Debug.Assert(placedCoords.Count > 0);
-        PlacedTerrainPreCalc[] placedTerrains = new PlacedTerrainPreCalc[placedCoords.Count];
+        SeedingTerrainTile[] placedTerrains = new SeedingTerrainTile[placedCoords.Count];
         for (int i = 0; i < placedCoords.Count; i++)
         {
             var (py, px) = placedCoords[i];
             Terrain t = map[py, px];
             double c = climate.DistanceCoefficients[(int)t];
-            placedTerrains[i] = new PlacedTerrainPreCalc(px, py, t, c * c);
+            placedTerrains[i] = new SeedingTerrainTile(px, py, t, c * c);
         }
         return placedTerrains;
+    }
+
+    private struct Node
+    {
+        public readonly int X;
+        public readonly int Y;
+        public SeedingTerrainTile Source;
+        public Node(int x, int y)
+        {
+            X = x;
+            Y = y;
+        }
+        public Node(int x, int y, SeedingTerrainTile source)
+        {
+            X = x;
+            Y = y;
+            Source = source;
+        }
     }
 
     public static bool GrowTerrain(Random r, ref Terrain[,] map, int MAP_COLS, int MAP_ROWS, Climate climate, IEnumerable<Terrain> randomTerrainFilter)
     {
         var randomTerrains = climate.RandomTerrains(randomTerrainFilter).ToFrozenSet();
         Terrain[,] mapCopy = new Terrain[MAP_ROWS, MAP_COLS];
-        PlacedTerrainPreCalc[] placedTerrains = GrowTerrainGetPlacedTerrains(map, MAP_COLS, MAP_ROWS, climate, randomTerrains);
+        SeedingTerrainTile[] placedTerrains = GrowTerrainGetPlacedTerrains(map, MAP_COLS, MAP_ROWS, climate, randomTerrains);
         const double EPSILON = 1e-9;
-        double distance, minDistance;
-        List<Terrain> choices = new();
+
+        double[,] minDistancesSquared = new double[MAP_ROWS, MAP_COLS];
         for (int y = 0; y < MAP_ROWS; y++)
         {
             for (int x = 0; x < MAP_COLS; x++)
             {
-                var existingT = map[y, x];
-                if (existingT != Terrain.NONE)
-                {
-                    mapCopy[y, x] = existingT;
-                }
-                else
-                {
-                    choices.Clear();
-                    minDistance = double.MaxValue;
-
-                    for (int i = 0; i < placedTerrains.Length; i++)
-                    {
-                        ref readonly var p = ref placedTerrains[i];
-                        double dx = p.X - x;
-                        double dy = p.Y - y;
-                        Terrain t = p.Terrain;
-
-                        // optimize further by skipping square root, because the
-                        // minimum distance will also be the minimum distance squared
-                        distance = p.CoefSquared * (dx * dx + dy * dy);
-                        if (distance > minDistance) // most likely case first
-                        {
-                            continue;
-                        }
-                        else if (distance + EPSILON < minDistance)
-                        {
-                            choices.Clear();
-                            choices.Add(t);
-                            minDistance = distance;
-                        }
-                        else
-                        {
-                            choices.Add(t);
-                        }
-                    }
-                    Debug.Assert(choices.Count > 0);
-                    mapCopy[y, x] = choices[r.Next(choices.Count)];
-                }
+                minDistancesSquared[y, x] = double.PositiveInfinity;
             }
         }
+        bool[,] visited = new bool[MAP_ROWS, MAP_COLS];
+        var pq = new PriorityQueue<Node, double>();
+
+        for (int i = 0; i < placedTerrains.Length; i++)
+        {
+            ref readonly var p = ref placedTerrains[i];
+            minDistancesSquared[p.Y, p.X] = 0.0;
+            pq.Enqueue(new Node(p.X, p.Y, p), 0.0);
+        }
+
+        while (pq.Count > 0)
+        {
+            var node = pq.Dequeue();
+            int x = node.X;
+            int y = node.Y;
+            if (visited[y, x]) { continue; }
+
+            var p = node.Source;
+            mapCopy[y, x] = p.Terrain;
+            visited[y, x] = true;
+
+            if (x > 0)
+            {
+                ProcessNeighbor(x - 1, y, p);
+            }
+            if (x + 1 < MAP_COLS)
+            {
+                ProcessNeighbor(x + 1, y, p);
+            }
+            if (y > 0)
+            {
+                ProcessNeighbor(x, y - 1, p);
+            }
+            if (y + 1 < MAP_ROWS)
+            {
+                ProcessNeighbor(x, y + 1, p);
+            }
+        }
+
+        void ProcessNeighbor(int x, int y, SeedingTerrainTile p)
+        {
+            if (visited[y, x]) { return; }
+            double dx = x - p.X;
+            double dy = y - p.Y;
+            // optimize further by skipping square root, because the
+            // minimum distance will also be the minimum distance squared
+            double c = p.CoefSquared * (dx * dx + dy * dy);
+            var minDistSq = minDistancesSquared[y, x];
+            if (c > minDistSq) { return; }
+            if (minDistSq - c <= EPSILON)
+            {
+                // quick tie-breaker (won't be fair if more than 2 tiles compete)
+                if (r.NextDouble() < 0.5) { return; }
+            }
+
+            minDistancesSquared[y, x] = c;
+            pq.Enqueue(new Node(x, y, p), c);
+        }
+
         map = mapCopy; // no need to clone as we created this array at the start of the method
         return true;
     }
