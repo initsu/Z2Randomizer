@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -84,6 +85,7 @@ public class Terraforming
             }
         }
         bool[,] visited = new bool[MAP_ROWS, MAP_COLS];
+        var ties = new List<SeedingTerrainTile>[MAP_ROWS, MAP_COLS];
         var pq = new PriorityQueue<Node, double>();
 
         for (int i = 0; i < placedTerrains.Length; i++)
@@ -100,25 +102,35 @@ public class Terraforming
             int y = node.Y;
             if (visited[y, x]) { continue; }
 
+            var listOfTies = ties[y, x];
+            if (listOfTies == null || listOfTies.Count == 1)
+            {
+                mapCopy[y, x] = node.Source.Terrain;
+            }
+            else
+            {
+                var pick = listOfTies[r.Next(listOfTies.Count)];
+                mapCopy[y, x] = pick.Terrain;
+            }
+
             var p = node.Source;
-            mapCopy[y, x] = p.Terrain;
             visited[y, x] = true;
 
-            if (x > 0)
-            {
-                ProcessNeighbor(x - 1, y, p);
-            }
-            if (x + 1 < MAP_COLS)
-            {
-                ProcessNeighbor(x + 1, y, p);
-            }
             if (y > 0)
             {
+                if (x > 0) { ProcessNeighbor(x - 1, y - 1, p); }
                 ProcessNeighbor(x, y - 1, p);
+                if (x < MAP_COLS - 1) { ProcessNeighbor(x + 1, y - 1, p); }
             }
-            if (y + 1 < MAP_ROWS)
+
+            if (x > 0) { ProcessNeighbor(x - 1, y, p); }
+            if (x < MAP_COLS - 1) { ProcessNeighbor(x + 1, y, p); }
+
+            if (y < MAP_ROWS - 1)
             {
+                if (x > 0) { ProcessNeighbor(x - 1, y + 1, p); }
                 ProcessNeighbor(x, y + 1, p);
+                if (x < MAP_COLS - 1) { ProcessNeighbor(x + 1, y + 1, p); }
             }
         }
 
@@ -132,10 +144,27 @@ public class Terraforming
             double c = p.CoefSquared * (dx * dx + dy * dy);
             var minDistSq = minDistancesSquared[y, x];
             if (c > minDistSq) { return; }
+
+            List<SeedingTerrainTile> listOfTies;
             if (minDistSq - c <= EPSILON)
             {
-                // quick tie-breaker (won't be fair if more than 2 tiles compete)
-                if (r.NextDouble() < 0.5) { return; }
+                listOfTies = ties[y, x];
+                if (listOfTies == null)
+                {
+                    listOfTies = new(2);
+                    ties[y, x] = listOfTies;
+                }
+                else
+                {
+                    if (listOfTies.Contains(p)) { return; }
+                }
+                listOfTies.Add(p);
+            }
+            else
+            {
+                listOfTies = new(2);
+                ties[y, x] = listOfTies;
+                listOfTies.Add(p);
             }
 
             minDistancesSquared[y, x] = c;
