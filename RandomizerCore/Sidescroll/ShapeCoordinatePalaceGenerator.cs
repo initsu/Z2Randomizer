@@ -11,6 +11,8 @@ namespace Z2Randomizer.RandomizerCore.Sidescroll;
 public struct PalaceShape
 {
     public Dictionary<Coord, RoomExitType> Grid;
+    public int? Top;
+    public int? LoopAtY;
 
     public PalaceShape(Dictionary<Coord, RoomExitType> grid) : this()
     {
@@ -156,9 +158,23 @@ public abstract class ShapeCoordinatePalaceGenerator : CoordinatePalaceGenerator
         foreach (Room room in palace.AllRooms)
         {
             await Task.Yield();
+            var topY = room.coords.Y + 1;
+            var downY = room.coords.Y - 1;
+            if (shape.LoopAtY != null)
+            {
+                Debug.Assert(shape.Top != null);
+                if (topY == shape.Top - 1)
+                {
+                    topY = shape.LoopAtY!.Value - 1;
+                }
+                if (downY == shape.LoopAtY)
+                {
+                    downY = shape.Top!.Value;
+                }
+            }
             Room[] leftRooms = palace.AllRooms.Where(i => i.coords == room.coords with { X = room.coords.X - 1 }).ToArray();
-            Room[] downRooms = palace.AllRooms.Where(i => i.coords == room.coords with { Y = room.coords.Y - 1 }).ToArray();
-            Room[] upRooms = palace.AllRooms.Where(i => i.coords == room.coords with { Y = room.coords.Y + 1 }).ToArray();
+            Room[] downRooms = palace.AllRooms.Where(i => i.coords == room.coords with { Y = downY }).ToArray();
+            Room[] upRooms = palace.AllRooms.Where(i => i.coords == room.coords with { Y = topY }).ToArray();
             Room[] rightRooms = palace.AllRooms.Where(i => i.coords == room.coords with { X = room.coords.X + 1 }).ToArray();
 
             foreach (Room left in leftRooms)
@@ -201,6 +217,8 @@ public abstract class ShapeCoordinatePalaceGenerator : CoordinatePalaceGenerator
                 }
             }
         }
+
+        Debug.WriteLine("\n" + GetLayoutDebug(shape.Grid, false) + "\n");
 
         //Some percentage of the time, dropifying some rooms causes part of the palace to become
         //unreachable because up was the only way to get there.

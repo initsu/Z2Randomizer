@@ -69,6 +69,7 @@ public class Palaces
                 PalaceStyle.SEQUENTIAL => new SequentialPlacementCoordinatePalaceGenerator(),
                 PalaceStyle.RANDOM_WALK => new RandomWalkCoordinatePalaceGenerator(),
                 PalaceStyle.VANILLA_WEIGHTED => new VanillaWeightedPalaceGenerator(),
+                PalaceStyle.TOROIDAL => new ToroidalGridPalaceGenerator(),
                 PalaceStyle.RECONSTRUCTED => new ReconstructedPalaceGenerator(ct),
                 PalaceStyle.CHAOS => new ChaosPalaceGenerator(),
                 _ => throw new Exception("Unrecognized palace style while generating palaces")
