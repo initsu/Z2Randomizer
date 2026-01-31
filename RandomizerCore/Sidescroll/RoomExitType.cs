@@ -134,6 +134,11 @@ public static class RoomExitTypeExtensions
         return (RoomExitType)((int)exitType & 0b11110);
     }
 
+    public static RoomExitType RemoveDownAndDrop(this RoomExitType exitType)
+    {
+        return (RoomExitType) ((int) exitType & 0b10011);
+    }
+
     public static RoomExitType Merge(this RoomExitType exitType, RoomExitType toMerge)
     {
         return exitType | toMerge;

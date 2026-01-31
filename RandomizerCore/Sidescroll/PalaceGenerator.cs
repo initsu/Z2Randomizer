@@ -123,6 +123,7 @@ public abstract class PalaceGenerator
             case PalaceStyle.TOWER:
             case PalaceStyle.RANDOM_WALK: // not implemented
             case PalaceStyle.VANILLA_WEIGHTED: // based on Random Walk
+            case PalaceStyle.SHAPE_SHUFFLE: // not implemented
                 return;
         }
         if (!AllowDuplicatePrevention(props, palace.Number)) { return; }

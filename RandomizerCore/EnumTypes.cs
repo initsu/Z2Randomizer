@@ -253,6 +253,8 @@ public enum PalaceStyle
     VANILLA_WEIGHTED,
     [Description("Tower"), CanHaveWeight]
     TOWER,
+    [Description("Shape Shuffle"), CanHaveWeight]
+    SHAPE_SHUFFLE,
     [Description("Chaos"), CanHaveWeight]
     CHAOS,
     [Description("Random"), IsRandom]
@@ -288,6 +290,7 @@ public static class PalaceStyleExtensions
         {
             PalaceStyle.SEQUENTIAL => true,
             PalaceStyle.RANDOM_WALK => true,
+            PalaceStyle.SHAPE_SHUFFLE => true,
             PalaceStyle.VANILLA_WEIGHTED => true,
             PalaceStyle.TOWER => true,
             _ => false

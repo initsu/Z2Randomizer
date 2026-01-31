@@ -74,6 +74,7 @@ public class Palaces
                 PalaceStyle.RANDOM_WALK => new RandomWalkCoordinatePalaceGenerator(),
                 PalaceStyle.VANILLA_WEIGHTED => new VanillaWeightedPalaceGenerator(),
                 PalaceStyle.TOWER => new TowerCoordinatePalaceGenerator(),
+                PalaceStyle.SHAPE_SHUFFLE => new ShapeShufflePalaceGenerator(),
                 PalaceStyle.RECONSTRUCTED => new ReconstructedPalaceGenerator(ct),
                 PalaceStyle.CHAOS => new ChaosPalaceGenerator(),
                 _ => throw new Exception("Unrecognized palace style while generating palaces")
