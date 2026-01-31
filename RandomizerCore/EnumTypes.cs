@@ -249,8 +249,11 @@ public enum PalaceStyle
     SEQUENTIAL,
     [Description("Random Walk"), CanHaveWeight]
     RANDOM_WALK,
-    [Description("Vanilla-Weighted"), CanHaveWeight]
+    [Description("Toroidal")]
+    TOROIDAL,
+    [Description("Vanilla-Weighted")]
     VANILLA_WEIGHTED,
+    [Description("Tower")]
     [Description("Tower"), CanHaveWeight]
     TOWER,
     [Description("Chaos"), CanHaveWeight]
@@ -288,6 +291,7 @@ public static class PalaceStyleExtensions
         {
             PalaceStyle.SEQUENTIAL => true,
             PalaceStyle.RANDOM_WALK => true,
+            PalaceStyle.TOROIDAL => true,
             PalaceStyle.VANILLA_WEIGHTED => true,
             PalaceStyle.TOWER => true,
             _ => false
