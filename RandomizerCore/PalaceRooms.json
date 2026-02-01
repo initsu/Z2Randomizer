@@ -21144,5 +21144,32 @@
     "palaceNumber": null,
     "linkedRoomName": null,
     "isUpDownReversed": false
+  },
+  {
+    "name": "Balcony Escape v3",
+    "author": "Knightcrawler",
+    "enabled": true,
+    "bitmask": "0F",
+    "connections": "FF00FFFF",
+    "elevatorScreen": 1,
+    "hasDrop": false,
+    "hasDroppableElevator": false,
+    "isDropZone": true,
+    "map": 4,
+    "palaceGroup": null,
+    "memoryAddress": 75784,
+    "requirements": ["GLOVE"],
+    "hasItem": false,
+    "enemies": "0B6383285F6B830F870047",
+    "hasBoss": false,
+    "isBossRoom": false,
+    "group": "V5_0",
+    "isThunderBirdRoom": false,
+    "isEntrance": false,
+    "palaceNumber": null,
+    "linkedRoomName": null,
+    "isUpDownReversed": false,
+    "suppressWarning": ["DropTilesInNonDropRoom"],
+    "sideviewData": "616001103200C1F41272602232C270C201FB6020A02B520AB1C1330AB2C1212212226028D10120C370C2F350500F0870F1132121C370C201FF102020226020A02FB3C1410AB4C1330AB2C103FAA02A510AB1C1140AB1C1147230B6C0F5D1643500"
   }
 ]
