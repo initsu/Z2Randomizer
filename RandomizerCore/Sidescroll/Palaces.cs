@@ -83,8 +83,22 @@ public class Palaces
             };
 
             bool oneWayDropToBossAllowed = !props.BossRoomsExitToPalace[currentPalace - 1];
+            if (palaceGenerator is CoordinatePalaceGenerator)
+            {
+                // Do an additional roll for coordinate palaces to determine
+                // whether drops are allowed to be one-way drops to boss exit.
+                // This number will have to be tweaked to account for bias
+                // as less strict validation will be more likely to succeed.
+                // Gameplay-wise both taking a drop and exploring other paths
+                // first should be reasonable decisions.
+                if (oneWayDropToBossAllowed)
+                {
+                    oneWayDropToBossAllowed = r.NextDouble() < 0.4;
+                }
+            }
+
             RoomPool roomPool;
-            if(props.PalaceStyles[currentPalace - 1].UsesVanillaRoomPool())
+            if(palaceStyle.UsesVanillaRoomPool())
             {
                 roomPool = new VanillaRoomPool(palaceRooms, currentPalace, props);
             }
@@ -92,14 +106,12 @@ public class Palaces
             {
                 roomPool = new(palaceRooms, currentPalace, props);
             }
+
             Palace palace;
             do
             {
                 palace = await palaceGenerator.GeneratePalace(props, roomPool, r, sizes[currentPalace - 1], currentPalace);
-            } while (
-            !palace.IsValid || 
-            (props.PalaceStyles[currentPalace - 1] != PalaceStyle.VANILLA 
-                && palace.HasInescapableDrop(props.BossRoomsExitToPalace[currentPalace - 1])));
+            } while (!palace.IsValid || palaceStyle != PalaceStyle.VANILLA && palace.HasInescapableDrop(oneWayDropToBossAllowed));
             PalaceGenerator.DebugCheckDuplicates(props, palace);
             if (props.UsePalaceItemRoomCountIndicator && currentPalace != 7)
             {
