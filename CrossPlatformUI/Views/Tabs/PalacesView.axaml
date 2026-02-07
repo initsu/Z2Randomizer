@@ -106,6 +106,13 @@
         </Grid>
 
         <Grid Grid.Row="1" Margin="0 16 0 0" ColumnDefinitions="*, *, *">
+            <StackPanel Grid.Column="0" Margin="0 -11 0 0">
+                <views:WeightedEnumSelection EnumType="{x:Type rc:PalaceStyle}"
+                                             Weights="{Binding Main.Config.PalaceStyleWeights}"
+                                             IsVisible="{Binding PalaceStyleWeightsIsIncludedObservable^}"
+                                             Heading="Custom Palace Style Weights" />
+            </StackPanel>
+
             <StackPanel Grid.Column="1" Margin="0 0">
                 <CheckBox Name="IncludeVanillaRoomsCheckbox"
                           Classes="DisabledMeansChecked"
@@ -133,7 +140,7 @@
                 <ToolTip.Tip><TextBlock Text="{x:Static lang:Resources.UseCustomRoomsFileToolTip}"/></ToolTip.Tip>
             </CheckBox>
             -->
-                <Separator/>
+                <Separator Margin="0 26 0 10" />
                 <CheckBox Name="NoDuplicateRoomsByLayoutCheckbox"
                           IsChecked="{Binding Main.Config.NoDuplicateRoomsByLayout}">
                     <TextBlock>No Duplicate Rooms<LineBreak/>(By Layout)</TextBlock>

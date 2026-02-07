@@ -324,6 +324,38 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
     [Reactive]
     private PalaceStyle gpStyle;
 
+    [Reactive]
+    [ConditionallyIncludeInFlags]
+    private ImmutableDictionary<PalaceStyle, int> palaceStyleWeights = new Dictionary<PalaceStyle, int>().ToImmutableDictionary();
+    public bool palaceStyleWeightsIsIncluded()
+    {
+        foreach (var style in (List<PalaceStyle>)[normalPalaceStyle, gpStyle])
+        {
+            switch (style)
+            {
+                case PalaceStyle.RANDOM_CUSTOM:
+                case PalaceStyle.RANDOM_PER_PALACE_CUSTOM:
+                case PalaceStyle.RANDOM_ALL_SAME_CUSTOM:
+                    return true;
+            }
+        }
+        return false;
+    }
+    public ImmutableDictionary<PalaceStyle, int> palaceStyleWeightsDefault()
+    {
+        var builder = ImmutableDictionary.CreateBuilder<PalaceStyle, int>();
+        foreach (var enumValue in Enum.GetValues<PalaceStyle>().Where(b => b.CanHaveWeight()))
+        {
+            builder.Add(enumValue, enumValue switch
+            {
+                PalaceStyle.RECONSTRUCTED => 2,
+                PalaceStyle.CHAOS => 0,
+                _ => 1,
+            });
+        }
+        return builder.ToImmutableDictionary();
+    }
+
     private bool palaceStylesAreNotAllVanilla()
     {
         foreach (var style in (List<PalaceStyle>)[normalPalaceStyle, gpStyle])
@@ -976,6 +1008,12 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
                     allowedPalaceStyles.RemoveAll(i => i.UsesVanillaRoomPool());
                 }
             }
+            else if (gpStyle == PalaceStyle.RANDOM_CUSTOM)
+            {
+                var weightedRnd = new LinearWeightedRandom<PalaceStyle>(palaceStyleWeights);
+                if (!weightedRnd.HasPositiveWeight()) { throw new UserFacingException("Impossible Palace Style Weights", "At least one style must be included at above zero weight."); }
+                properties.PalaceStyles[6] = weightedRnd.Next(r);
+            }
             else
             {
                 allowedPalaceStyles = [GpStyle];
@@ -1007,6 +1045,25 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
                 {
                     properties.PalaceStyles[i] = singlePalaceStyle;
                 }
+            else if (normalPalaceStyle == PalaceStyle.RANDOM_ALL_SAME_CUSTOM)
+            {
+                var weightedRnd = new LinearWeightedRandom<PalaceStyle>(palaceStyleWeights);
+                if (!weightedRnd.HasPositiveWeight()) { throw new UserFacingException("Impossible Palace Style Weights", "At least one style must be included at above zero weight."); }
+                PalaceStyle style = weightedRnd.Next(r);
+                for (int i = 0; i < 6; i++)
+                {
+                    properties.PalaceStyles[i] = style;
+                }
+            }
+            else if (normalPalaceStyle == PalaceStyle.RANDOM_PER_PALACE_CUSTOM)
+            {
+                var weightedRnd = new LinearWeightedRandom<PalaceStyle>(palaceStyleWeights);
+                if (!weightedRnd.HasPositiveWeight()) { throw new UserFacingException("Impossible Palace Style Weights", "At least one style must be included at above zero weight."); }
+                for (int i = 0; i < 6; i++)
+                {
+                    properties.PalaceStyles[i] = weightedRnd.Next(r);
+                }
+            }
                 else
                 {
                     properties.PalaceStyles[i] = normalPalaceStyle;
