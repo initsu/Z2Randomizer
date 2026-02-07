@@ -12,12 +12,17 @@ public class PalacesViewModel : ReactiveObject, IActivatableViewModel
     public ViewModelActivator Activator { get; }
     public MainViewModel Main { get; }
 
+    public IObservable<bool> PalaceStyleWeightsIncludedObservable { get; }
     public IObservable<bool> RandomStylesAllowVanillaIncludedObservable { get; }
 
     public PalacesViewModel(MainViewModel main)
     {
         Main = main;
         Activator = new();
+
+        PalaceStyleWeightsIncludedObservable = Main.FlagsChanged
+            .Select(_ => Main.Config.palaceStyleWeightsIncluded())
+            .DistinctUntilChanged();
 
         RandomStylesAllowVanillaIncludedObservable = Main.FlagsChanged
             .Select(_ => Main.Config.randomStylesAllowVanillaIncluded())

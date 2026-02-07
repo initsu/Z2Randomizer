@@ -156,6 +156,11 @@
                           Content="Reduce Dripper Variance">
                     <ToolTip.Tip><TextBlock Text="{x:Static lang:Resources.ReduceDripperVarianceToolTip}"/></ToolTip.Tip>
                 </CheckBox>
+
+                <views:WeightedEnumSelection EnumType="{x:Type rc:PalaceStyle}"
+                                             Weights="{Binding Main.Config.PalaceStyleWeights}"
+                                             IsVisible="{Binding PalaceStyleWeightsIncludedObservable^}"
+                                             Heading="Custom Palace Style Weights" />
             </StackPanel>
 
             <StackPanel Grid.Column="1" Margin="0 0">
