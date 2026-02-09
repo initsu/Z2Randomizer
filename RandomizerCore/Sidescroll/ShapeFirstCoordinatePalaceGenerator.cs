@@ -77,6 +77,9 @@ public abstract class ShapeFirstCoordinatePalaceGenerator() : CoordinatePalaceGe
                     logger.Debug($"RandomWalk ran out of rooms of exit type: {roomExitType} in palace {palaceNumber}. Starting to use duplicate rooms.");
                 }
                 roomCandidates!.FisherYatesShuffle(r);
+                var withPrio = roomCandidates.OrderByDescending(x => x.Priority).ToList();
+                roomCandidates.Clear();
+                roomCandidates.AddRange(withPrio);
                 Room? upRoom = palace.AllRooms.FirstOrDefault(i => i.coords == new Coord(x, y + 1));
                 foreach (Room roomCandidate in roomCandidates!)
                 {
