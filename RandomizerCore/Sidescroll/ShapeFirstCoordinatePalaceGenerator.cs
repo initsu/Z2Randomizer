@@ -178,6 +178,8 @@ public abstract class ShapeFirstCoordinatePalaceGenerator() : CoordinatePalaceGe
                 }
 
                 roomCandidates.FisherYatesShuffle(r);
+                // place "priority rooms" first. this is useful to quickly test new rooms
+                roomCandidates = roomCandidates.OrderByDescending(x => x.Priority).ToList();
 
                 newRoom = SelectRoomForCoord(palace, rooms, roomPool, palaceShape, roomCoords, dropZone, roomCandidates);
                 if (newRoom != null)
