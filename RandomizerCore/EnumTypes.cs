@@ -238,13 +238,7 @@ public static class PalaceStyleExtensions
     }
     public static bool IsMetastyle(this PalaceStyle style)
     {
-        return style switch
-        {
-            PalaceStyle.RANDOM => true,
-            PalaceStyle.RANDOM_ALL => true,
-            PalaceStyle.RANDOM_PER_PALACE => true,
-            _ => false
-        };
+        return style.IsRandom();
     }
     public static bool IsCoordinateBased(this PalaceStyle style)
     {
@@ -941,7 +935,7 @@ public static class Enums
         = ToDescriptions<PalaceStyle>(i => !i.IsRandom() || i == PalaceStyle.RANDOM_PER_PALACE || i == PalaceStyle.RANDOM_ALL_SAME ||
                                            i == PalaceStyle.RANDOM_PER_PALACE_CUSTOM || i == PalaceStyle.RANDOM_ALL_SAME_CUSTOM);
     public static IEnumerable<EnumDescription> GpPalaceStyleList { get; } 
-        = ToDescriptions<PalaceStyle>(i => !i.IsRandom() || i == PalaceStyle.RANDOM || i == PalaceStyle.RANDOM_NO_VANILLA_OR_SHUFFLE ||
+        = ToDescriptions<PalaceStyle>(i => !i.IsRandom() || i == PalaceStyle.RANDOM ||
                                            i == PalaceStyle.RANDOM_CUSTOM);
     public static IEnumerable<EnumDescription> BossRoomsExitTypeList { get; } = ToDescriptions<BossRoomsExitType>();
 

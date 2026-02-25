@@ -1018,7 +1018,6 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
             {
                 allowedPalaceStyles = [GpStyle];
             }
-            properties.PalaceStyles[6] = allowedPalaceStyles.Sample(r);
             Debug.Assert(!properties.PalaceStyles[6].IsMetastyle());
 
             if (NormalPalaceStyle.IsMetastyle())
@@ -1035,13 +1034,14 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
                 allowedPalaceStyles = [NormalPalaceStyle];
             }
             PalaceStyle singlePalaceStyle = allowedPalaceStyles.Sample(r);
+            /*
             for (int i = 0; i < 6; i++)
             {
                 if (normalPalaceStyle == PalaceStyle.RANDOM_PER_PALACE)
                 {
                     properties.PalaceStyles[i] = allowedPalaceStyles.Sample(r);
                 }
-                else if (normalPalaceStyle == PalaceStyle.RANDOM_ALL)
+                else if (normalPalaceStyle == PalaceStyle.RANDOM)
                 {
                     properties.PalaceStyles[i] = singlePalaceStyle;
                 }
@@ -1070,6 +1070,8 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
                 }
                 Debug.Assert(!properties.PalaceStyles[i].IsMetastyle());
             }
+            terrible
+            */
 
 
             properties.PalaceLengths = Palaces.RollPalaceLengths(r, properties, this);
