@@ -394,22 +394,24 @@ static class BiomeExtensions
 [DefaultValue(CLASSIC)]
 public enum ClimateEnum
 {
-    [Description("Classic")]
+    [Description("Classic"), CanHaveWeight]
     CLASSIC,
-    [Description("Vanilla-Weighted")]
+    [Description("Vanilla-Weighted"), CanHaveWeight]
     VANILLA_WEIGHTED_WEST,
-    [Description("Vanilla-Weighted")]
+    [Description("Vanilla-Weighted"), CanHaveWeight]
     VANILLA_WEIGHTED_EAST,
-    [Description("Chaos")]
+    [Description("Chaos"), CanHaveWeight]
     CHAOS,
-    [Description("Wetlands")]
+    [Description("Wetlands"), CanHaveWeight]
     WETLANDS,
-    [Description("Great Lakes")]
+    [Description("Great Lakes"), CanHaveWeight]
     GREAT_LAKES,
-    [Description("Scrubland")]
+    [Description("Scrubland"), CanHaveWeight]
     SCRUBLAND,
     [Description("Random")]
-    RANDOM
+    RANDOM,
+    [Description("Random (Custom)")]
+    RANDOM_CUSTOM,
 }
 
 static class ClimateExtensions

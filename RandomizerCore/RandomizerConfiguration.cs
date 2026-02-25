@@ -291,7 +291,35 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
     private ClimateEnum dmClimate;
 
     [Reactive]
-    private ClimateEnum mazeClimate;
+    [ConditionallyIncludeInFlags]
+    private ImmutableDictionary<ClimateEnum, int> climateWeights = new Dictionary<ClimateEnum, int>().ToImmutableDictionary();
+    public bool climateWeightsIsIncluded()
+    {
+        foreach (var biome in (List<ClimateEnum>)[westClimate, eastClimate, dmClimate])
+        {
+            switch (biome)
+            {
+                case ClimateEnum.RANDOM_CUSTOM:
+                    return true;
+            }
+        }
+        return false;
+    }
+    public ImmutableDictionary<ClimateEnum, int> climateWeightsDefault()
+    {
+        var builder = ImmutableDictionary.CreateBuilder<ClimateEnum, int>();
+
+        foreach (var enumValue in Enum.GetValues<ClimateEnum>().Where(b => b.CanHaveWeight()))
+        {
+            builder.Add(enumValue, enumValue switch
+            {
+                ClimateEnum.CHAOS => 0,
+                ClimateEnum.WETLANDS => 0,
+                _ => 1,
+            });
+        }
+        return builder.ToImmutableDictionary();
+    }
 
     [Reactive]
     [ConditionallyIncludeInFlags]
@@ -861,7 +889,6 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
         westClimate = ClimateEnum.CLASSIC;
         eastClimate = ClimateEnum.CLASSIC;
         dmClimate = ClimateEnum.CLASSIC;
-        mazeClimate = ClimateEnum.CLASSIC;
         if (sprite == null)
         {
             throw new ImpossibleException();
@@ -1371,6 +1398,14 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
                 _ => throw new Exception("Unrecognized climate")
             };
         }
+        else if (westClimate == ClimateEnum.RANDOM_CUSTOM)
+        {
+            var keys = Enum.GetValues<ClimateEnum>().Where(c => c.IsWestClimate() && climateWeights.ContainsKey(c));
+            var weightsList = keys.Select(k => (k, climateWeights[k])).ToList();
+            var weightedRnd = new LinearWeightedRandom<ClimateEnum>(weightsList);
+            if (!weightedRnd.HasPositiveWeight()) { throw new UserFacingException("Impossible Climate Weights", "At least one West climate must be included at above zero weight."); }
+            properties.WestClimate = weightedRnd.Next(r);
+        }
         else
         {
             properties.WestClimate = westClimate;
@@ -1387,6 +1422,14 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
                 _ => throw new Exception("Unrecognized climate")
             };
         }
+        else if (eastClimate == ClimateEnum.RANDOM_CUSTOM)
+        {
+            var keys = Enum.GetValues<ClimateEnum>().Where(c => c.IsEastClimate() && climateWeights.ContainsKey(c));
+            var weightsList = keys.Select(k => (k, climateWeights[k])).ToList();
+            var weightedRnd = new LinearWeightedRandom<ClimateEnum>(weightsList);
+            if (!weightedRnd.HasPositiveWeight()) { throw new UserFacingException("Impossible Climate Weights", "At least one East climate must be included at above zero weight."); }
+            properties.EastClimate = weightedRnd.Next(r);
+        }
         else
         {
             properties.EastClimate = eastClimate;
@@ -1402,6 +1445,14 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
                 4 => ClimateEnum.SCRUBLAND,
                 _ => throw new Exception("Unrecognized climate")
             };
+        }
+        else if (dmClimate == ClimateEnum.RANDOM_CUSTOM)
+        {
+            var keys = Enum.GetValues<ClimateEnum>().Where(c => c.IsDmClimate() && climateWeights.ContainsKey(c));
+            var weightsList = keys.Select(k => (k, climateWeights[k])).ToList();
+            var weightedRnd = new LinearWeightedRandom<ClimateEnum>(weightsList);
+            if (!weightedRnd.HasPositiveWeight()) { throw new UserFacingException("Impossible Climate Weights", "At least one Death Mountain climate must be included at above zero weight."); }
+            properties.DmClimate = weightedRnd.Next(r);
         }
         else
         {

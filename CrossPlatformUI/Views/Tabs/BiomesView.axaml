@@ -153,6 +153,13 @@
                                              IsVisible="{Binding BiomeWeightsIsIncludedObservable^}"
                                              Heading="Custom Biome Weights" />
             </StackPanel>
+
+            <StackPanel Grid.Column="2" Margin="0 0">
+                <views:WeightedEnumSelection EnumType="{x:Type rc:ClimateEnum}"
+                                             Weights="{Binding Main.Config.ClimateWeights}"
+                                             IsVisible="{Binding ClimateWeightsIsIncludedObservable^}"
+                                             Heading="Custom Climate Weights" />
+            </StackPanel>
         </Grid>
     </Grid>
 </UserControl>
