@@ -273,30 +273,32 @@ public enum BossRoomsExitType
 [DefaultValue(VANILLA)]
 public enum Biome
 {
-    [Description("Vanilla")]
+    [Description("Vanilla"), CanHaveWeight]
     VANILLA,
-    [Description("Vanilla Shuffle")]
+    [Description("Vanilla Shuffle"), CanHaveWeight]
     VANILLA_SHUFFLE,
-    [Description("Vanilla Like")]
+    [Description("Vanilla Like"), CanHaveWeight]
     VANILLALIKE,
-    [Description("Islands")]
+    [Description("Islands"), CanHaveWeight]
     ISLANDS,
-    [Description("Canyon")]
+    [Description("Canyon"), CanHaveWeight]
     CANYON,
     [Description("Dry Canyon")]
     DRY_CANYON,
-    [Description("Mountainous")]
+    [Description("Mountainous"), CanHaveWeight]
     MOUNTAINOUS,
-    [Description("Volcano")]
+    [Description("Volcano"), CanHaveWeight]
     VOLCANO,
-    [Description("Caldera")]
+    [Description("Caldera"), CanHaveWeight]
     CALDERA,
     [Description("Random (No Vanilla or Shuffle)"), Metastyle]
     RANDOM_NO_VANILLA_OR_SHUFFLE,
     [Description("Random (No Vanilla)"), Metastyle]
     RANDOM_NO_VANILLA,
     [Description("Random"), Metastyle]
-    RANDOM
+    RANDOM,
+    [Description("Random (Custom)"), Metastyle]
+    RANDOM_CUSTOM,
 }
 
 static class BiomeExtensions
@@ -332,6 +334,7 @@ static class BiomeExtensions
             Biome.RANDOM => true,
             Biome.RANDOM_NO_VANILLA => true,
             Biome.RANDOM_NO_VANILLA_OR_SHUFFLE => true,
+            Biome.RANDOM_CUSTOM => true,
             _ => false
         };
     }
@@ -350,11 +353,12 @@ static class BiomeExtensions
             Biome.RANDOM => true,
             Biome.RANDOM_NO_VANILLA => true,
             Biome.RANDOM_NO_VANILLA_OR_SHUFFLE => true,
+            Biome.RANDOM_CUSTOM => true,
             _ => false
         };
     }
 
-    public static bool IsDMBiome(this Biome biome)
+    public static bool IsDmBiome(this Biome biome)
     {
         return biome switch
         {
@@ -368,6 +372,7 @@ static class BiomeExtensions
             Biome.RANDOM => true,
             Biome.RANDOM_NO_VANILLA => true,
             Biome.RANDOM_NO_VANILLA_OR_SHUFFLE => true,
+            Biome.RANDOM_CUSTOM => true,
             _ => false
         };
     }
@@ -380,6 +385,7 @@ static class BiomeExtensions
             Biome.VANILLA_SHUFFLE => true,
             Biome.VANILLALIKE => true,
             Biome.RANDOM => true,
+            Biome.RANDOM_CUSTOM => true,
             _ => false
         };
     }
@@ -931,7 +937,7 @@ public static class Enums
 
     public static IEnumerable<EnumDescription> WestBiomeList { get; } = ToDescriptions<Biome>(i => i.IsWestBiome());
     public static IEnumerable<EnumDescription> EastBiomeList { get; } = ToDescriptions<Biome>(i => i.IsEastBiome());
-    public static IEnumerable<EnumDescription> DMBiomeList { get; } = ToDescriptions<Biome>(i => i.IsDMBiome());
+    public static IEnumerable<EnumDescription> DMBiomeList { get; } = ToDescriptions<Biome>(i => i.IsDmBiome());
     public static IEnumerable<EnumDescription> MazeBiomeList { get; } = ToDescriptions<Biome>(i => i.IsMazeBiome());
     public static IEnumerable<EnumDescription> WestClimateList { get; } = ToDescriptions<ClimateEnum>(i => i.IsWestClimate());
     public static IEnumerable<EnumDescription> EastClimateList { get; } = ToDescriptions<ClimateEnum>(i => i.IsEastClimate());
