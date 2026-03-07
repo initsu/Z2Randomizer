@@ -299,7 +299,24 @@ public class Hyrule
                 //Randomize Enemies
                 if (props.ShufflePalaceEnemies)
                 {
-                    palaces.ForEach(i => i.RandomizeEnemies(props, r));
+                    var palacesToShuffle = palaces.ToList();
+                    if (props.WestBiome is Biome.VANILLA_EVERYTHING)
+                    {
+                        palacesToShuffle.Remove(palaces[0]);
+                        palacesToShuffle.Remove(palaces[1]);
+                        palacesToShuffle.Remove(palaces[2]);
+                    }
+                    if (props.MazeBiome is Biome.VANILLA_EVERYTHING)
+                    {
+                        palacesToShuffle.Remove(palaces[3]);
+                    }
+                    if (props.EastBiome is Biome.VANILLA_EVERYTHING)
+                    {
+                        palacesToShuffle.Remove(palaces[4]);
+                        palacesToShuffle.Remove(palaces[5]);
+                        palacesToShuffle.Remove(palaces[6]);
+                    }
+                    palacesToShuffle.ForEach(i => i.RandomizeEnemies(props, r));
                 }
 
                 if (props.RandomizeSmallItems || props.ExtraKeys)
@@ -928,13 +945,64 @@ public class Hyrule
             excessItems.RemoveAt(excessItemIndex);
         }
 
+        List<Location> shuffleItemLocs = itemLocs.ToList();
+
+        void ResetVanillaEverythingLocations(Continent continent)
+        {
+            var itemLocsToRemove = shuffleItemLocs.Where(loc => loc.VanillaContinent == continent).ToList();
+            foreach (Location loc in itemLocsToRemove)
+            {
+                Collectable vanillaCollectable = loc.VanillaCollectable;
+                bool itemInPool = shufflableItems.Contains(vanillaCollectable);
+                Collectable usedCollectable;
+                if (itemInPool)
+                {
+                    usedCollectable = vanillaCollectable;
+                    bool removed = shufflableItems.Remove(vanillaCollectable);
+                    Debug.Assert(removed);
+                }
+                else
+                {
+                    var firstMinorItemIndex = shufflableItems.FindIndex(c => c.IsMinorItem());
+                    Debug.Assert(firstMinorItemIndex != -1);
+                    usedCollectable = shufflableItems[firstMinorItemIndex];
+                    shufflableItems.RemoveAt(firstMinorItemIndex);
+                }
+                loc.Collectables = [usedCollectable];
+                if (loc.PalaceNumber != null)
+                {
+                    palaces[(int)loc.PalaceNumber! - 1].ItemRooms[0].Collectable = usedCollectable;
+                }
+                shuffleItemLocs.Remove(loc);
+            }
+        }
+
+        palaces.ForEach(i => i.ItemRooms.ForEach(j => j.Collectable = null));
+
+        if (props.WestBiome is Biome.VANILLA_EVERYTHING)
+        {
+            ResetVanillaEverythingLocations(Continent.WEST);
+        }
+        if (props.DmBiome is Biome.VANILLA_EVERYTHING)
+        {
+            ResetVanillaEverythingLocations(Continent.DM);
+        }
+        if (props.EastBiome is Biome.VANILLA_EVERYTHING)
+        {
+            ResetVanillaEverythingLocations(Continent.EAST);
+        }
+        if (props.MazeBiome is Biome.VANILLA_EVERYTHING)
+        {
+            ResetVanillaEverythingLocations(Continent.MAZE);
+        }
+
         //Do the actual shuffling
         List<Location> duplicateItemPlacementCandidates = [];
-        palaces.ForEach(i => i.ItemRooms.ForEach(j => j.Collectable = null));
+
         if (props.MixOverworldPalaceItems)
         {
-            duplicateItemPlacementCandidates.AddRange(itemLocs);
-            DoShuffle(shufflableItems, itemLocs);
+            duplicateItemPlacementCandidates.AddRange(shuffleItemLocs);
+            DoShuffle(shufflableItems, shuffleItemLocs);
         }
         else
         {
@@ -945,7 +1013,7 @@ public class Hyrule
             {
                 itemsToActuallyShuffle = [];
                 shufflableItemLocations = [];
-                foreach (Location palaceLocation in itemLocs.Where(i => i.PalaceNumber != null))
+                foreach (Location palaceLocation in shuffleItemLocs.Where(i => i.PalaceNumber != null))
                 {
                     shufflableItemLocations.Add(palaceLocation);
                     Collectable vanillaCollectable = Palace.GetVanillaCollectable(palaceLocation.PalaceNumber);
@@ -961,7 +1029,7 @@ public class Hyrule
             }
             else
             {
-                foreach (Location palaceLocation in itemLocs.Where(i => i.PalaceNumber != null && i.PalaceNumber < 7))
+                foreach (Location palaceLocation in shuffleItemLocs.Where(i => i.PalaceNumber != null && i.PalaceNumber < 7))
                 {
                     Collectable vanillaCollectable = Palace.GetVanillaCollectable(palaceLocation.PalaceNumber);
                     palaceLocation.Collectables = [shufflableItems.Contains(vanillaCollectable) ? vanillaCollectable : minorItems.Sample(r)];
@@ -1118,12 +1186,9 @@ public class Hyrule
     private void DoShuffle(List<Collectable> itemsToShuffle, List<Location> itemShuffleLocations)
     {
         int itemShuffleLocationsCount = itemShuffleLocations.Count;
-        if(itemShuffleLocations.Any(i => i.PalaceNumber != null))
+        foreach (var loc in itemShuffleLocations.Where(i => i.PalaceNumber != null))
         {
-            itemShuffleLocationsCount = itemShuffleLocationsCount
-                - itemShuffleLocations.Count(i => i.PalaceNumber != null)
-                + props.PalaceItemRoomCounts.Sum(i => i);
-                //- props.PalaceItemRoomCounts.Where(i => i == 0).Count();
+            itemShuffleLocationsCount = itemShuffleLocationsCount - 1 + props.PalaceItemRoomCounts[loc.PalaceNumber!.Value - 1];
         }
         if (itemsToShuffle.Count != itemShuffleLocationsCount)
         {
@@ -2108,7 +2173,23 @@ public class Hyrule
         if (!props.PalacesCanSwapContinent) return;
         List<Location> pals = [westHyrule.locationAtPalace1, westHyrule.locationAtPalace2, westHyrule.locationAtPalace3, mazeIsland.locationAtPalace4, eastHyrule.locationAtPalace5, eastHyrule.locationAtPalace6];
 
-        if (props.P7shuffle)
+        if (props.WestBiome is Biome.VANILLA_EVERYTHING)
+        {
+            pals.Remove(westHyrule.locationAtPalace1);
+            pals.Remove(westHyrule.locationAtPalace2);
+            pals.Remove(westHyrule.locationAtPalace3);
+        }
+        if (props.MazeBiome is Biome.VANILLA_EVERYTHING)
+        {
+            pals.Remove(mazeIsland.locationAtPalace4);
+        }
+        if (props.EastBiome is Biome.VANILLA_EVERYTHING)
+        {
+            pals.Remove(eastHyrule.locationAtPalace5);
+            pals.Remove(eastHyrule.locationAtPalace6);
+        }
+
+        if (props.P7shuffle && props.EastBiome != Biome.VANILLA_EVERYTHING)
         {
             pals.Add(eastHyrule.locationAtGP);
         }

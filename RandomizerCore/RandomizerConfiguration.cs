@@ -957,6 +957,18 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
                 Debug.Assert(!properties.PalaceStyles[i].IsMetastyle());
             }
 
+            if (westBiome is Biome.VANILLA_EVERYTHING)
+            {
+                for (int i = 0; i < 3; i++) { properties.PalaceStyles[i] = PalaceStyle.VANILLA; }
+            }
+            if (mazeBiome is Biome.VANILLA_EVERYTHING)
+            {
+                properties.PalaceStyles[3] = PalaceStyle.VANILLA;
+            }
+            if (eastBiome is Biome.VANILLA_EVERYTHING)
+            {
+                for (int i = 4; i < 7; i++) { properties.PalaceStyles[i] = PalaceStyle.VANILLA; }
+            }
 
             properties.PalaceLengths = Palaces.RollPalaceLengths(r, properties, this);
 
@@ -966,6 +978,20 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
             properties.ShufflePalaceItems = shufflePalaceItems ?? GetIndeterminateFlagValue(r);
             properties.MixOverworldPalaceItems = mixOverworldAndPalaceItems ?? GetIndeterminateFlagValue(r);
             AssignPalaceItemCounts(properties, r);
+
+            // properties.WestBiome etc. has not been set yet, so doing this outside the above function
+            if (westBiome is Biome.VANILLA_EVERYTHING)
+            {
+                for (int i = 0; i < 3; i++) { properties.PalaceItemRoomCounts[i] = 1; }
+            }
+            if (mazeBiome is Biome.VANILLA_EVERYTHING)
+            {
+                properties.PalaceItemRoomCounts[3] = 1;
+            }
+            if (eastBiome is Biome.VANILLA_EVERYTHING)
+            {
+                for (int i = 4; i < 7; i++) { properties.PalaceItemRoomCounts[i] = 1; }
+            }
 
             //Other starting attributes
             int startHeartsMin, startHeartsMax;
@@ -1587,7 +1613,7 @@ public sealed partial class RandomizerConfiguration : INotifyPropertyChanged
         }
 
         //if (eastBiome.SelectedIndex == 0 || (hiddenPalaceList.SelectedIndex == 0 && hideKasutoList.SelectedIndex == 0))
-        if (properties.EastBiome == Biome.VANILLA || properties is { HiddenPalace: false, HiddenKasuto: false })
+        if ((properties.EastBiome is Biome.VANILLA or Biome.VANILLA_EVERYTHING) || properties is { HiddenPalace: false, HiddenKasuto: false })
         {
             properties.ShuffleHidden = false;
         }

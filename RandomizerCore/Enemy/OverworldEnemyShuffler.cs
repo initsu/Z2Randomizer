@@ -124,6 +124,8 @@ public class OverworldEnemyShuffler
     /// as best as is possible in C#.
     protected static byte[] RandomizeEnemiesInner(World world, byte[] sideviewBytes, byte[] enemyBytes, bool encounter, bool mixLargeAndSmallEnemies, bool generatorsAlwaysMatch, Random RNG)
     {
+        if (world.biome == Biome.VANILLA_EVERYTHING) { return enemyBytes; }
+
         switch (world.groupedEnemies)
         {
             case GroupedEnemies<EnemiesWest> gWest:
