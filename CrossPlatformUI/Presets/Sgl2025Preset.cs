@@ -83,6 +83,7 @@ A challenging preset focused on combat, with low XP gains and slightly lower tha
         MixOverworldAndPalaceItems = true,
 
         PreventSpellItemChains = false,
+        FastItemPickup = true,
 
         //Drops
         StandardizeDrops = true,

@@ -1,4 +1,4 @@
-using DynamicData;
+﻿using DynamicData;
 using FtRandoLib.Importer;
 using js65;
 using NLog;
@@ -2574,6 +2574,7 @@ public class Hyrule
         }
 
         // Copy heart and magic container sprite tiles to the new location.
+        /*
         for (int i = 0; i < 64; i++)
         {
             byte heartByte = ROMData.GetByte(ROM.ChrRomOffset + 0x7800 + i);
@@ -2585,6 +2586,7 @@ public class Hyrule
             ROMData.Put(ROM.ChrRomOffset + 0x17800 + i, heartByte);
             ROMData.Put(ROM.ChrRomOffset + 0x19800 + i, heartByte);
         }
+        */
 
         foreach (Palace palace in palaces)
         {
@@ -4071,7 +4073,7 @@ FlagHudUpdate:
         KeysPerPalace(engine, props.KeyLogic.UsesKeysPerPalace());
         CustomHud(engine, props.UpdatedHud, props.KeyLogic.UsesKeysPerPalace());
         rom.ChangeLavaKillPosition(engine);
-        rom.FixItemPickup(engine);
+        rom.FixItemPickup(engine, props.FastItemPickup);
         rom.CollisionFixes(engine);
         rom.FixSideviewEntryFacing(engine);
         if (!randomizeMusic) // custom music already optimizes the overworld similarly

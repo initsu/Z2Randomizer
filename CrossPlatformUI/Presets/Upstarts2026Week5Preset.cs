@@ -81,6 +81,7 @@ Starting items and spells: Candle
         RandomizeNewKasutoJarRequirements = true,
         ShufflePBagAmounts = true,
         PreventSpellItemChains = true,
+        FastItemPickup = true,
         IncludeSpellsInShuffle = true,
         IncludeQuestItemsInShuffle = true,
         ShuffleItemDropFrequency = true,
