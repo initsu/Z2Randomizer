@@ -126,6 +126,7 @@ public abstract class World
     public List<Location> AllLocations { get; }
     public List<Location> RemovedLocations { get; }
     public Dictionary<Terrain, List<Location>> Locations { get; set; }
+    protected Location? startLocation { get; set; }
 
     public bool AllReached { get; set; }
 
@@ -301,7 +302,7 @@ public abstract class World
         }
     }
 
-    protected Location GetLocation(LocationID lid)
+    public Location GetLocation(LocationID lid)
     {
         return AllLocations.FirstOrDefault(i => i.ID == lid)
             ?? throw new Exception($"Failed to find Location with ID {lid}");
@@ -2887,11 +2888,22 @@ public abstract class World
         return false;
     }
 
+    public void SetStart(Location start)
+    {
+        startLocation = start;
+        start.Reachable = true;
+        visitation[start.Y, start.Xpos] = true;
+    }
+
     /// <summary>
     /// Updates the visitation matrix and location reachability 
     /// </summary>
     public virtual void UpdateVisit(IReadOnlySet<RequirementType> requireables)
     {
+        if (startLocation != null)
+        {
+            visitation[startLocation.Y, startLocation.Xpos] = true;
+        }
         UpdateReachable(requireables);
 
         foreach (Location location in AllLocations)
