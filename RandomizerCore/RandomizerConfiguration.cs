@@ -820,6 +820,10 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
 
     [Reactive]
     [IgnoreInFlags]
+    private bool updatedHud = true;
+
+    [Reactive]
+    [IgnoreInFlags]
     private bool fastSpellCasting = false;
 
     [Reactive]
@@ -1624,6 +1628,7 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
         properties.RemoveFlashing = removeFlashing;
         //Removed the option to select this for now.
         properties.UseCustomRooms = false;
+        properties.UpdatedHud = updatedHud;
         properties.DisableHUDLag = disableHUDLag;
         properties.RandomizeKnockback = randomizeKnockback;
 

@@ -2043,16 +2043,18 @@ SetStartLocationHook:
             a.Code(/* lang=s */"""
 .include "z2r.inc"
 .import ItemTileTable
+.import FlagHudUpdate
+
 .segment "PRG7"
 .org $e53b
 SetPostItemPickupVars:
     lda $af,x                          ; this byte has the item ID we picked up
     and #$7f                           ; keep bits .xxx xxxx
-    sta $49d
     cmp #$12                           ; check if item is 1-up
     beq SetPostItemPickupKeepVelocity  ; skip resetting velocity if 1-up
     jmp HoistItem
 SetPostItemPickupKeepVelocity:
+    jsr FlagHudUpdate
     lda #$00
 ClearEnemyByte:
     sta $a8,x                          ; clear item/enemy collision byte to prevent phantom damage
@@ -2069,6 +2071,7 @@ FREE_UNTIL $ed66
 
 .reloc
 HoistItem:
+    sta $49d
     lda #$70
     sta $49c                           ; set hold item above head timer to 0x70
     lda #$00
@@ -2081,6 +2084,8 @@ HoistItem:
         {
             a.Code(/* lang=s */"""
 .include "z2r.inc"
+.import FlagHudUpdate
+
 .segment "PRG7"
 .org $e53b
 SetPostItemPickupVars:
@@ -2090,8 +2095,9 @@ SetPostItemPickupVars:
     beq SetPostItemPickupKeepVelocity  ; skip resetting velocity if 1-up
     lda #$00
     sta $70                            ; set Link's X velocity to zero
-    sta $57d                           ; set Link's Y velocity to zero
+    ;sta $57d                           ; set Link's Y velocity to zero
 SetPostItemPickupKeepVelocity:
+    jsr FlagHudUpdate
     lda #$00
     sta $a8,x                          ; clear item/enemy collision byte to prevent phantom damage
     rts
