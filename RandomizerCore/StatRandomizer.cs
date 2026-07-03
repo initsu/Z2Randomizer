@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -16,6 +17,18 @@ public class StatRandomizer
 {
     public const int LIFE_EFFECTIVENESS_ROWS = 7;
     public const int MAGIC_EFFECTIVENESS_ROWS = 8;
+
+    // Nerfed Linked Fire spell costs to not trivialize late game
+    // FIRE:    120	80	60	30	16	16	16	16
+    // LIFE:    70	70	60	60	50	50	50	50
+    private static ReadOnlyCollection<byte> BASE_FIRE_LIFE_COST = [120, 80, 60, 60, 50, 50, 50, 50];
+    // FAIRY:   80	80	60	60	40	40	40	40
+    private static ReadOnlyCollection<byte> BASE_FIRE_FAIRY_COST = [120, 80, 60, 48, 40, 40, 40, 40];
+    // SPELL:   120	112	96	80	48	32	24	16
+    private static ReadOnlyCollection<byte> BASE_FIRE_SPELL_COST = [120, 96, 96, 80, 48, 32, 24, 16];
+    // THUNDER: 120	120	120	120	120	120	100	64
+    private static ReadOnlyCollection<byte> BASE_FIRE_THUNDER_COST = [120, 120, 120, 120, 120, 120, 100, 64];
+
     public byte[] AttackEffectivenessTable { get; private set; } = null!;
     public byte[] LifeEffectivenessTable { get; private set; } = null!;
     public byte[] MagicEffectivenessTable { get; private set; } = null!;
@@ -494,6 +507,29 @@ public class StatRandomizer
                 int index = spellIndex * 8 + level;
                 byte nextVal;
                 byte baseVal = (byte)(MagicEffectivenessTable[index] >> 1);
+                int logicalSpellIndex = spellIndex;
+                if (spellIndex == 4)
+                {
+                    if (props.LinkedFireSpell != null)
+                    {
+                        logicalSpellIndex = props.LinkedFireSpell.Value.VanillaSpellOrder();
+                        switch (props.LinkedFireSpell)
+                        {
+                            case Collectable.LIFE_SPELL:
+                                baseVal = BASE_FIRE_LIFE_COST[level];
+                                break;
+                            case Collectable.FAIRY_SPELL:
+                                baseVal = BASE_FIRE_FAIRY_COST[level];
+                                break;
+                            case Collectable.SPELL_SPELL:
+                                baseVal = BASE_FIRE_SPELL_COST[level];
+                                break;
+                            case Collectable.THUNDER_SPELL:
+                                baseVal = BASE_FIRE_THUNDER_COST[level];
+                                break;
+                        }
+                    }
+                }
                 int min = (int)Math.Round(baseVal * range.Low);
                 int max = (int)Math.Round(baseVal * range.High);
                 nextVal = (byte)r.Next(min, max + 1);
