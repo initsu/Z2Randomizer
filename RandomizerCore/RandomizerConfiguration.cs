@@ -360,8 +360,15 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
 
     private bool roomSelectionEnabled()
     {
+        if (customRoomPool)
+        {
+            return false;
+        }
         return palaceStylesAreNotAllVanillaOrShuffled();
     }
+
+    [Reactive]
+    private bool customRoomPool = true;
 
     private bool palaceStylesAnyMetastyleSelected()
     {
@@ -427,7 +434,7 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
     [Reactive]
     [ConditionallyIncludeInFlags]
     private BossRoomsExitType bossRoomsExitType = BossRoomsExitType.OVERWORLD;
-    public bool bossRoomsExitTypeIncluded() => roomSelectionEnabled();
+    public bool bossRoomsExitTypeIncluded() => palaceStylesAreNotAllVanillaOrShuffled();
 
     [Reactive]
     [ConditionallyIncludeInFlags]
@@ -1275,7 +1282,7 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
             properties.AllowV4Rooms = includev4_0Rooms ?? GetIndeterminateFlagValue(r);
             properties.AllowV5_0Rooms = includev5_0Rooms ?? GetIndeterminateFlagValue(r);
         }
-
+        properties.CustomRoomPool = customRoomPool;
         properties.KeyLogic = keyLogicIncluded() ? keyLogic : KeyLogicOption.FAIRY_OR_MAGICKEY;
         properties.BlockersAnywhere = blockingRoomsInAnyPalaceIncluded() && blockingRoomsInAnyPalace;
         properties.RemoveLongDeadEnds = removeLongDeadEndsIncluded() && removeLongDeadEnds;
@@ -1814,7 +1821,7 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
             }
         }
 
-        if (noDuplicateRoomsByLayout || noDuplicateRoomsByEnemies)
+        if (!customRoomPool && (noDuplicateRoomsByLayout || noDuplicateRoomsByEnemies))
         {
             // if current palace generation logic changes, this should be updated
             int potentialRoomPools = 0;

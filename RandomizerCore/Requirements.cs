@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,16 +19,35 @@ public enum RequirementTarget
 public record RequirementRoute(
     Direction[]? From,
     Direction[]? To
-);
+) : IDeterministicHash
+{
+    public int GetDeterministicHash()
+    {
+        int hash = DeterministicHash.Combine(DeterministicHash.Seed, From, direction => (int)direction);
+        hash = DeterministicHash.Combine(hash, To, direction => (int)direction);
+        return hash;
+    }
+}
 
 public record ComplexRequirement(
     RequirementTarget Target,
     RequirementType[] IndividualRequirements,
     RequirementType[][] CompositeRequirements,
     RequirementRoute[]? Routes = null
-);
+) : IDeterministicHash
+{
+    public int GetDeterministicHash()
+    {
+        int hash = DeterministicHash.Combine(DeterministicHash.Seed, (int)Target);
+        hash = DeterministicHash.Combine(hash, IndividualRequirements, requirement => (int)requirement);
+        hash = DeterministicHash.Combine(hash, CompositeRequirements,
+            inner => DeterministicHash.Combine(DeterministicHash.Seed, inner, requirement => (int)requirement));
+        hash = DeterministicHash.Combine(hash, Routes);
+        return hash;
+    }
+}
 
-public class Requirements
+public class Requirements : IDeterministicHash
 {
     public static readonly Requirements NONE = new();
     public static readonly Requirements DEFAULT_PALACE_REQUIREMENTS = new([RequirementType.FAIRY, RequirementType.MAGIC_KEY]);
@@ -90,6 +109,15 @@ public class Requirements
     public Requirements? Deserialize(string? json)
     {
         return JsonSerializer.Deserialize(json ?? "[]", RoomSerializationContext.Default.Requirements);
+    }
+
+    public int GetDeterministicHash()
+    {
+        int hash = DeterministicHash.Combine(DeterministicHash.Seed, IndividualRequirements, requirement => (int)requirement);
+        hash = DeterministicHash.Combine(hash, CompositeRequirements,
+            inner => DeterministicHash.Combine(DeterministicHash.Seed, inner, requirement => (int)requirement));
+        hash = DeterministicHash.Combine(hash, ComplexRequirements);
+        return hash;
     }
 
     /// Check if a requirement is included in any way, composite or individually
