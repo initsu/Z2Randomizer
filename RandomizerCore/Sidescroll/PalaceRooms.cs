@@ -56,7 +56,7 @@ public partial class PalaceRooms
             roomsByName[room.Name] = room;
         }
 
-        Hash = rooms.GetHashCode().ToString("X8");
+        Hash = rooms.GetHashCode().ToString("X8").ToLower();
     }
 
     private void AddRoomToTagList(Room room, string tag)

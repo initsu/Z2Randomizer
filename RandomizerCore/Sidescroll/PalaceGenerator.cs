@@ -20,6 +20,10 @@ public abstract class PalaceGenerator
 
     protected static bool AllowDuplicatePrevention(RandomizerProperties props, int palaceNumber)
     {
+        if (props.CustomRoomPool)
+        {
+            return true;
+        }
         if (palaceNumber < 7)
         {
             //Short normal palace should always be safe regardless of which palace set is being used
@@ -86,7 +90,7 @@ public abstract class PalaceGenerator
                 if (room.HasItem) { continue; }
                 if (room.LinkedRoom != null) { continue; }
                 var sideviewBytes = room.SideView;
-                //Debug.Assert(!usedRoomVariants.Contains(sideviewBytes));
+                Debug.Assert(!usedRoomVariants.Contains(sideviewBytes));
                 usedRoomVariants.Add(sideviewBytes);
             }
         }

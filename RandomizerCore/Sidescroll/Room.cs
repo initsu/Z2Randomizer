@@ -890,6 +890,34 @@ public class Room : IJsonOnDeserialized
         };
         return basePtr + Map * 2;
     }
+
+    public override int GetHashCode()
+    {
+        HashCode hash = new HashCode();
+        hash.Add(Name);
+        hash.Add(Author);
+        hash.Add(Group);
+        hash.Add(ItemGetBits);
+        hash.Add(Connections);
+        hash.Add(HasDrop);
+        hash.Add(ElevatorScreen);
+        hash.Add(Requirements);
+        hash.Add(IsDropZone);
+        hash.Add(HasItem);
+        hash.Add(Enemies);
+        hash.Add(SideView);
+        hash.Add(HasBoss);
+        hash.Add(IsBossRoom);
+        hash.Add(IsThunderBirdRoom);
+        hash.Add(Enabled);
+        hash.Add(IsEntrance);
+        hash.Add(PalaceNumber);
+        hash.Add(LinkedRoomName);
+        hash.Add(IsUpDownReversed);
+        hash.Add(Priority);
+        hash.Add(Tags);
+        return hash.ToHashCode();
+    }
 }
 
 public class HexStringConverter : JsonConverter<byte[]?>
