@@ -1,8 +1,11 @@
-using ReactiveUI;
-using ReactiveUI.Primitives.Disposables;
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using ReactiveUI;
 using ReactiveUI.Primitives;
+using ReactiveUI.Primitives.Disposables;
+using CrossPlatformUI.Services;
 
 namespace CrossPlatformUI.ViewModels.Tabs;
 
@@ -11,7 +14,8 @@ public class PalacesViewModel : ReactiveObject, IActivatableViewModel
 {
     public ViewModelActivator Activator { get; }
     public MainViewModel Main { get; }
-
+    public string CustomRoomPoolText { get; private set; } = "Use predefined room pool";
+    public string PalaceRoomsText { get; private set; } = "";
     public IObservable<bool> PalaceStyleWeightsIncludedObservable { get; }
     public IObservable<bool> BossRoomsExitTypeIncludedObservable { get; }
     public IObservable<bool> NoDuplicateRoomsByLayoutIncludedObservable { get; }
@@ -78,10 +82,23 @@ public class PalacesViewModel : ReactiveObject, IActivatableViewModel
             .Select(_ => Main.Config.tBirdRequiredIncluded())
             .DistinctUntilChanged();
 
+        _ = InitializeAsync();
+
         this.WhenActivated(OnActivate);
     }
 
     internal void OnActivate(MultipleDisposable disposables)
     {
+    }
+
+    public async Task InitializeAsync()
+    {
+        var roomLoaderService = App.Current?.Services?.GetService<RoomLoaderService>();
+
+        var palaceRooms = await roomLoaderService!.GetPalaceRooms();
+        PalaceRoomsText = $"Palace rooms hash: {palaceRooms.Hash}";
+
+        var spec = await roomLoaderService!.GetRoomPoolSpec();
+        CustomRoomPoolText = spec != null ? $"Use {spec.Name} ({spec.Hash})" : "Custom Room Pool Not Found";
     }
 }

@@ -222,6 +222,7 @@ public class Hyrule
 
     private readonly NewAssemblerFn NewAssembler;
     private readonly PalaceRooms palaceRooms;
+    private readonly RoomPoolSpec? roomPool;
 
     public string Hash { get; private set; }
 
@@ -229,11 +230,12 @@ public class Hyrule
     //going to be a massive project, so for now we're just ignoring the fact that basically every property
     //is not guaranteed to initialize to the analyzer
 #pragma warning disable CS8618
-    public Hyrule(NewAssemblerFn createAsm, PalaceRooms rooms)
+    public Hyrule(NewAssemblerFn createAsm, PalaceRooms rooms, RoomPoolSpec? roomPoolSpec)
 #pragma warning restore CS8618
     {
         NewAssembler = createAsm;
         palaceRooms = rooms;
+        roomPool = roomPoolSpec;
     }
     public async Task<RandomizerResult> Randomize(byte[] vanillaRomData, RandomizerConfiguration config, Func<string, Task> progress, CancellationToken ct)
     {
@@ -290,7 +292,7 @@ public class Hyrule
             {
                 freeBanks = new(ROM.FreeRomBanks);
                 var palaceGenerator = new Palaces();
-                palaces = await palaceGenerator.CreatePalaces(r, props, palaceRooms, raftIsRequired, ct);
+                palaces = await palaceGenerator.CreatePalaces(r, props, palaceRooms, roomPool, raftIsRequired, ct);
 
                 if (palaces.Count == 0)
                 {

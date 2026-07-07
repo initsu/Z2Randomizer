@@ -12,8 +12,8 @@ using ReactiveUI;
 using ReactiveUI.Primitives.Disposables;
 using RxVoid = ReactiveUI.Primitives.RxVoid;
 using Z2Randomizer.RandomizerCore;
-using Z2Randomizer.RandomizerCore.Sidescroll;
 using CrossPlatformUI.Services;
+using Z2Randomizer.RandomizerCore.Sidescroll;
 
 namespace CrossPlatformUI.ViewModels;
 
@@ -77,14 +77,30 @@ Seed: {config.Seed}
             var files = App.Current?.Services?.GetService<IFileSystemService>();
             var host = (HostScreen as MainViewModel)!;
             var config = host.Config;
-            var roomsJson = await files!.OpenFile(IFileSystemService.RandomizerPath.Palaces, "PalaceRooms.json");
-            var customJson = config.UseCustomRooms ? await files.OpenFile(IFileSystemService.RandomizerPath.Palaces, "CustomRooms.json") : null;
-            var rooms = config.UseCustomRooms ? customJson : roomsJson;
-            var palaceRooms = new PalaceRooms(rooms!, config.UseCustomRooms);
-            var randomizer = new Hyrule(createAsm!, palaceRooms);
+
+            //var customJson = config.UseCustomRooms ? await files.OpenFile(IFileSystemService.RandomizerPath.Palaces, "CustomRooms.json") : null;
+            //var rooms = config.UseCustomRooms ? customJson : roomsJson;
+            var roomLoaderService = App.Current?.Services?.GetService<RoomLoaderService>();
+            PalaceRooms palaceRooms;
+            RoomPoolSpec? roomPoolSpec;
+            try
+            {
+                palaceRooms = await roomLoaderService!.GetPalaceRooms();
+                roomPoolSpec = await roomLoaderService!.GetRoomPoolSpec();
+            }
+            catch(UserFacingException userError)
+            {
+                string errorHeading, errorBody;
+                errorHeading = userError.Heading;
+                errorBody = userError.Message;
+                await UpdateProgress(errorHeading, errorBody);
+                return;
+            }
+
+            var randomizer = new Hyrule(createAsm!, palaceRooms, roomPoolSpec);
             Dispatcher.UIThread.Post(GenerateSeed, DispatcherPriority.Background);
             return;
-            
+
             async void GenerateSeed()
             {
                 try
@@ -101,7 +117,7 @@ Seed: {config.Seed}
                         {
                             try
                             {
-                                await files.SaveGeneratedBinaryFile(filename, output.romdata!, Main.OutputFilePath);
+                                await files!.SaveGeneratedBinaryFile(filename, output.romdata!, Main.OutputFilePath);
                                 saved = true;
                             }
                             catch (Exception e)
@@ -124,15 +140,15 @@ Seed: {config.Seed}
                         var debugfile = basename + ".mlb";
                         if (!string.IsNullOrEmpty(output.debuginfo))
                         {
-                            await files.SaveSpoilerFile(debugfile, output.debuginfo, Main.OutputFilePath);
+                            await files!.SaveSpoilerFile(debugfile, output.debuginfo, Main.OutputFilePath);
                         }
 #endif
                         if (config.GenerateSpoiler)
                         {
                             var spoilerFilename = basename + "_spoiler.txt";
-                            await files.SaveSpoilerFile(spoilerFilename, randomizer.GenerateSpoiler(), Main.OutputFilePath);
+                            await files!.SaveSpoilerFile(spoilerFilename, randomizer.GenerateSpoiler(), Main.OutputFilePath);
                             var spoilerMapFilename = basename + "_spoiler.png";
-                            await files.SaveGeneratedBinaryFile(spoilerMapFilename, new Spoiler(randomizer.ROMData).CreateSpoilerImage(randomizer.worlds), Main.OutputFilePath);
+                            await files!.SaveGeneratedBinaryFile(spoilerMapFilename, new Spoiler(randomizer.ROMData).CreateSpoilerImage(randomizer.worlds), Main.OutputFilePath);
                         }
                         ProgressHeading = "Generation Complete";
                         ProgressBody = $"Hash: {randomizer.Hash}\n\nFile: {filename}";
@@ -156,7 +172,7 @@ Seed: {config.Seed}
                     else
                     {
 #if DEBUG
-                        // if (System.Diagnostics.Debugger.IsAttached) { throw; }
+                        if (System.Diagnostics.Debugger.IsAttached) { throw; }
 #endif
                         errorHeading = "Error Generating Seed";
                         errorBody = "Please report this on the discord";

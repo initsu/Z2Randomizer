@@ -58,6 +58,7 @@
             <!-- Define the external source items -->
             <ExternalSprites Include="..\RandomizerCore\Sprites\**" />
             <ExternalJson Include="..\RandomizerCore\PalaceRooms.json" />
+            <ExternalJson Include="..\RandomizerCore\CustomRoomPool.yaml" />
             <ExternalAsm Include="..\RandomizerCore\Asm\**" />
 
             <!-- Tell Visual Studio to watch them for changes -->
@@ -68,7 +69,7 @@
               DestinationFiles="@(ExternalSprites -> 'wwwroot\Sprites\%(RecursiveDir)%(Filename)%(Extension)')"
               SkipUnchangedFiles="true" />
         <Copy SourceFiles="@(ExternalJson)"
-              DestinationFiles="wwwroot\PalaceRooms.json"
+              DestinationFiles="wwwroot\%(Filename)%(Extension)"
               SkipUnchangedFiles="true" />
         <Copy SourceFiles="@(ExternalAsm)"
               DestinationFiles="@(ExternalAsm -> 'wwwroot\Asm\%(RecursiveDir)%(Filename)%(Extension)')"

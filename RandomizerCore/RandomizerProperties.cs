@@ -133,6 +133,7 @@ public class RandomizerProperties
 
     public bool NoDuplicateRoomsBySideview { get; set; }
     public bool GeneratorsAlwaysMatch { get; set; }
+    public bool CustomRoomPool { get; set; }
     public bool AllowVanillaRooms { get; set; }
     public bool AllowV4Rooms { get; set; }
     public bool AllowV5_0Rooms { get; set; }
