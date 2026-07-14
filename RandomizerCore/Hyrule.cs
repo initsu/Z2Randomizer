@@ -3910,7 +3910,6 @@ FlagHudUpdate:
             .. HudCmdText(4, 2, "MAGIC-"),
             .. HudCmdText(13, 2, "LIFE-"),
             // .. HudCmdText(26, 2, "NEXT"),
-            .. HudCmdSymbol(23, 2, [0x96]), // lives tile (96) and empty space
             .. HudCmdSymbol(1, 3, [0xc9]),  // attack level sword tile (c9)
             .. HudCmdSymbol(13, 3, [0xf7]), // life bar L tile (f7)
             .. HudCmdText(30, 3, "0"),      // last level up XP zero (3 bytes trimmed)
@@ -3922,34 +3921,47 @@ FlagHudUpdate:
         a.Free("PRG7", (ushort)(staticHudCmdAddr + staticHud.Length), 0xd0fc);
 
         // dynamic HUD (new)
-        byte[] newHudCmd = [
-            .. HudCmdSymbol(24, 2, [
-                0xf4, 0xf4,        // lives will replace the first space
-                0xb9, 0xf4, 0xf4,  // key tile (b9)
-                0xcd, 0xf4,        // crystal tile (cd)
-            ]),
-            0xff
-        ];
-        byte[] palaceHudCmd = [
-            .. HudCmdText(1, 2, "P "),
-            0xff
-        ];
+        byte leftCmdStart = 0;
+        List<byte> newHudCmd = [.. HudCmdSymbol(1, 2, [])];
+
+        byte locationIndex = (byte)newHudCmd.Count;
+        newHudCmd.AddRange([0xf4, 0xf4]);
+
+        byte leftLength = (byte)(newHudCmd.Count - leftCmdStart - 3);
+        newHudCmd[leftCmdStart + 2] = leftLength;
+        byte rightCmdStart = (byte)newHudCmd.Count;
+        newHudCmd.AddRange([.. HudCmdSymbol(23, 2, [])]);
+
+        newHudCmd.AddRange([0x96, 0xf4]);                                 // lives tile (96)
+        byte livesIndex = (byte)(newHudCmd.Count - 1);
+        newHudCmd.Add(0xf4);
+        newHudCmd.AddRange([0xb9, 0xf4]);                                 // key tile (b9)
+        byte keyIndex = (byte)(newHudCmd.Count - 1);
+        newHudCmd.Add(0xf4);
+        newHudCmd.AddRange([0xcd, 0xf4]);                                 // crystal tile (cd)
+        byte crystalIndex = (byte)(newHudCmd.Count - 1);
+
+        byte rightLength = (byte)(newHudCmd.Count - rightCmdStart - 3);
+        newHudCmd[rightCmdStart + 2] = rightLength;
+        newHudCmd.Add(0xff);
+
+        a.Assign("HUD_INCLUDES_KEYS", 1);
         a.Segment("PRG0");
         a.Reloc();
         a.Label("NewHudCmd");
-        a.Byt(newHudCmd);
-        a.Assign("NewHudLength", newHudCmd.Length);
-        a.Reloc();
-        a.Label("PalaceHudCmd");
-        a.Byt(palaceHudCmd);
-        a.Assign("PalaceHudLength", palaceHudCmd.Length);
+        a.Byt(newHudCmd.ToArray());
+        a.Assign("NewHudLength", newHudCmd.Count());
+        a.Assign("LocationIndex", locationIndex);
+        a.Assign("KeyIndex", keyIndex);
+        a.Assign("LivesIndex", livesIndex);
+        a.Assign("CrystalIndex", crystalIndex);
         a.Code(/* lang=s */"""
 .include "z2r.inc"
 .import GetItemReturn
 
 .segment "PRG0"
 
-.org $96ff  ; optimized code to make room for our hook
+.org $96ff  ; optimized code to make room for our UpdateNewHud hook
     tax
     @Loop:
         dex
@@ -3975,34 +3987,25 @@ UpdateNewHud:
         iny
         cpx #NewHudLength
         bne @CopyLoop
+
     lda Lives
     adc #$d0 - 2              ; add offset for digit tile index. -1 since carry is guaranteed to be set from CPX and -1 since we show remaining lives
-    sta $0302 - 8,y
-    lda HaveMagicKey
-    beq @NoMagicKey
-        lda #$da              ; show A for keys like Zelda 1
-        bne @SetKeyTileIndex
-    @NoMagicKey:
-        lda Keys
-        adc #$d0              ; add offset for digit tile index
-    @SetKeyTileIndex:
-    sta $0302 - 5,y
+    sta $0302 - (NewHudLength - LivesIndex),y
+
+.if HUD_INCLUDES_KEYS
+    lda Keys
+    adc #$d0                  ; add offset for digit tile index
+    sta $0302 - (NewHudLength - KeyIndex),y
+.endif
+
     lda Crystals
     adc #$d0                  ; add offset for digit tile index
-    sta $0302 - 2,y
+    sta $0302 - (NewHudLength - CrystalIndex),y
+
     lda WorldNumber
     cmp #3
     bcc @Done
     @LocationPalace:
-        dey
-        ldx #$00
-        @PalaceCopyLoop:
-            lda PalaceHudCmd,x
-            sta $0302,y
-            inx
-            iny
-            cpx #PalaceHudLength
-            bne @PalaceCopyLoop
         lda RegionNumber
         asl
         asl
@@ -4010,15 +4013,12 @@ UpdateNewHud:
         tax
         lda PalaceTable,x
         cmp #7
-        beq @LocationGp
-            adc #$d0         ; add offset for digit tile index
-            sta $0302 - 2,y
-            bcc @Done
-        @LocationGp:
-            lda #$e0         ; G
-            sta $0302 - 3,y
-            lda #$e9         ; P
-            sta $0302 - 2,y
+        beq @Done
+        @NotGP:
+            adc #$d0              ; add offset for digit tile index
+            sta $0302 - (NewHudLength - LocationIndex - 1),y
+            lda #$e9              ; letter P
+            sta $0302 - (NewHudLength - LocationIndex),y
 @Done:
     tya
     pha
@@ -4043,6 +4043,7 @@ PalaceTable:
     ; region 3 - Maze Island
     .byte RealPalaceAtLocation4 + 1
 
+; Insert HUD updates
 .segment "PRG7"
 
 .reloc
@@ -4053,21 +4054,23 @@ FlagHudUpdate:
     rts
 .export FlagHudUpdate
 
-.org $e7b8  ; update hud when a key is stabbed
-    jmp UpdateHudGetItemReturn
+.if HUD_INCLUDES_KEYS
+    .org $e7b8  ; update hud when a key is stabbed
+        jmp UpdateHudGetItemReturn
 
-.reloc
-UpdateHudGetItemReturn:
-    jsr FlagHudUpdate
-    jmp GetItemReturn
+    .reloc
+    UpdateHudGetItemReturn:
+        jsr FlagHudUpdate
+        jmp GetItemReturn
 
-.org $d9e4  ; update hud when a key is used
-    jsr DecreaseKeysUpdateHud
+    .org $d9e4  ; update hud when a key is used
+        jsr DecreaseKeysUpdateHud
 
-.reloc
-DecreaseKeysUpdateHud:
-    dec Keys
-    jmp FlagHudUpdate
+    .reloc
+    DecreaseKeysUpdateHud:
+        dec Keys
+        jmp FlagHudUpdate
+.endif
 """);
     }
 
