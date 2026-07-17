@@ -316,7 +316,9 @@ public enum PalaceStyle
     [Description("Random (All Same)"), Metastyle]
     RANDOM_ALL,
     [Description("Random (Per Palace)"), Metastyle]
-    RANDOM_PER_PALACE
+    RANDOM_PER_PALACE,
+    [Description("Random (Unique Per Palace)"), Metastyle]
+    RANDOM_UNIQUE,
 }
 
 public static class PalaceStyleExtensions
@@ -358,7 +360,17 @@ public static class PalaceStyleExtensions
             PalaceStyle.MIRROR => false,
             PalaceStyle.RANDOM_ALL => false,
             PalaceStyle.RANDOM_PER_PALACE => false,
+            PalaceStyle.RANDOM_UNIQUE => false,
             _ => true
+        };
+    }
+
+    public static bool IsSimilar(this PalaceStyle self, PalaceStyle other)
+    {
+        return (self, other) switch
+        {
+            // in the future we could add some styles here, like how we did for Biomes
+            _ => self == other
         };
     }
 }
@@ -391,26 +403,28 @@ public enum BossRoomsExitType
 [DefaultValue(VANILLA)]
 public enum Biome
 {
-    [Description("Vanilla")]
+    [Description("Vanilla"), DefaultWeight(2)]
     VANILLA,
-    [Description("Vanilla Shuffle")]
+    [Description("Vanilla Shuffle"), DefaultWeight(2)]
     VANILLA_SHUFFLE,
-    [Description("Vanilla Like")]
+    [Description("Vanilla Like"), DefaultWeight(2)]
     VANILLALIKE,
-    [Description("Islands")]
+    [Description("Islands"), DefaultWeight(2)]
     ISLANDS,
-    [Description("Canyon")]
+    [Description("Canyon"), DefaultWeight(1)]
     CANYON,
-    [Description("Dry Canyon")]
+    [Description("Dry Canyon"), DefaultWeight(1)]
     DRY_CANYON,
-    [Description("Mountainous")]
+    [Description("Mountainous"), DefaultWeight(2)]
     MOUNTAINOUS,
-    [Description("Volcano")]
+    [Description("Volcano"), DefaultWeight(2)]
     VOLCANO,
-    [Description("Caldera")]
+    [Description("Caldera"), DefaultWeight(2)]
     CALDERA,
     [Description("Random (No Vanilla or Shuffle)"), Metastyle]
     RANDOM_NO_VANILLA_OR_SHUFFLE,
+    [Description("Random (Unique, No Vanilla/Shuffle)"), Metastyle]
+    RANDOM_UNIQUE,
     [Description("Random (No Vanilla)"), Metastyle]
     RANDOM_NO_VANILLA,
     [Description("Random"), Metastyle]
@@ -464,6 +478,7 @@ static class BiomeExtensions
             Biome.CALDERA => true,
             Biome.MOUNTAINOUS => true,
             Biome.RANDOM => true,
+            Biome.RANDOM_UNIQUE => true,
             Biome.RANDOM_NO_VANILLA => true,
             Biome.RANDOM_NO_VANILLA_OR_SHUFFLE => true,
             _ => false
@@ -482,6 +497,7 @@ static class BiomeExtensions
             Biome.VOLCANO => true,
             Biome.MOUNTAINOUS => true,
             Biome.RANDOM => true,
+            Biome.RANDOM_UNIQUE => true,
             Biome.RANDOM_NO_VANILLA => true,
             Biome.RANDOM_NO_VANILLA_OR_SHUFFLE => true,
             _ => false
@@ -500,6 +516,7 @@ static class BiomeExtensions
             Biome.CALDERA => true,
             Biome.MOUNTAINOUS => true,
             Biome.RANDOM => true,
+            Biome.RANDOM_UNIQUE => true,
             Biome.RANDOM_NO_VANILLA => true,
             Biome.RANDOM_NO_VANILLA_OR_SHUFFLE => true,
             _ => false
@@ -515,6 +532,37 @@ static class BiomeExtensions
             Biome.VANILLALIKE => true,
             Biome.RANDOM => true,
             _ => false
+        };
+    }
+
+    public static bool IncludesVanilla(this Biome biome)
+    {
+        return biome switch
+        {
+            Biome.VANILLA => true,
+            Biome.RANDOM => true,
+            _ => false
+        };
+    }
+
+    public static bool IncludesVanillaShuffle(this Biome biome)
+    {
+        return biome switch
+        {
+            Biome.VANILLA_SHUFFLE => true,
+            Biome.RANDOM => true,
+            Biome.RANDOM_NO_VANILLA => true,
+            _ => false
+        };
+    }
+
+    public static bool IsSimilar(this Biome self, Biome other)
+    {
+        return (self, other) switch
+        {
+            (Biome.CANYON or Biome.DRY_CANYON, Biome.CANYON or Biome.DRY_CANYON) => true,
+            (Biome.VOLCANO or Biome.CALDERA, Biome.VOLCANO or Biome.CALDERA) => true,
+            _ => self == other
         };
     }
 }
