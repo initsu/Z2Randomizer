@@ -3921,14 +3921,8 @@ FlagHudUpdate:
         a.Free("PRG7", (ushort)(staticHudCmdAddr + staticHud.Length), 0xd0fc);
 
         // dynamic HUD (new)
-        byte leftCmdStart = 0;
-        List<byte> newHudCmd = [.. HudCmdSymbol(1, 2, [])];
+        List<byte> newHudCmd = [];
 
-        byte locationIndex = (byte)newHudCmd.Count;
-        newHudCmd.AddRange([0xf4, 0xf4]);
-
-        byte leftLength = (byte)(newHudCmd.Count - leftCmdStart - 3);
-        newHudCmd[leftCmdStart + 2] = leftLength;
         byte rightCmdStart = (byte)newHudCmd.Count;
         newHudCmd.AddRange([.. HudCmdSymbol(23, 2, [])]);
 
@@ -3951,7 +3945,6 @@ FlagHudUpdate:
         a.Label("NewHudCmd");
         a.Byt(newHudCmd.ToArray());
         a.Assign("NewHudLength", newHudCmd.Count());
-        a.Assign("LocationIndex", locationIndex);
         a.Assign("KeyIndex", keyIndex);
         a.Assign("LivesIndex", livesIndex);
         a.Assign("CrystalIndex", crystalIndex);
@@ -4002,46 +3995,10 @@ UpdateNewHud:
     adc #$d0                  ; add offset for digit tile index
     sta $0302 - (NewHudLength - CrystalIndex),y
 
-    lda WorldNumber
-    cmp #3
-    bcc @Done
-    @LocationPalace:
-        lda RegionNumber
-        asl
-        asl
-        adc PalaceRegionIndex
-        tax
-        lda PalaceTable,x
-        cmp #7
-        beq @Done
-        @NotGP:
-            adc #$d0              ; add offset for digit tile index
-            sta $0302 - (NewHudLength - LocationIndex - 1),y
-            lda #$e9              ; letter P
-            sta $0302 - (NewHudLength - LocationIndex),y
 @Done:
     tya
     pha
     jmp $970e
-
-PalaceTable:
-    ; region 0 - West Hyrule
-    .byte RealPalaceAtLocation1 + 1
-    .byte RealPalaceAtLocation2 + 1
-    .byte RealPalaceAtLocation3 + 1
-    .byte $ff ; unused 4th palace in region 0
-    ; region 1 - Death Mountain
-    .byte $ff ; unused 1st palace in region 1
-    .byte $ff ; unused 2nd palace in region 1
-    .byte $ff ; unused 3th palace in region 1
-    .byte $ff ; unused 4th palace in region 1
-    ; region 2 - East Hyrule
-    .byte RealPalaceAtLocation5 + 1
-    .byte RealPalaceAtLocation6 + 1
-    .byte RealPalaceAtLocationGP + 1
-    .byte $ff ; unused 4th palace in region 2
-    ; region 3 - Maze Island
-    .byte RealPalaceAtLocation4 + 1
 
 ; Insert HUD updates
 .segment "PRG7"
