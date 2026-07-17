@@ -122,8 +122,10 @@ public enum AttackEffectiveness
     VANILLA,
     [Description("Low Attack"),  FixedBytes(1, 2, 3, 4,  5,  6,  9, 12)]
     LOW,
-    [Description("Randomize (Low)"), RandomRangeDouble(Low = .5, High = 1.0)]
-    AVERAGE_LOW,
+    //[Description("Randomize (Low)"), RandomRangeDouble(Low = .5, High = 1.0)]
+    //AVERAGE_LOW,
+    [Description("SGL"), FixedBytes(2, 3, 4, 6, 8, 12, 16, 18)]
+    SGL,
     [Description("Balanced"),    FixedBytes(3, 3, 4, 6,  8, 12, 16, 18)]
     BALANCED,
     [Description("Randomize"), RandomRangeDouble(Low = .667, High = 1.5)]
