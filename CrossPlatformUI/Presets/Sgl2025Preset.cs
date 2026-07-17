@@ -80,7 +80,7 @@ public static class Sgl2025Preset
         AttackLevelCap = 6,
         MagicLevelCap = 8,
         LifeLevelCap = 8,
-        AttackEffectiveness = AttackEffectiveness.AVERAGE_LOW, // was AttackValues = [2, 3, 4, 6, 8, 12, 14, 16];
+        AttackEffectiveness = AttackEffectiveness.SGL, // was AttackValues = [2, 3, 4, 6, 8, 12, 14, 16];
         MagicEffectiveness = MagicEffectiveness.AVERAGE,
         LifeEffectiveness = LifeEffectiveness.VANILLA,
 

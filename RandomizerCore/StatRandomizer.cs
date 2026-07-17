@@ -380,14 +380,15 @@ public class StatRandomizer
                 int max = (int)(vanilla * range.High);
                 nextVal = r.Next(min, max);
 
-                if (attackEffectiveness == AttackEffectiveness.AVERAGE_LOW)
+                /*if (attackEffectiveness == AttackEffectiveness.AVERAGE_LOW)
                 {
                     if (i == 1)
                     {
                         nextVal = Math.Max(nextVal, 2); // set minimum 2 damage at level 2
                     }
                 }
-                else if (attackEffectiveness == AttackEffectiveness.AVERAGE)
+                else */
+                if (attackEffectiveness == AttackEffectiveness.AVERAGE)
                 {
                     if (i == 0)
                     {
