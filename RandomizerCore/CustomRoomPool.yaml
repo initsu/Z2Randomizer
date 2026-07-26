@@ -1,7 +1,7 @@
 # This is an example Custom Room Pool that you can replace with your own
 
-name: Custom Room Pool
-description: Rooms are included according to the rules in the file CustomRoomPool.yaml
+name: SGL 2026 Room Pool
+description: Room pool for SGL 2026 - Created by MiRai
 
 groups-include:
 - VANILLA
