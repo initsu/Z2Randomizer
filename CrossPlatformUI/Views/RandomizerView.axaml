@@ -27,6 +27,8 @@
                             </Button.Content>
                             <Button.Flyout>
                                 <MenuFlyout>
+                                    <MenuItem Header="SGL 2026 Preset" Command="{Binding LoadPreset}"
+                                              CommandParameter="{Binding Source={x:Static presets:Sgl2026Preset.Preset}}"/>
                                     <MenuItem Header="Vanilla Preset" Command="{Binding LoadPreset}"
                                               CommandParameter="{Binding Source={x:Static presets:VanillaPreset.Preset}}"/>
                                     <MenuItem Header="Beginner Preset" Command="{Binding LoadPreset}"
@@ -35,10 +37,6 @@
                                               CommandParameter="{Binding Source={x:Static presets:NormalPreset.Preset}}"/>
                                     <MenuItem Header="Full Shuffle Preset" Command="{Binding LoadPreset}"
                                               CommandParameter="{Binding Source={x:Static presets:FullShufflePreset.Preset}}"/>
-                                    <MenuItem Header="Great Palace Ready Preset" Command="{Binding LoadPreset}"
-                                              CommandParameter="{Binding Source={x:Static presets:GreatPalaceReadyPreset.Preset}}"/>
-                                    <MenuItem Header="Half-and-Half Vanilla Preset" Command="{Binding LoadPreset}"
-                                              CommandParameter="{Binding Source={x:Static presets:HalfAndHalfPreset.Preset}}"/>
                                     <MenuItem Header="Standard Tournament Swiss Preset" Command="{Binding LoadPreset}"
                                               CommandParameter="{Binding Source={x:Static presets:StandardSwissPreset.Preset}}"/>
                                     <MenuItem Header="Standard Tournament Brackets Preset" Command="{Binding LoadPreset}"
@@ -47,6 +45,10 @@
                                               CommandParameter="{Binding Source={x:Static presets:MaxRandoPreset.Preset}}"/>
 
                                     <MenuItem Header="More Presets">
+                                        <MenuItem Header="Great Palace Ready Preset" Command="{Binding LoadPreset}"
+                                                  CommandParameter="{Binding Source={x:Static presets:GreatPalaceReadyPreset.Preset}}"/>
+                                        <MenuItem Header="Half-and-Half Vanilla Preset" Command="{Binding LoadPreset}"
+                                                  CommandParameter="{Binding Source={x:Static presets:HalfAndHalfPreset.Preset}}"/>
                                         <MenuItem Header="SGL 2025 Preset" Command="{Binding LoadPreset}"
                                                   CommandParameter="{Binding Source={x:Static presets:Sgl2025Preset.Preset}}"/>
                                         <MenuItem Header="Upstarts Tournament 2025 Preset" Command="{Binding LoadPreset}"
