@@ -38,9 +38,9 @@ public class RoomLoaderService
     private static async Task<RoomPoolSpec?> LoadRoomPoolSpecAsync(IFileSystemService fileService)
     {
         var roomPoolYaml = await fileService.OpenFile(
-            IFileSystemService.RandomizerPath.Palaces,
+            IFileSystemService.RandomizerPath.RoomPool,
             "CustomRoomPool.yaml");
         if (roomPoolYaml == null) { return null; }
-        return RoomPoolSpec.FromString(roomPoolYaml);
+        return RoomPoolSpecDeserializer.FromString(roomPoolYaml);
     }
 }

@@ -3,9 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using YamlDotNet.Core;
 using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
 
 namespace Z2Randomizer.RandomizerCore.Sidescroll;
+
+/// <summary>
+/// Source generator definition providing static serialization metadata for Blazor WASM / AOT compatibility.
+/// </summary>
+[YamlStaticContext]
+[YamlSerializable(typeof(RoomPoolSpec))]
+[YamlSerializable(typeof(GroupOverride))]
+[YamlSerializable(typeof(OverrideCondition))]
+[YamlSerializable(typeof(RoomOverride))]
+public partial class RoomYamlContext : StaticContext
+{
+}
 
 public static class RoomPoolConfigs
 {
@@ -70,18 +81,28 @@ public class RoomPoolSpec
     [YamlIgnore]
     private string? hash = null;
     [YamlIgnore]
-    public string Hash {
-        get {
+    public string Hash
+    {
+        get
+        {
             if (hash == null) { hash = GetHashCode().ToString("X8").ToLower(); }
             return hash;
         }
     }
 
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Groups, GroupsInclude, Groups, TagsInclude, TagsExclude, Tags, Rooms, RoomsExclude);
+    }
+}
+
+public static class RoomPoolSpecDeserializer
+{
     public static RoomPoolSpec FromString(string yaml)
     {
-        var deserializer = new DeserializerBuilder()
-            .WithNamingConvention(NullNamingConvention.Instance)
-            .Build();
+        var context = new RoomYamlContext();
+        var builder = new StaticDeserializerBuilder(context);
+        var deserializer = builder.Build();
 
         try
         {
@@ -89,20 +110,17 @@ public class RoomPoolSpec
         }
         catch (YamlException ex)
         {
-            throw new UserFacingException("Custom Room Pool Issue", $"YAML Parsing Error at Line {ex.Start.Line}, Column {ex.Start.Column}:\n{ex.Message}");
+            var line = ex.Start.Line;
+            var column = ex.Start.Column;
+            throw new UserFacingException("Custom Room Pool Issue", $"YAML Parsing Error at Line {line}, Column {column}:\n{ex.Message}");
         }
-    }
-
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(Groups, TagsInclude, TagsExclude, Rooms, RoomsExclude);
     }
 }
 
 public class GroupOverride
 {
     [YamlMember(Alias = "name")]
-    public required string Name { get; set; }
+    public string Name { get; set; } = null!;
 
     [YamlMember(Alias = "enabled")]
     public bool Enabled { get; set; } = true;
@@ -170,7 +188,7 @@ public class OverrideCondition
 public class RoomOverride
 {
     [YamlMember(Alias = "name")]
-    public required string Name { get; set; }
+    public string Name { get; set; } = null!;
 
     [YamlMember(Alias = "enabled")]
     public bool Enabled { get; set; } = true;
@@ -186,9 +204,6 @@ public class RoomOverride
 
     [YamlMember(Alias = "priority")]
     public int? Priority { get; set; }
-
-    //[YamlMember(Alias = "weight")]
-    //public int? Weight { get; set; }
 
     public override int GetHashCode()
     {

@@ -103,7 +103,7 @@ public class RoomPoolTests
         var roomsJson = Util.ReadAllTextFromFile("PalaceRooms.json");
         var palaceRooms = new PalaceRooms(roomsJson, false);
         var roomPoolYaml = Util.ReadAllTextFromFile("CustomRoomPool.yaml");
-        var roomPoolSpec = RoomPoolSpec.FromString(roomPoolYaml);
+        var roomPoolSpec = RoomPoolSpecDeserializer.FromString(roomPoolYaml);
 
         var props = CreateMockProps(blockersAnywhere: true);
 
