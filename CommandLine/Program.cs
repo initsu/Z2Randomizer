@@ -135,7 +135,7 @@ public class Program
         var customJson = configuration!.UseCustomRooms ? RandomizerCore.Util.ReadAllTextFromFile("CustomRooms.json") : null;
         var palaceRooms = new PalaceRooms(configuration!.UseCustomRooms ? customJson! : roomsJson, configuration!.UseCustomRooms);
         var roomPoolYaml = RandomizerCore.Util.ReadAllTextFromFile("CustomRoomPool.yaml");
-        RoomPoolSpec? roomPoolSpec = RoomPoolSpec.FromString(roomPoolYaml);
+        RoomPoolSpec? roomPoolSpec = RoomPoolSpecDeserializer.FromString(roomPoolYaml);
         var randomizer = new Hyrule(createAsm, palaceRooms, roomPoolSpec);
         var rom = await randomizer.Randomize(vanillaRomData!, configuration, UpdateProgress, cts.Token);
 
