@@ -99,6 +99,6 @@ public class PalacesViewModel : ReactiveObject, IActivatableViewModel
         PalaceRoomsText = $"Palace rooms hash: {palaceRooms.Hash}";
 
         var spec = await roomLoaderService!.GetRoomPoolSpec();
-        CustomRoomPoolText = spec != null ? $"Use {spec.Name} ({spec.Hash})" : "Custom Room Pool Not Found";
+        CustomRoomPoolText = spec != null ? $"Use {spec.Name}" : "Custom Room Pool Not Found";
     }
 }
