@@ -1,8 +1,8 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
 using ReactiveUI;
+using ReactiveUI.Primitives;
+using ReactiveUI.Primitives.Disposables;
 
 namespace CrossPlatformUI.ViewModels.Tabs;
 
@@ -36,7 +36,7 @@ public class BiomesViewModel : ReactiveObject, IActivatableViewModel
         this.WhenActivated(OnActivate);
     }
 
-    internal void OnActivate(CompositeDisposable disposables)
+    internal void OnActivate(MultipleDisposable disposables)
     {
     }
 }

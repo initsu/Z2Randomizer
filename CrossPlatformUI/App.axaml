@@ -6,6 +6,7 @@
              xmlns:dialogHostAvalonia="clr-namespace:DialogHostAvalonia;assembly=DialogHost.Avalonia"
              xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              xmlns:assists="clr-namespace:Material.Styles.Assists;assembly=Material.Styles"
+             xmlns:controls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
              xmlns:behaviors="clr-namespace:CrossPlatformUI.Behaviors"
              x:Class="CrossPlatformUI.App">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
@@ -118,6 +119,11 @@
             <Style Selector="^ /template/ ProgressBar#PART_ProgressLayer /template/ Border#PART_InactiveState">
                 <Setter Property="Background" Value="{DynamicResource MaterialCheckBoxDisabledBrush}" />
             </Style>
+        </Style>
+
+        <Style Selector="TextBox#FlagInputTextBox /template/ controls|MaterialUnderline#PART_Underline">
+            <Setter Property="IdleBrush" Value="{Binding $parent[TextBox].BorderBrush}"/>
+            <Setter Property="ActiveBrush" Value="{Binding $parent[TextBox].BorderBrush}"/>
         </Style>
     </Application.Styles>
   <Application.Resources>
