@@ -1483,7 +1483,7 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
         //properties affecting item pool/location count are set in AssignItemPoolProps()
         properties.RandomizeSmallItems = shuffleSmallItems;
         properties.ExtraKeys = palacesContainExtraKeys ?? GetIndeterminateFlagValue(r);
-        properties.NewKasutoBasementRequirement = randomizeNewKasutoJarRequirements ? r.Next(5,8) : 7;
+        properties.NewKasutoBasementRequirement = randomizeNewKasutoJarRequirements ? r.Next(5,8) : 6;
         properties.FastItemPickup = fastItemPickup;
         properties.AllowImportantItemDuplicates = allowImportantItemDuplicates;
         properties.PbagItemShuffle = includePBagCavesInItemShuffleIncluded() && (includePBagCavesInItemShuffle ?? GetIndeterminateFlagValue(r));

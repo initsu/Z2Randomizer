@@ -118,10 +118,8 @@
             >
                 <ToolTip.Tip><TextBlock Text="{x:Static lang:Resources.PalacesContainExtraKeysToolTip}"/></ToolTip.Tip>
             </CheckBox>
-            <CheckBox
-                IsChecked="{Binding Main.Config.RandomizeNewKasutoJarRequirements}"
-                Content="Randomize New Kasuto Jar Requirements"
-            >
+            <CheckBox IsChecked="{Binding Main.Config.RandomizeNewKasutoJarRequirements}">
+                <TextBlock>Randomize New Kasuto Jar Requirements<LineBreak/> - Unchecked means 6 jars required</TextBlock>
                 <ToolTip.Tip><TextBlock Text="{x:Static lang:Resources.RandomizeNewKasutoJarRequirementsToolTip}"/></ToolTip.Tip>
             </CheckBox>
             <CheckBox IsChecked="{Binding Main.Config.FastItemPickup}"
