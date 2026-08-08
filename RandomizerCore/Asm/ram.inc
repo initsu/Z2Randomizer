@@ -386,13 +386,13 @@ HaveFlute = $0789
 HaveCross = $078a
 HaveHammer = $078b
 HaveMagicKey = $078c
-Crystal1Placed = $078d
-Crystal2Placed = $078e
-Crystal3Placed = $078f
-Crystal4Placed = $0790
-Crystal5Placed = $0791
-Crystal6Placed = $0792
-Keys = $0793                             ; Current number of Keys
+Palace1Keys = $078d                      ; [Z2] Crystal1Placed; [Keys+] Number of keys for P1
+Palace2Keys = $078e                      ; [Z2] Crystal2Placed
+Palace3Keys = $078f                      ; [Z2] Crystal3Placed
+Palace4Keys = $0790                      ; [Z2] Crystal4Placed
+Palace5Keys = $0791                      ; [Z2] Crystal5Placed
+Palace6Keys = $0792                      ; [Z2] Crystal6Placed
+Keys = $0793                             ; Current number of Keys; [Keys+] Number of keys for GP
 Crystals = $0794                         ; Number of Crystals left
 HaveStabs = $0796                        ; 0x04 = Have Downstab | 0x10 = Have Upstab
 HaveTrophy = $0798                       ; 0x10 = Have Trophy

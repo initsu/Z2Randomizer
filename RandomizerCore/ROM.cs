@@ -2361,6 +2361,7 @@ ConditionalDrawThunderbird:
         a.Code(/* lang=s */"""
 .include "z2r.inc"
 .import ElevatorBossFix
+.import IncKeysForCurrentPalace
 
 .segment "PRG7"
 .org $e79a
@@ -2384,7 +2385,7 @@ ConditionalDrawThunderbird:
     cpy #8
     bne +
         ; increment number of keys and carry on
-        inc Keys
+        jsr IncKeysForCurrentPalace
         jmp $e797  ; always overwritten by full_item_shuffle anyway
     +
     ; Otherwise continue to $E7BB which is the start of the get item code

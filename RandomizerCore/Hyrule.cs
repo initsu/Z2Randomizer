@@ -3853,6 +3853,79 @@ EndTileComparisons = $8601
         a.Code(Util.ReadResource("Z2Randomizer.RandomizerCore.Asm.StatTracking.s"), "stat_tracking.s");
     }
 
+    public void KeysPerPalace(Assembler asm, bool enabled)
+    {
+        var a = asm.Module();
+
+        if (!enabled)
+        {
+            a.Code(/* lang=s */"""
+.include "z2r.inc"
+.import FlagHudUpdate
+
+.segment "PRG7"
+.org $d9e4
+    jsr DecreaseKeysUpdateHud
+
+.reloc
+DecreaseKeysUpdateHud:
+    dec Keys
+    jmp FlagHudUpdate
+
+IncKeysForCurrentPalace:
+    inc Keys
+    rts
+.export IncKeysForCurrentPalace
+
+""");
+            return;
+        }
+
+        a.Code(/* lang=s */"""
+.include "z2r.inc"
+.import FlagHudUpdate
+
+.segment "PRG0"
+.org $a150
+    jsr GetKeysForCurrentPalace
+
+.segment "PRG7"
+
+.org $d9df
+    jsr GetKeysForCurrentPalace
+
+.org $d9e4
+    jsr DecKeysForCurrentPalace
+
+.org $e7b5
+jsr IncKeysForCurrentPalace
+
+.reloc
+GetKeysForCurrentPalace:
+    ldx PalaceNumber
+    lda Palace1Keys-1,x
+    rts
+.export GetKeysForCurrentPalace
+
+.reloc
+DecKeysForCurrentPalace:
+    ldx PalaceNumber
+DecKeysForPalaceX:
+    dec Palace1Keys-1,x
+    jmp FlagHudUpdate
+
+.reloc
+IncKeysForCurrentPalace:
+    ldx PalaceNumber
+    inc Palace1Keys-1,x
+    ldx EnemyIndex
+    rts
+.export IncKeysForCurrentPalace
+
+""");
+    }
+
+
     public void CustomHud(Assembler asm, bool enabled)
     {
         var a = asm.Module();
@@ -3949,6 +4022,7 @@ FlagHudUpdate:
         a.Code(/* lang=s */"""
 .include "z2r.inc"
 .import GetItemReturn
+.import GetKeysForCurrentPalace
 
 .segment "PRG0"
 
@@ -3980,17 +4054,17 @@ UpdateNewHud:
         bne @CopyLoop
 
     lda Lives
-    adc #$d0 - 2              ; add offset for digit tile index. -1 since carry is guaranteed to be set from CPX and -1 since we show remaining lives
+    adc #$d0 - 2                                 ; add offset for digit tile index. -1 since carry is guaranteed to be set from CPX and -1 since we show remaining lives
     sta $0302 - (NewHudLength - LivesIndex),y
 
 .if HUD_INCLUDES_KEYS
-    lda Keys
-    adc #$d0                  ; add offset for digit tile index
+    jsr GetKeysForCurrentPalace                  ; clobbers X
+    adc #$d0                                     ; add offset for digit tile index
     sta $0302 - (NewHudLength - KeyIndex),y
 .endif
 
     lda Crystals
-    adc #$d0                  ; add offset for digit tile index
+    adc #$d0                                     ; add offset for digit tile index
     sta $0302 - (NewHudLength - CrystalIndex),y
 
 @Done:
@@ -4017,14 +4091,6 @@ FlagHudUpdate:
     UpdateHudGetItemReturn:
         jsr FlagHudUpdate
         jmp GetItemReturn
-
-    .org $d9e4  ; update hud when a key is used
-        jsr DecreaseKeysUpdateHud
-
-    .reloc
-    DecreaseKeysUpdateHud:
-        dec Keys
-        jmp FlagHudUpdate
 .endif
 """);
     }
@@ -4102,6 +4168,7 @@ bank5_Pointer_table_for_End_Credits:
         rom.AllowForChangingDoorYPosition(engine);
         rom.AllowForChangingElevatorYPosition(engine);
         rom.InstantText(engine);
+        KeysPerPalace(engine, true);
         CustomHud(engine, props.UpdatedHud);
         rom.ChangeLavaKillPosition(engine);
         rom.FixItemPickup(engine, props.FastItemPickup);
