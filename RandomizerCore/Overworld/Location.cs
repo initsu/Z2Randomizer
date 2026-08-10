@@ -309,7 +309,7 @@ public class Location
         }
         if (Palace != null)
         {
-            return Palace.GetGettableItems(requireables, shufflableItemsOnly);
+            return Palace.GetGettableItems(requireables, shufflableItemsOnly, props);
         }
         if (shufflableItemsOnly && !CollectablesAreShufflable)
         {
