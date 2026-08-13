@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Reactive.Subjects;
 using System.Reflection;
 using System.Text.Json.Serialization;
 using System.Threading;
@@ -65,7 +64,7 @@ Seed: {config.Seed}
             if (!Main.GenerateRomDialogOpen) return;
 
             runningMutex.Wait();
-            isRunning.OnNext(true);
+            IsRunning = true;
 
             lastError = null;
             HasError = false;
@@ -168,7 +167,7 @@ Seed: {config.Seed}
                 {
                     tokenSource.Dispose();
                     tokenSource = null;
-                    isRunning.OnNext(false);
+                    IsRunning = false;
                     runningMutex.Release();
                 }
             }
@@ -206,8 +205,8 @@ Seed: {config.Seed}
     public ReactiveCommand<RxVoid, RxVoid> CopyError { get; }
 
     private readonly SemaphoreSlim runningMutex = new SemaphoreSlim(1, 1);
-    private readonly BehaviorSubject<bool> isRunning = new BehaviorSubject<bool>(false);
-    public IObservable<bool> IsRunning => isRunning;
+    private bool isRunning;
+    public bool IsRunning { get => isRunning; set => this.RaiseAndSetIfChanged(ref isRunning, value); }
 
     private CancellationTokenSource? tokenSource;
 
