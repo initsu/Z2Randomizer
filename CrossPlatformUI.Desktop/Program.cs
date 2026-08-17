@@ -34,9 +34,10 @@ public static class Program
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
                     var version = Assembly.GetEntryAssembly()!.GetName().Version!;
-                    var versionString = $"{version.Major}.{version.Minor}.{version.Build}";
+                    var versionString = $"SGL2026v1";
                     WinSparkle.win_sparkle_set_appcast_url(
-                        "https://raw.githubusercontent.com/initsu/Z2Randomizer/refs/heads/extras/appcast.xml");
+                        //"https://raw.githubusercontent.com/initsu/Z2Randomizer/refs/heads/sgl/appcast.xml");
+                        "https://raw.githubusercontent.com/initsu/Z2Randomizer/refs/heads/tmp/appcast.xml");
                     WinSparkle.win_sparkle_set_app_details("Z2Randomizer", "Z2Randomizer",
                         versionString); // THIS CALL NOT IMPLEMENTED YET
                     WinSparkle.win_sparkle_init();
