@@ -1793,6 +1793,62 @@ ActualLavaDeath:                     ; original code that we replaced
      */
     private void UpdateAllBossHpDivisor(AsmModule a)
     {
+        // TODO: move this to a new method and add a customize option
+        a.Code(/* lang=s */$"""
+.include "z2r.inc"
+
+.segment "PRG7"
+; Give all sprite projectiles higher draw priority than enemy bodies
+.org $d59b
+ProjectileOamTable:
+.byt $20,$28,$30,$38,$40,$48
+.byt $24,$2c,$34,$3c,$44,$4c
+.assert * = $d5a7
+
+; Carock in vanilla gets shuffled around in all potential enemy
+; slots. This is normal for sideview enemies, but not for bosses.
+; Other bosses override the shuffled sprite with a fixed number.
+; This prevents the enemy sprites overwriting the HP bar sprites.
+.segment "PRG4"
+.org $ae7b
+    jsr PinCarockSpriteSlot
+.reloc
+PinCarockSpriteSlot:
+    lda #$58
+    sta SpriteShuffleOffsetEnemy0,x
+    jmp $b20d  ; continue to original jsr
+
+; Horizontal HP bar
+HP_X_STEP = $0a
+HP_X_START = $81 + HP_X_STEP * 4
+HP_Y = $d0
+
+;.segment "PRG4"
+;.org $9c53 -- can copy-paste code here if we want it for all palaces
+
+.segment "PRG5"
+.org $a4f7
+    lda #HP_X_START
+    sta zp_00
+    lda #$70
+    dey
+    bmi @KeepTile70
+        lda #$6e
+    @KeepTile70:
+    sta $02c1,X
+    lda #$01
+    sta $02c2,X
+    lda #HP_Y
+    sta $02c0,X
+    lda zp_00
+    sbc #HP_X_STEP
+    sta zp_00
+    sta $02c3,X
+.assert * = $a518
+
+""");
+
+
         a.Code(/* lang=s */$"""
 .include "z2r.inc"
 .segment "PRG4"
@@ -1821,8 +1877,10 @@ Bank4BossHpDivisorHi:
     jsr DoDivisionByRepeatedSubtraction
     nop
 .assert * = $9C51
+
 .org $9C7A
-    jmp HandleOverHP 
+    jmp HandleOverHP
+
 .reloc
 HandleOverHP:
     dey ; 1 or below means that the boss is 100% or less HP, so no over health
