@@ -3886,6 +3886,7 @@ FlagHudUpdate:
         rom.ChangeLavaKillPosition(engine);
         rom.FixItemPickup(engine);
         rom.CollisionFixes(engine);
+        rom.FixSideviewEntryFacing(engine);
         rom.FixBigBubbleSplit(engine, randomizedStats);
         rom.ApplyBossPatches(engine, props, randomizedStats, palaces);
         StatTracking(props, engine);
