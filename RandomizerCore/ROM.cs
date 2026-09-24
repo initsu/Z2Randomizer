@@ -404,12 +404,13 @@ public class ROM
         }
     }
 
-    public void ChangeMapperToMMC5(Assembler asm, int[] palaceOrder, bool preventFlash, bool enableZ2Ft, bool enableZ2Mario)
+    public void ChangeMapperToMMC5(Assembler asm, int[] palaceOrder, bool preventFlash, bool enableZ2Ft, bool enableZ2Mario, bool optimizeSidecroll)
     {
         var a = asm.Module();
         AssignRealPalaceLocations(a, palaceOrder);
         a.Assign("PREVENT_HUD_FLASH_ON_LAG", preventFlash ? 1 : 0);
         a.Assign("ENABLE_Z2FT", enableZ2Ft ? 1 : 0);
+        a.Assign("OptimizeSidecroll", optimizeSidecroll ? 1 : 0);
         if (enableZ2Mario)
             a.Assign("ENABLE_Z2_MARIO", 1);
         a.Code(Util.ReadResource("Z2Randomizer.RandomizerCore.Asm.MMC5.s"), "mmc5_conversion.s");

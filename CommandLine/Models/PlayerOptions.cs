@@ -23,6 +23,8 @@ namespace Z2Randomizer.CommandLine.Models
 
         public bool DisableHUDLag { get; set; }
 
+        public bool OptimizeSidecroll { get; set; }
+
         public string? Sprite { get; set; }
 
         public bool ChangeItemSprites { get; set; }

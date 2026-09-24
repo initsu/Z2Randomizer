@@ -886,6 +886,10 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
     private bool revealHiddenJars = false;
 
     [Reactive]
+    [DifficultyOnly]
+    private bool optimizeSidecroll = false;
+
+    [Reactive]
     private bool shareSeedAcrossDifficulty = false;
 
     //Meta
@@ -1483,6 +1487,7 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
         properties.UseCustomRooms = false;
         properties.UpdatedHud = updatedHud;
         properties.DisableHUDLag = disableHUDLag;
+        properties.OptimizeSidecroll = optimizeSidecroll;
         properties.RandomizeKnockback = randomizeKnockback;
 
         //"Server" side validation
