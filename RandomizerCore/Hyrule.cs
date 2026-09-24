@@ -4050,7 +4050,7 @@ FlagHudUpdate:
     {
         bool randomizeMusic = !props.DisableMusic && props.RandomizeMusic;
 
-        rom.ChangeMapperToMMC5(engine, GetPalaceOrder(), props.DisableHUDLag, randomizeMusic, props.MarioMode); // will make output vary with customize tab options
+        rom.ChangeMapperToMMC5(engine, GetPalaceOrder(), props.DisableHUDLag, randomizeMusic, props.MarioMode, props.OptimizeSidecroll); // will make output vary with customize tab options
         // the second flag determines if we should add the "randomizer" text, but we don't have a "vanilla" option
         // right now, so this is just always off, except when i manually make an update
         rom.AddRandomizerToTitle(engine, props.MarioMode, IS_RANDOMIZED);

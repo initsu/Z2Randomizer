@@ -115,6 +115,9 @@
 <value>Prevents the HUD from flying all over the place when lag happens. Does not actually reduce
 the amount of lag.</value>
 	</data>
+	<data name="OptimizeSidecrollToolTip" xml:space="preserve">
+<value>Apply sidescroller optimizations to reduce lag.</value>
+	</data>
 	<data name="UpdatedHudToolTip" xml:space="preserve">
 <value>The updated HUD shows your current lives, key count and crystal count without having to go
 into the spell menu. This can be good for people watching you play as it'll be easier to follow along.
@@ -1431,6 +1434,9 @@ This is a wildly different gameplay experience, so be warned when setting this f
 	</data>
 	<data name="NoDuplicateRoomsByLayout" xml:space="preserve">
 		<value>No Duplicate Rooms (By Layout)</value>
+	</data>
+	<data name="OptimizeSidecroll" xml:space="preserve">
+		<value>Sidescroll Optimizations</value>
 	</data>
 	<data name="PalacesCanSwapContinents" xml:space="preserve">
 		<value>Allow Palaces to Swap Continents</value>

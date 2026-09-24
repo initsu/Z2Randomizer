@@ -34,6 +34,9 @@
     <None Remove="Asm\Bosses.s" />
     <None Remove="Asm\BuffCarock.s" />
     <None Remove="Asm\MMC5.s" />
+    <None Remove="Asm\LoadAreaBGMetatile.s" />
+    <None Remove="Asm\LoadAreaBGMetatileOptimized.s" />
+    <None Remove="Asm\SpriteScreenXOptimized.s" />
     <None Remove="Asm\ram.inc" />
     <None Remove="Asm\z2r.inc" />
     <None Remove="Asm\z2rndft.ips" />

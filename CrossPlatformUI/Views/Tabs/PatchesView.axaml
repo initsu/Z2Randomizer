@@ -18,6 +18,7 @@
                 <z:Z2CheckBox Flag="RevealWalkthroughWalls" />
                 <z:Z2CheckBox Flag="RevealHiddenJars" />
             </StackPanel>
+            <z:Z2CheckBox Flag="OptimizeSidecroll" />
 
             <StackPanel Margin="0">
                 <TextBlock Text="Utility" Classes="SectionHeader" />

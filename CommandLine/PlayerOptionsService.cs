@@ -83,6 +83,7 @@ namespace Z2Randomizer.CommandLine
             configuration.IncludeDiverseMusic = playerOptions.IncludeDiverseMusic;
             configuration.DisableUnsafeMusic = playerOptions.DisableUnsafeMusic;
             configuration.DisableHUDLag = playerOptions.DisableHUDLag;
+            configuration.OptimizeSidecroll = playerOptions.OptimizeSidecroll;
             configuration.FastSpellCasting = playerOptions.FastSpellCasting;
 
             var sprite = GetSprite(playerOptions.Sprite);

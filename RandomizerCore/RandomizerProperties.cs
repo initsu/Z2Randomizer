@@ -253,6 +253,7 @@ public class RandomizerProperties
     public bool UpdatedHud { get; set; }
     public bool DisableHUDLag { get; set; }
     public bool RandomizeKnockback { get; set; }
+    public bool OptimizeSidecroll { get; set; }
 
     //For Statistics
     [Key]
