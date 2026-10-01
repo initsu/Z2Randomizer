@@ -275,7 +275,7 @@ public class ROM
         a.Label(label);
         a.Byt(bytes);
         a.Org((ushort)nesPtr);
-        a.Word(a.Symbol(label));
+        a.Word(AsmModule.Symbol(label));
     }
 
     public byte[] ReadSprite(int spriteAddr, int tilesWide, int tilesHigh, byte[] palette)

@@ -1,4 +1,4 @@
-﻿using DynamicData;
+using DynamicData;
 using FtRandoLib.Importer;
 using js65;
 using NLog;
@@ -3407,8 +3407,8 @@ EndTileComparisons = $8601
         // Update the pointers to the text tables
         a.Segment("PRG3");
         a.Org(0xB423);
-        a.Word(a.Symbol("Towns_in_West_Hyrule"));
-        a.Word(a.Symbol("Towns_in_East_Hyrule"));
+        a.Word(AsmModule.Symbol("Towns_in_West_Hyrule"));
+        a.Word(AsmModule.Symbol("Towns_in_East_Hyrule"));
 
         for (var i = 0; i < hints.Count; i++) {
             var hint = hints[i];
@@ -3422,14 +3422,14 @@ EndTileComparisons = $8601
         // There are 52 texts in this first table
         for (var i = 0; i < CustomTexts.WEST_TEXT_COUNT; i++) {
             var hint = hints[i];
-            a.Word(a.Symbol($"HintText{i}"));
+            a.Word(AsmModule.Symbol($"HintText{i}"));
         }
         // and the rest are in this table
         a.Reloc();
         a.Label("Towns_in_East_Hyrule");
         for (var i = CustomTexts.WEST_TEXT_COUNT; i < hints.Count; i++) {
             var hint = hints[i];
-            a.Word(a.Symbol($"HintText{i}"));
+            a.Word(AsmModule.Symbol($"HintText{i}"));
         }
     }
 
@@ -3446,7 +3446,7 @@ EndTileComparisons = $8601
         a.Label("MovingDialogTable");
         for (var i = 0; i < texts.Count; i++)
         {
-            a.Word(a.Symbol($"MovingDialogText{i}"));
+            a.Word(AsmModule.Symbol($"MovingDialogText{i}"));
         }
         for (var i = 0; i < texts.Count; i++)
         {
@@ -3788,13 +3788,13 @@ FlagHudUpdate:
         a.Word(vanillaEntries);
         if (props.MarioMode)
         {
-            a.Word(a.Symbol("MarioRole1")); a.Word(a.Symbol("MarioName1"));
-            a.Word(a.Symbol("MarioRole2")); a.Word(a.Symbol("MarioName2"));
-            a.Word(a.Symbol("MarioRole3")); a.Word(a.Symbol("MarioName3"));
-            a.Word(a.Symbol("MarioRole4")); a.Word(a.Symbol("MarioName4"));
+            a.Word(AsmModule.Symbol("MarioRole1")); a.Word(AsmModule.Symbol("MarioName1"));
+            a.Word(AsmModule.Symbol("MarioRole2")); a.Word(AsmModule.Symbol("MarioName2"));
+            a.Word(AsmModule.Symbol("MarioRole3")); a.Word(AsmModule.Symbol("MarioName3"));
+            a.Word(AsmModule.Symbol("MarioRole4")); a.Word(AsmModule.Symbol("MarioName4"));
         }
-        a.Word(a.Symbol("NewCreditsHeader"));
-        a.Word(a.Symbol("NewCreditsBody"));
+        a.Word(AsmModule.Symbol("NewCreditsHeader"));
+        a.Word(AsmModule.Symbol("NewCreditsBody"));
 
         a.Code($$"""
 .include "z2r.inc"
