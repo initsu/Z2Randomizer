@@ -416,6 +416,7 @@ public class PresetsViewModel : ReactiveObject, IActivatableViewModel
         Presets.Add(new(Upstarts2025TournamentPreset.Name, Upstarts2025TournamentPreset.Preset, Upstarts2025TournamentPreset.Description));
         Presets.Add(new(MaxRando2025Preset.Name, MaxRando2025Preset.Preset, MaxRando2025Preset.Description));
         Presets.Add(new(RandomPercentPreset.Name, RandomPercentPreset.Preset, RandomPercentPreset.Description));
+        Presets.Add(new(GreatPalaceReadyPreset.Name, GreatPalaceReadyPreset.Preset, GreatPalaceReadyPreset.Description));
     }
 
     private void RefreshCustomPresets()

@@ -57,6 +57,7 @@ Tournament preset used for SpeedGaming Live 2026
         GpStyle = PalaceStyle.RECONSTRUCTED,
         NormalPalaceLength = PalaceLengthOption.MEDIUM,
         GpLength = PalaceLengthOption.MEDIUM,
+        RoomPoolOption = RoomPoolOption.SGL2026,
         IncludeVanillaRooms = true,
         Includev4_0Rooms = false,
         Includev5_0Rooms = false,
