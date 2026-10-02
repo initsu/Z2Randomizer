@@ -13,6 +13,7 @@
         <StackPanel Grid.Column="0" Orientation="Vertical">
             <z:Z2CheckBox Flag="RemoveFlashing" />
             <z:Z2CheckBox Flag="DarkenThunderbird" />
+            <z:Z2CheckBox Flag="HorizontalBossBarsGP" />
             <z:Z2CheckBox Flag="UpdatedHud" />
             <z:Z2CheckBox Flag="DisableHUDLag" />
             <z:Z2CheckBox Flag="FastSpellCasting" />
