@@ -20,8 +20,7 @@ public abstract class PalaceGenerator
 
     public virtual bool AllReachable(RandomizerProperties props, Palace palace)
     {
-        return palace.AllReachable(dropsMayBypassBosses: props.DropsMayBypassBosses,
-                                   tBirdRequired: props.RequireTbird);
+        return palace.AllReachable(props);
     }
 
     protected static bool AllowDuplicatePrevention(RandomizerProperties props, int palaceNumber)

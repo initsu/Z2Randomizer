@@ -930,6 +930,9 @@ variants of a room (same layout with different enemy sets, Fairy/No Fairy, etc.)
 considered duplicates of each other. Has no effect on vanilla palaces. Does not completely
 prevent duplicates for Random Walk generated palaces.</value>
 	</data>
+	<data name="KeyLogicToolTip" xml:space="preserve">
+		<value>Determines the logic for locked doors in palaces.</value>
+	</data>
 	<data name="BlockingRoomsInAnyPalaceToolTip" xml:space="preserve">
 <value>Allows rooms that cannot be passed without a specific item or spell to appear in any palace.
 Otherwise, the allowed requirements for rooms in palaces are based on the items and spells
@@ -1251,6 +1254,9 @@ This is a wildly different gameplay experience, so be warned when setting this f
 	</data>
 	<data name="AllowUnsafePathEncounters" xml:space="preserve">
 		<value>Allow Unsafe Path Encounters</value>
+	</data>
+	<data name="KeyLogic" xml:space="preserve">
+		<value>Key Logic</value>
 	</data>
 	<data name="BlockingRoomsInAnyPalace" xml:space="preserve">
 		<value>Blocking Rooms in Any Palace</value>
