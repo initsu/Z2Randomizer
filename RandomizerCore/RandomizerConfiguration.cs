@@ -540,7 +540,9 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
     private bool? swapUpAndDownStab = false;
 
     [Reactive]
+    // Add [ConditionallyIncludeInFlags] for next minor release.
     private FireOption fireOption = FireOption.NORMAL;
+    public bool fireOptionIncluded() => !marioMode;
 
     //Enemies
     [Reactive]
@@ -737,18 +739,22 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
     [Reactive]
     [IgnoreInFlags]
     private bool randomizeMusic = false;
+    public bool randomizeMusicIncluded() => !disableMusic;
 
     [Reactive]
     [IgnoreInFlags]
     private bool mixCustomAndOriginalMusic = false;
-    
+    public bool mixCustomAndOriginalMusicIncluded() => !disableMusic && randomizeMusic;
+
     [Reactive]
     [IgnoreInFlags]
     private bool includeDiverseMusic = false;
+    public bool includeDiverseMusicIncluded() => !disableMusic && randomizeMusic;
 
     [Reactive]
     [IgnoreInFlags]
     private bool disableUnsafeMusic = false;
+    public bool disableUnsafeMusicIncluded() => !disableMusic && randomizeMusic;
 
     [Reactive]
     [IgnoreInFlags]
@@ -789,18 +795,22 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
 
     [Reactive]
     [IgnoreInFlags]
+    [IgnoreInFlagControls]
     private NesColor tunic = NesColor.Default;
 
     [Reactive]
     [IgnoreInFlags]
+    [IgnoreInFlagControls]
     private NesColor skinTone = NesColor.Default;
 
     [Reactive]
     [IgnoreInFlags]
+    [IgnoreInFlagControls]
     private NesColor tunicOutline = NesColor.Default;
 
     [Reactive]
     [IgnoreInFlags]
+    [IgnoreInFlagControls]
     private NesColor shieldTunic = NesColor.Default;
 
     [Reactive]
