@@ -15585,7 +15585,7 @@
     "palaceNumber": null,
     "requirements": [{"target": "KEY", "requires": ["OUT_OF_LOGIC"]}],
     "suppressWarning": ["EnemyTooCloseToEntrance", "MultipleItemsOnPage"],
-    "sideviewData": "24608008D087D480F0126030712F322DA00F0DA20F087B2F312F7F2F312F7F243126D787"
+    "sideviewData": "20408008D087D480F0126030712F322DA00F10A20F083C2F7033742F3C26D787"
   },
   {
     "author": "Ellendar",
