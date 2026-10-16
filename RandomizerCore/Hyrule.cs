@@ -3908,6 +3908,10 @@ FlagHudUpdate:
         rom.FixItemPickup(engine, props.FastItemPickup);
         rom.CollisionFixes(engine);
         rom.FixSideviewEntryFacing(engine);
+        if (!randomizeMusic) // custom music already optimizes the overworld similarly
+        {
+            rom.OptimizeOverworldByteDecode(engine);
+        }
         rom.FixBigBubbleSplit(engine, randomizedStats);
         rom.ApplyBossPatches(engine, props, randomizedStats, palaces);
         StatTracking(props, engine);
