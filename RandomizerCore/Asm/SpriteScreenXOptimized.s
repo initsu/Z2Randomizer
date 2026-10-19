@@ -19,57 +19,61 @@ bank7_BuildSpriteScreenX_And_OffscreenMask := $f27d
     jmp BuildSpriteScreenX
 FREE_UNTIL $f2d3
 
-XOffscreenBitMasks := $f26c      ; $80,$40,$20,$10
-XOffscreenBitMasksLow4 := $f270  ; $08,$04,$02,$01
-ColumnXOffsetTable := $f274      ; $00,$08,$10,$18,
-                                 ; $20,$28,$30,$38,$40
-
-; Link[XY]Position(Hi) is the index 0 entry in the position array
-; The arrays also include all enemies and projectiles (see ram.inc).
-
 .reloc
 BuildSpriteScreenX:
-    sty zp_00
-    lda #$00
-    ; we accumulate the mask in zp_01 instead of doing STY/LDY juggle into $C8,y
-    sta zp_01                         ; slice/visibility mask accumulator
-    ; compute `screenX (16-bit) = objectX - scrollX` outside loop
     lda LinkXPosition,x
     sec
     sbc ScrollLeftX
-    sta zp_0e                         ; screenX low
+    sta LinkXScreenPosition,y     ; final output, also reused below
     lda LinkXPositionHi,x
-    sbc ScrollLeftPage
-    sta zp_0f                         ; screenX high
-    ldy #$03                          ; four slices
-@EdgeLoop:
-        lda zp_0e
-        clc
-        adc ColumnXOffsetTable,y
-        lda zp_0f
-        adc #$00                          ; high byte of (screenX + offset)
-        beq @Aligned                      ; zero -> slice on screen, bit stays clear
-@Misaligned:
-        lda XOffscreenBitMasksLow4,y
-        ora zp_01
-        sta zp_01
-@Aligned:
-        dey
-        bpl @EdgeLoop
-    ldy zp_00                         ; restores Y from before loop
-    lda LinkYPos,x
-    clc
-    adc #$10
-    lda LinkYPositionHi,x
-    adc #$00
-    cmp #$01
-    beq @Store
-    lda #$f0
-    ora zp_01
-    sta zp_01
-@Store:
-    lda zp_01
+    sbc ScrollLeftPage            ; A = screenX high
+    bne @HiNonZero
+    lda LinkXScreenPosition,y     ; hi == 0: only the right edge can clip
+    cmp #$e8
+    bcs @RightEdge
+    lda #$00                      ; all four slices on screen
+@StoreMask:
     sta LinkOffscreenBits,y
-    lda zp_0e
-    sta LinkXScreenPosition,y
+    lda LinkYPos,x
+    cmp #$f0                      ; C = carry out of (Y + $10)
+    lda LinkYPositionHi,x
+    adc #$ff                      ; zero <=> hi + carry == 1
+    bne @YOff
     rts
+@YOff:
+    lda LinkOffscreenBits,y
+    ora #$f0
+    sta LinkOffscreenBits,y
+    rts
+
+@RightEdge:                       ; hi == 0, lo >= $E8
+    cmp #$f0
+    bcc @M1
+    cmp #$f8
+    bcc @M3
+    lda #$07
+    bne @StoreMask
+@M3: lda #$03
+    bne @StoreMask
+@M1: lda #$01
+    bne @StoreMask
+
+@HiNonZero:
+    cmp #$ff
+    bne @AllOff
+    lda LinkXScreenPosition,y     ; hi == $FF: only the left edge slices are on
+    cmp #$e8
+    bcc @AllOff
+    cmp #$f0
+    bcc @M0E
+    cmp #$f8
+    bcc @M0C
+    lda #$08
+    bne @StoreMask
+@M0C: lda #$0c
+    bne @StoreMask
+@M0E: lda #$0e
+    bne @StoreMask
+@AllOff:
+    lda #$0f
+    bne @StoreMask
