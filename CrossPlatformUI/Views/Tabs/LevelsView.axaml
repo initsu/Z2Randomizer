@@ -36,11 +36,14 @@
             </StackPanel>
 
             <z:Z2CheckBox Flag="ScaleLevelRequirementsToCap" />
+            <z:Z2ComboBox Flag="EnemyXPDrops" />
+            <z:Z2CheckBox Flag="ShufflePBagAmounts" />
         </StackPanel>
         <StackPanel Grid.Column="1">
             <z:Z2ComboBox Flag="AttackEffectiveness" />
             <z:Z2ComboBox Flag="MagicEffectiveness" />
             <z:Z2ComboBox Flag="LifeEffectiveness" />
+            <z:Z2CheckBox Flag="ShuffleLifeRefillAmount" />
         </StackPanel>
     </Grid>
 </UserControl>

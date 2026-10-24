@@ -50,12 +50,6 @@
 
                 <z:Z2CheckBox Flag="NoDuplicateRoomsByLayout" />
                 <z:Z2CheckBox Flag="NoDuplicateRoomsByEnemies" />
-                <Separator Margin="16 10 18 10"/>
-
-                <!-- QoL -->
-                <z:Z2CheckBox Flag="RestartAtPalacesOnGameOver" />
-                <z:Z2CheckBox Flag="Global5050JarDrop" />
-                <z:Z2CheckBox Flag="ReduceDripperVariance" />
             </StackPanel>
 
             <StackPanel Grid.Column="1" Margin="0 0">
@@ -75,9 +69,7 @@
             <StackPanel Grid.Column="2" Margin="0 0">
                 <!-- boss-related -->
                 <z:Z2CheckBox Flag="RandomizeBossItemDrop" />
-                <z:Z2CheckBox Flag="HardBosses" />
                 <z:Z2CheckBox Flag="TBirdRequired" Classes="DisabledMeansChecked" />
-                <z:Z2CheckBox Flag="AggressiveTbird" />
                 <z:Z2CheckBox Flag="RemoveTBird" />
                 <z:Z2CheckBox Flag="DropsMayBypassBosses" />
 
