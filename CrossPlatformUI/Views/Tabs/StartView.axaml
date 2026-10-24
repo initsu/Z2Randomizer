@@ -27,7 +27,7 @@
                 </UniformGrid>
             </Border>
             <z:Z2ComboBox Flag="StartItemsLimit" />
-			<z:Z2ComboBox Flag="IndeterminateOptionRate" />
+            <z:Z2ComboBox Flag="IndeterminateOptionRate" />
         </StackPanel>
         <StackPanel Grid.Column="1">
             <z:Z2CheckBox Flag="ShuffleStartingSpells" Margin="14 8 4 8" />
@@ -45,8 +45,8 @@
                     <z:Z2CheckBox Flag="StartWithThunder" />
                 </UniformGrid>
             </Border>
-          <z:Z2ComboBox Flag="StartSpellsLimit" />
-            <Separator/>
+            <z:Z2ComboBox Flag="StartSpellsLimit" />
+            <z:Z2CheckBox Flag="RemoveSpellItems" />
             <z:Z2CheckBox Flag="ShareSeedAcrossDifficulty" Margin="14 8 4 8" />
         </StackPanel>
         <StackPanel Grid.Column="2">

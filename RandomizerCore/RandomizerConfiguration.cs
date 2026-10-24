@@ -534,16 +534,10 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
     private bool shuffleLifeRefillAmount = false;
 
     [Reactive]
-    private bool? shuffleSpellLocations = false;
-
-    [Reactive]
     private bool? disableMagicContainerRequirements = false;
 
     [Reactive]
     private bool? randomizeSpellSpellEnemy = false;
-
-    [Reactive]
-    private bool? swapUpAndDownStab = false;
 
     [Reactive]
     // Add [ConditionallyIncludeInFlags] for next minor release.
@@ -634,7 +628,17 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
     private bool? includeSpellsInShuffle = false;
 
     [Reactive]
+    [ConditionallyIncludeInFlags]
+    private bool? shuffleSpellLocations = false;
+    public bool shuffleSpellLocationsIncluded() => includeSpellsInShuffle != true;
+
+    [Reactive]
     private bool? includeSwordTechsInShuffle = false;
+
+    [Reactive]
+    [ConditionallyIncludeInFlags]
+    private bool? swapUpAndDownStab = false;
+    public bool swapUpAndDownStabIncluded() => includeSwordTechsInShuffle != true;
 
     [Reactive]
     private bool? includeQuestItemsInShuffle = false;
@@ -1118,8 +1122,7 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
         }
 
         ResolveStartingTechniques(properties, r, includeDifficulty);
-        properties.SwapUpAndDownStab = swapUpAndDownStab ?? GetIndeterminateFlagValue(r);
-
+        properties.SwapUpAndDownStab = swapUpAndDownStabIncluded() && (swapUpAndDownStab ?? GetIndeterminateFlagValue(r));
 
         properties.StartLives = ResolveStartingLives(r, includeDifficulty);
         properties.PermanentBeam = permanentBeamSword;
@@ -1328,7 +1331,7 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
         properties.MagicEffectiveness = magicEffectiveness;
         properties.LifeEffectiveness = includeDifficulty ? lifeEffectiveness : LifeEffectiveness.VANILLA;
         properties.ShuffleLifeRefill = shuffleLifeRefillAmount;
-        properties.ShuffleSpellLocations = shuffleSpellLocations ?? GetIndeterminateFlagValue(r);
+        properties.ShuffleSpellLocations = shuffleSpellLocationsIncluded() && (shuffleSpellLocations ?? GetIndeterminateFlagValue(r));
         properties.DisableMagicRecs = disableMagicContainerRequirements ?? GetIndeterminateFlagValue(r);
         properties.AttackCap = includeDifficulty ? attackLevelCap : 8;
         properties.MagicCap = includeDifficulty ? magicLevelCap : 8;

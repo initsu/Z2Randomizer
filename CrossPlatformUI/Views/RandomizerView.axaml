@@ -105,9 +105,6 @@
             <TabItem Header="Levels">
                 <tabs:LevelsView DataContext="{Binding Main}"/>
             </TabItem>
-            <TabItem Header="Spells">
-                <tabs:SpellsView DataContext="{Binding Main}"/>
-            </TabItem>
             <TabItem Header="Enemies">
                 <tabs:EnemiesView DataContext="{Binding Main}"/>
             </TabItem>
@@ -119,6 +116,9 @@
             </TabItem>
             <TabItem Header="Hints" Background="{Binding HeaderBackgroundObservable^}">
                 <tabs:HintsView DataContext="{Binding Main}"/>
+            </TabItem>
+            <TabItem Header="Patches">
+                <tabs:PatchesView DataContext="{Binding Main}"/>
             </TabItem>
         </TabControl>
     </Grid>

@@ -26,8 +26,6 @@
         </StackPanel>
         <StackPanel Grid.Column="1">
             <z:Z2CheckBox Flag="GenerateSpoiler" />
-            <z:Z2CheckBox Flag="RevealWalkthroughWalls" />
-            <z:Z2CheckBox Flag="RevealHiddenJars" />
         </StackPanel>
     </Grid>
 </UserControl>
