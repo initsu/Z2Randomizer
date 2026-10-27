@@ -1,4 +1,7 @@
+using System;
+using System.Collections.Generic;
 using Z2Randomizer.RandomizerCore;
+using Random = Z2Randomizer.RandomizerCore.Random;
 using Z2Randomizer.RandomizerCore.Sidescroll.Palace;
 
 namespace Z2Randomizer.Tests;
@@ -30,6 +33,7 @@ public class KeyLogicTests
             Author = name,
             SideView = bytes.ToArray(),
             ItemPresenceBits = [0x0F],
+            Enemies = [0x01],
             IsEntrance = isEntrance,
             HasBoss = hasBoss,
             LinkRequirements = Requirements.NONE,
@@ -46,7 +50,7 @@ public class KeyLogicTests
         return palace;
     }
 
-    [TestMethod]
+     [TestMethod]
     public void PalaceWithoutLockedDoorsIsAlwaysSolvable()
     {
         var entrance = MakeRoom("E", keys: 0, isEntrance: true);
@@ -54,7 +58,8 @@ public class KeyLogicTests
         entrance.Right = a;
         var palace = MakePalace(entrance, a);
 
-        Assert.IsTrue(palace.HasSolvableKeyLogic([], bossesDropKeys: false, startingKeys: 0));
+        palace.SolveKeyLogic([], bossesDropKeys: false, startingKeys: 0, createKeys: true, new Random(0));
+        Assert.IsTrue(palace.KeyLogicSolved);
     }
 
     [TestMethod]
@@ -67,7 +72,8 @@ public class KeyLogicTests
         a.Left = b;
         var palace = MakePalace(entrance, a, b);
 
-        Assert.IsTrue(palace.HasSolvableKeyLogic([], bossesDropKeys: false, startingKeys: 1));
+        palace.SolveKeyLogic([], bossesDropKeys: false, startingKeys: 1, createKeys: true, new Random(0));
+        Assert.IsTrue(palace.KeyLogicSolved);
     }
 
     [TestMethod]
@@ -81,7 +87,8 @@ public class KeyLogicTests
         a.Left = b;
         var palace = MakePalace(entrance, a, b);
 
-        Assert.IsFalse(palace.HasSolvableKeyLogic([], bossesDropKeys: false, startingKeys: 1));
+        palace.SolveKeyLogic([], bossesDropKeys: false, startingKeys: 1, createKeys: true, new Random(0));
+        Assert.IsFalse(palace.KeyLogicSolved);
     }
 
     [TestMethod]
@@ -94,8 +101,11 @@ public class KeyLogicTests
         a.Left = b;
         var palace = MakePalace(entrance, a, b);
 
-        Assert.IsFalse(palace.HasSolvableKeyLogic([], bossesDropKeys: false, startingKeys: 1));
-        Assert.IsTrue(palace.HasSolvableKeyLogic([], bossesDropKeys: false, startingKeys: 2));
+        palace.SolveKeyLogic([], bossesDropKeys: false, startingKeys: 1, createKeys: true, new Random(0));
+        Assert.IsFalse(palace.KeyLogicSolved);
+
+        palace.SolveKeyLogic([], bossesDropKeys: false, startingKeys: 2, createKeys: true, new Random(0));
+        Assert.IsTrue(palace.KeyLogicSolved);
     }
 
     [TestMethod]
@@ -113,7 +123,8 @@ public class KeyLogicTests
         a.Left = d;
         var palace = MakePalace(entrance, a, c, d);
 
-        Assert.IsFalse(palace.HasSolvableKeyLogic([], bossesDropKeys: false, startingKeys: 2));
+        palace.SolveKeyLogic([], bossesDropKeys: false, startingKeys: 2, createKeys: true, new Random(0));
+        Assert.IsFalse(palace.KeyLogicSolved);
     }
 
     [TestMethod]
@@ -126,7 +137,8 @@ public class KeyLogicTests
         entrance.Right = a;
         var palace = MakePalace(entrance, a, b);
 
-        Assert.IsTrue(palace.HasSolvableKeyLogic([], bossesDropKeys: false, startingKeys: 0));
+        palace.SolveKeyLogic([], bossesDropKeys: false, startingKeys: 0, createKeys: true, new Random(0));
+        Assert.IsTrue(palace.KeyLogicSolved);
     }
 
     [TestMethod]
@@ -139,8 +151,11 @@ public class KeyLogicTests
         d.Left = a;
         var palace = MakePalace(entrance, d, a);
 
-        Assert.IsFalse(palace.HasSolvableKeyLogic([], bossesDropKeys: false, startingKeys: 2));
-        Assert.IsTrue(palace.HasSolvableKeyLogic([], bossesDropKeys: false, startingKeys: 3));
+        palace.SolveKeyLogic([], bossesDropKeys: false, startingKeys: 2, createKeys: true, new Random(0));
+        Assert.IsFalse(palace.KeyLogicSolved);
+
+        palace.SolveKeyLogic([], bossesDropKeys: false, startingKeys: 3, createKeys: true, new Random(0));
+        Assert.IsTrue(palace.KeyLogicSolved);
     }
 
     [TestMethod]
@@ -151,12 +166,15 @@ public class KeyLogicTests
         var entrance = MakeRoom("E", keys: 0, isEntrance: true);
         var boss = MakeRoom("Boss", keys: 0, lockedDoors: 1, hasBoss: true);
         var after = MakeRoom("C", keys: 0, lockedDoors: 1);
-        entrance.Left = boss;
-        boss.Left = after;
+        entrance.Down = boss;
+        boss.Right = after;
         var palace = MakePalace(entrance, boss, after);
 
-        Assert.IsFalse(palace.HasSolvableKeyLogic([], bossesDropKeys: false, startingKeys: 1));
-        Assert.IsTrue(palace.HasSolvableKeyLogic([], bossesDropKeys: true, startingKeys: 1));
+        palace.SolveKeyLogic([], bossesDropKeys: false, startingKeys: 1, createKeys: true, new Random(0));
+        Assert.IsFalse(palace.KeyLogicSolved);
+
+        palace.SolveKeyLogic([], bossesDropKeys: true, startingKeys: 1, createKeys: true, new Random(0));
+        Assert.IsTrue(palace.KeyLogicSolved);
     }
 
     [TestMethod]
@@ -173,10 +191,12 @@ public class KeyLogicTests
         var palace = MakePalace(entrance, h, b, a);
 
         // Without JUMP the treasure room is unreachable, so its door can never be paid for.
-        Assert.IsFalse(palace.HasSolvableKeyLogic([], bossesDropKeys: false, startingKeys: 0));
+        palace.SolveKeyLogic([], bossesDropKeys: false, startingKeys: 0, createKeys: true, new Random(0));
+        Assert.IsFalse(palace.KeyLogicSolved);
         // With JUMP (and its implicit 2-container requirement) both branches are reachable.
         var withJump = new HashSet<RequirementType> { RequirementType.JUMP, RequirementType.TWO_CONTAINERS };
-        Assert.IsTrue(palace.HasSolvableKeyLogic(withJump, bossesDropKeys: false, startingKeys: 0));
+        palace.SolveKeyLogic(withJump, bossesDropKeys: false, startingKeys: 0, createKeys: true, new Random(0));
+        Assert.IsTrue(palace.KeyLogicSolved);
     }
 
     [TestMethod]
@@ -196,7 +216,8 @@ public class KeyLogicTests
         d.Right = x;
         var palace = MakePalace(entrance, d, treasure, x);
 
-        Assert.IsTrue(palace.HasSolvableKeyLogic([], bossesDropKeys: false, startingKeys: 0));
+        palace.SolveKeyLogic([], bossesDropKeys: false, startingKeys: 0, createKeys: true, new Random(0));
+        Assert.IsTrue(palace.KeyLogicSolved);
     }
 
     [TestMethod]
@@ -212,8 +233,11 @@ public class KeyLogicTests
         d.Right = a;
         var palace = MakePalace(entrance, d, a);
 
-        Assert.IsFalse(palace.HasSolvableKeyLogic([], bossesDropKeys: false, startingKeys: 0));
-        Assert.IsTrue(palace.HasSolvableKeyLogic([], bossesDropKeys: false, startingKeys: 1));
+        palace.SolveKeyLogic([], bossesDropKeys: false, startingKeys: 0, createKeys: true, new Random(0));
+        Assert.IsFalse(palace.KeyLogicSolved);
+
+        palace.SolveKeyLogic([], bossesDropKeys: false, startingKeys: 1, createKeys: true, new Random(0));
+        Assert.IsTrue(palace.KeyLogicSolved);
     }
 
     [TestMethod]
@@ -229,12 +253,15 @@ public class KeyLogicTests
         d.Right = a;
         var palace = MakePalace(entrance, d, a);
 
-        Assert.IsFalse(palace.HasSolvableKeyLogic([], bossesDropKeys: false, startingKeys: 0));
-        Assert.IsFalse(palace.HasSolvableKeyLogic([RequirementType.GLOVE], bossesDropKeys: false, startingKeys: 0));
+        palace.SolveKeyLogic([], bossesDropKeys: false, startingKeys: 0, createKeys: true, new Random(0));
+        Assert.IsFalse(palace.KeyLogicSolved);
+
+        palace.SolveKeyLogic([RequirementType.GLOVE], bossesDropKeys: false, startingKeys: 0, createKeys: true, new Random(0));
+        Assert.IsFalse(palace.KeyLogicSolved);
     }
 
     [TestMethod]
-    public void HasSolvableKeyLogicIgnoresTheMagicKey()
+    public void MagicKeyDoesNotStandInForSmallKey()
     {
         // The magic key must not stand in for a small key: this check confirms the palace is
         // solvable with the keys found within it, not by leaning on the magic key.
@@ -245,8 +272,11 @@ public class KeyLogicTests
         d.Right = a;
         var palace = MakePalace(entrance, d, a);
 
-        Assert.IsFalse(palace.HasSolvableKeyLogic([RequirementType.MAGIC_KEY], bossesDropKeys: false, startingKeys: 0));
-        Assert.IsTrue(palace.HasSolvableKeyLogic([RequirementType.MAGIC_KEY], bossesDropKeys: false, startingKeys: 1));
+        palace.SolveKeyLogic([RequirementType.MAGIC_KEY], bossesDropKeys: false, startingKeys: 0, createKeys: true, new Random(0));
+        Assert.IsFalse(palace.KeyLogicSolved);
+
+        palace.SolveKeyLogic([RequirementType.MAGIC_KEY], bossesDropKeys: false, startingKeys: 1, createKeys: true, new Random(0));
+        Assert.IsTrue(palace.KeyLogicSolved);
     }
 
     [TestMethod]
@@ -265,6 +295,28 @@ public class KeyLogicTests
     public void MagicKeyRequirementMapsBackToItsCollectable()
     {
         Assert.AreEqual(Collectable.MAGIC_KEY, RequirementType.MAGIC_KEY.AsCollectable());
+    }
+
+    [TestMethod]
+    public void LockedDoorsOnlyCountsDoorsOnPagesWithItemBitSet()
+    {
+        // Create a room with a locked door on page 3
+        var room = MakeRoom("triforceOfCourage M12");
+        room.SideView = Convert.FromHexString("24600E08D20892737473F01F5473543FF81F583FD808F01FD808507374739473D60E8005");
+        room.ItemPresenceBits = [0x0F];
+        // The locked door should be counted since page 3 has item bit set
+        Assert.IsTrue(room.GetItemBit(3));
+        Assert.AreEqual(1, room.LockedDoors());
+
+        // Now clear the item bit for page 3
+        room.ItemPresenceBits = [0x0E];
+        Assert.IsFalse(room.GetItemBit(3));
+        Assert.AreEqual(0, room.LockedDoors());
+        
+        // Clear all item bits
+        room.ItemPresenceBits = [0x00];
+        Assert.IsFalse(room.GetItemBit(3));
+        Assert.AreEqual(0, room.LockedDoors());
     }
 
     [TestMethod]

@@ -465,7 +465,7 @@ public class Room : IJsonOnDeserialized, IDeterministicHash
         SideviewEditable<PalaceObject> sv = new(SideView);
         int keys = sv.Commands
             .Count(cmd => cmd.IsItem(RandomizerCore.Collectable.KEY) &&
-                          ItemBit(cmd.Page));
+                          GetItemBit(cmd.Page));
 
         if (!LinkRequirements.KeyIsAccessible(requireables))
         {
@@ -899,10 +899,101 @@ public class Room : IJsonOnDeserialized, IDeterministicHash
         return mirror;
     }
 
-    public bool ItemBit(int page)
+    public bool TryAddKey(Random r)
+    {
+        SideviewEditable<PalaceObject> sv = new(SideView);
+
+        if (!HasTag("NoKeyTransform"))
+        {
+            var minorItems = sv.Commands
+                .Where(cmd => cmd.IsMinorItem()
+                           && cmd.Extra != RandomizerCore.Collectable.KEY
+                           && GetItemBit(cmd.Page))
+                .ToList();
+            var replacement = minorItems.Sample(r);
+            if (replacement != null)
+            {
+                replacement.Extra = RandomizerCore.Collectable.KEY;
+                SideView = sv.Finalize();
+                return true;
+            }
+        }
+
+        var ee = new EnemiesEditable<EnemiesPalace125>(Enemies);
+
+        var doors = sv.Commands.Where(cmd => cmd.IsLockedDoor());
+        var items = sv.Commands.Where(cmd => cmd.IsItem());
+        var strikeForJarEnemies = ee.Enemies.Where(o => o.IsStrikeForJarLike());
+
+        bool ItemPageIsFree(int page)
+        {
+            if (doors.Any(cmd => cmd.Page == page)) { return false; }
+            if (items.Any(cmd => cmd.Page == page)) { return false; }
+            if (strikeForJarEnemies.Any(cmd => cmd.Page == page)) { return false; }
+            return true;
+        }
+
+        bool TryCreateKey(bool[,] solidGrid, int x)
+        {
+            var floor = SolidGridHelper.FindFloor(solidGrid, x, 10, 1, 1);
+            if (floor > 0)
+            {
+                var newKey = SideviewMapCommand<PalaceObject>.CreateCollectable(x, floor, RandomizerCore.Collectable.KEY);
+                sv.Commands.Add(newKey);
+                SideView = sv.Finalize();
+                return true;
+            }
+            return false;
+        }
+
+        if (HasLeftExit && ItemPageIsFree(0))
+        {
+            var solidGrid = sv.CreateSolidGrid();
+            int x = 5;
+            if (TryCreateKey(solidGrid, x))
+            {
+                SetItemBit(0, true);
+                return true;
+            }
+        }
+
+        if (HasRightExit && sv.PageCount == 3 && ItemPageIsFree(3))
+        {
+            var solidGrid = sv.CreateSolidGrid();
+            int x = 58;
+            if (TryCreateKey(solidGrid, x))
+            {
+                SetItemBit(3, true);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public bool GetItemBit(int page)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(page, 3);
+        ArgumentOutOfRangeException.ThrowIfNegative(page);
+
         return (ItemPresenceBits[0] & (0b1000 >> page)) != 0;
+    }
+
+    public void SetItemBit(int page, bool value)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(page, 3);
+        ArgumentOutOfRangeException.ThrowIfNegative(page);
+
+        byte mask = (byte)(0b1000 >> page);
+
+        if (value)
+        {
+            ItemPresenceBits[0] |= mask;
+        }
+        else
+        {
+            ItemPresenceBits[0] &= (byte)~mask;
+        }
     }
 
     public Requirements GetEffectiveRequirements(bool isMario)

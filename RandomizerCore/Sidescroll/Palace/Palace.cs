@@ -1,6 +1,5 @@
 using NLog;
 using System;
-using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
@@ -22,6 +21,8 @@ public partial class Palace(int number, bool palaceItemsAreShufflable)
     private const byte OUTSIDE_ROOM_EXIT = 0b11111100;
     private readonly SortedDictionary<int, List<Room>> rooms = [];
     internal bool IsValid { get; set; } = false;
+    /// <summary>True when key logic has been solved granted all requireables</summary>
+    internal bool KeyLogicSolved { get; private set; } = false;
 
     public static readonly ReadOnlyCollection<Collectable> SHUFFLABLE_SMALL_ITEMS = [
         Collectable.KEY,
@@ -230,30 +231,27 @@ public partial class Palace(int number, bool palaceItemsAreShufflable)
     }
 
     /// <summary>
-    /// Determines whether the palace is solvable under worst-case small-key usage.
-    /// This expands the unlocked area from the entrance (recursively over every openable
-    /// locked door) and makes sure that no matter which locked doors the player opens, they
-    /// can never burn through their keys and get stuck while there are still locked doors
-    /// (and the keys behind them) left to find.
-
-    /// All traversable rooms are considered reachable (?)
-    /// because it is assumed the player has every requirement expected of them going in.
+    /// Attempts to solve the palace's key logic by adding keys to accessible rooms as needed.
+    /// This expands the unlocked area from the entrance and makes sure that no matter which 
+    /// locked doors the player opens, they can never burn through their keys and not be able
+    /// to open all doors.
+    /// 
+    /// If the palace is not initially solvable, this method will
+    /// attempt to add keys to accessible rooms until either the palace becomes solvable
+    /// or no more keys can be added.
+    /// 
+    /// Sets AccessRequirements and keyLogicSolved to true when successful.
     /// </summary>
-    public bool HasSolvableKeyLogic(IReadOnlyCollection<RequirementType> initialRequireables, bool bossesDropKeys, int startingKeys = 0)
+    /// <returns>True if the palace is solvable (or was made solvable by adding keys)</returns>
+    public bool SolveKeyLogic(IReadOnlyCollection<RequirementType> initialRequireables, bool bossesDropKeys, int startingKeys, bool createKeys, Random? r)
     {
         var entrance = AllRooms.First(room => room.IsEntrance);
         var doorRooms = AllRooms.Where(room => room.LockedDoors() > 0).ToImmutableSortedSet(new RoomReferenceComparer());
         int doorsTotal = doorRooms.Sum(room => room.LockedDoors());
         if (doorsTotal == 0)
         {
+            KeyLogicSolved = true;
             return true;
-        }
-
-        // Fail quickly if there are not enough keys to open every locked door.
-        int keysTotal = AllRooms.Sum(room => room.Keys(initialRequireables, bossesDropKeys));
-        if (keysTotal + startingKeys < doorsTotal)
-        {
-            return false;
         }
 
         HashSet<RequirementType> requireables = [.. initialRequireables.Where(req => req != RequirementType.KEY && req != RequirementType.MAGIC_KEY)];
@@ -350,13 +348,13 @@ public partial class Palace(int number, bool palaceItemsAreShufflable)
             return area;
         }
 
-        // array that is 1 at each opened door room's index
+        // array of 1s for opened doors and 0 for unopened doors
         byte[] MemoKey(HashSet<Room> openedDoors) => doorRooms
                 .Select(room => (byte)(openedDoors.Contains(room) ? 1 : 0))
                 .ToArray();
         Dictionary<byte[], bool> memo = new(new StandardByteArrayEqualityComparer());
 
-        bool RecursiveSolvableKeyLogic(HashSet<Room> openedDoors)
+        bool CheckRecursive(HashSet<Room> openedDoors)
         {
             byte[] key = MemoKey(openedDoors);
             if (memo.TryGetValue(key, out bool cached))
@@ -365,46 +363,98 @@ public partial class Palace(int number, bool palaceItemsAreShufflable)
             }
 
             AreaBetweenDoors area = ComputeArea(openedDoors);
-            bool result;
             if (area.UnopenedDoors.Count == 0)
             {
-                // every reachable door has been opened.
-                // result now depends on whether every door was
-                // reachable with the requirements
-                result = openedDoors.Count == doorRooms.Count; // Should this not just be result = true?
+                if (doorRooms.Count > openedDoors.Count)
+                {
+                    // Not every door in the palace is reachable
+                    // Some doors unreachable from the entrance
+                    return false;
+                }
+
+                // All doors are opened
+                memo[key] = true;
+                return true;
             }
             else
             {
-                // The player may open any available locked door next. If any of the choices
-                // lead to a state from which a deadlock is possible, result should be false.
                 int keys = area.KeysOnHand;
                 bool openedAny = false;
-                result = true;
-                foreach (var (_, door) in area.UnopenedDoors)
+                foreach (var (_, doorRoom) in area.UnopenedDoors)
                 {
-                    if (door.LockedDoors() > keys)
+                    if (doorRoom.LockedDoors() > keys)
                     {
                         continue;
                     }
                     openedAny = true;
-                    if (!RecursiveSolvableKeyLogic(new HashSet<Room>(openedDoors) { door }))
+                    if (!CheckRecursive(new HashSet<Room>(openedDoors) { doorRoom }))
                     {
-                        result = false;
-                        break;
+                         return false;
                     }
                 }
-                // If no locked door was affordable, the player cannot open anything and is deadlocked.
-                if (!openedAny)
+                if (openedAny)
                 {
-                    result = false;
+                    // All doors succeeded
+                    memo[key] = true;
+                    return true;
                 }
-            }
 
-            memo[key] = result;
-            return result;
+                if (!createKeys)
+                {
+                    return false; // all doors could not be opened and we aren't adding keys
+                }
+                Debug.Assert(r != null, "Random should be non-null when createKeys is set");
+                // Try adding keys if we couldn't open all doors
+                // no locked door was affordable, the player cannot open
+                // anything and the key logic is currently unsolvable.
+                // lets try creating a key somewhere in the accessible area
+                List<Room> tryAddKeyRooms = [.. area.AccessibleRooms];
+                tryAddKeyRooms.FisherYatesShuffle(r!);
+
+                bool added = false;
+                while (tryAddKeyRooms.Count > 0)
+                {
+                    // iterate from end since we remove items
+                    for (int i = tryAddKeyRooms.Count - 1; i >= 0; i--)
+                    {
+                        var room = tryAddKeyRooms[i];
+                        if (room.TryAddKey(r))
+                        {
+                            // keep (re-insert) the room last, in case it has room for more keys
+                            tryAddKeyRooms.RemoveAt(i);
+                            tryAddKeyRooms.Insert(0, room);
+                            added = true;
+                            break;
+                        }
+                        else
+                        {
+                            tryAddKeyRooms.RemoveAt(i);
+                        }
+                    }
+
+                    if (!added)
+                    {
+                        // no key could be created
+                        return false;
+                    }
+
+                    // we added a key; re-run this function
+                    return CheckRecursive(openedDoors);
+                }
+
+                // no key could be created
+                return false;
+            }
         }
 
-        return RecursiveSolvableKeyLogic([]);
+        bool isSolvable = CheckRecursive([]);
+        if (isSolvable)
+        {
+            // don't clear this if it's already verified with all requirements.
+            // the function can still fail later in "ItemGet checking" with less requirements.
+            KeyLogicSolved = true;
+        }
+        return isSolvable;
     }
 
     public static int RoomDistance(Room room1, Room room2)
@@ -486,7 +536,10 @@ public partial class Palace(int number, bool palaceItemsAreShufflable)
             Number < 7 &&
             (Number < 6 || props.BlockersAnywhere))
         {
-            return HasSolvableKeyLogic(RequirementTypeExtensions.ALL, !props.BossItem, 0);
+            if (!KeyLogicSolved)
+            {
+                throw new Exception("Key logic should be solved at this point");
+            }
         }
         return true;
     }
@@ -1427,15 +1480,16 @@ public partial class Palace(int number, bool palaceItemsAreShufflable)
         if (props != null && props.KeyLogic == KeyLogicOption.KEYS_PER_PALACE_SOLVABLE
             && Number < 7 && (Number < 6 || props.BlockersAnywhere))
         {
-            if (HasSolvableKeyLogic(initialRequireables, !props!.BossItem, 0))
+            if (!KeyLogicSolved)
             {
-                // HasSolvableKeyLogic has already proved this palace is key-solvable
-                requireables.Add(RequirementType.KEY);
+                throw new Exception("Key logic granted all requireables should have been solved at this point");
             }
-            else
+            if (!SolveKeyLogic(initialRequireables, props.BossItem, 0, false, null))
             {
                 return [];
             }
+            // SolveKeyLogic has proven this palace is key-solvable
+            requireables.Add(RequirementType.KEY);
         }
         var entrance = AllRooms.First(i => i.IsEntrance);
         Queue<(Direction, Room)> pendingRooms = new([(Direction.WEST, entrance)]);

@@ -4312,13 +4312,18 @@ FlagHudUpdate:
             case KeyLogicOption.KEYS_PER_PALACE_SOLVABLE:
                 foreach (var loc in palaceLocations)
                 {
-                    loc.AccessRequirements = Requirements.NONE;
-                }
-                if (!props.BlockersAnywhere)
-                {
-                    // with vanilla palace blockers, Magic Key is in-logic for P6
-                    var p6 = palaceLocations.Single(loc => loc.Palace!.Number == 6);
-                    p6.AccessRequirements = new([RequirementType.MAGIC_KEY]);
+                    var palace = loc.Palace!;
+                    if (palace.Number < 6
+                        || !props.BlockersAnywhere && palace.Number == 6)
+                    {
+                        loc.AccessRequirements = Requirements.NONE;
+                    }
+                    else if (palace.Number == 6)
+                    {
+                        // with vanilla palace blockers, Magic Key is in-logic for P6
+                        var p6 = palaceLocations.Single(loc => loc.Palace!.Number == 6);
+                        p6.AccessRequirements = new([RequirementType.MAGIC_KEY]);
+                    }
                 }
                 break;
             case KeyLogicOption.FAIRY_OR_MAGICKEY:

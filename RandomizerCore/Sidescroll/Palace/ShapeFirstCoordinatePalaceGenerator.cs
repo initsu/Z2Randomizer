@@ -225,6 +225,11 @@ public abstract class ShapeFirstCoordinatePalaceGenerator() : CoordinatePalaceGe
 
         ConnectNonEuclideanPaths(palace);
 
+        if (!ValidateKeyLogic(props, palace, r))
+        {
+            return false;
+        }
+
         //Some percentage of the time, dropifying some rooms causes part of the palace to become
         //unreachable because up was the only way to get there.
         if (!AllReachable(props, palace))
