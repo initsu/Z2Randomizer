@@ -419,6 +419,18 @@ public class Room : IJsonOnDeserialized, IDeterministicHash
             edit.Remove(statue);
             SideView = edit.Finalize();
         }
+
+        // for key logic: make sure it understands the boss key is not reachable from the right
+        LinkRequirements = new Requirements(
+            LinkRequirements.IndividualRequirements,
+            LinkRequirements.CompositeRequirements,
+            [
+                .. LinkRequirements.ComplexRequirements,
+                new ComplexRequirement(
+                    RequirementTarget.KEY,
+                    [RequirementType.OUT_OF_LOGIC], [],
+                    [new RequirementRoute([Direction.EAST], null)]),
+            ]);
     }
 
     public void AdjustEntrance(int palaceItemRoomCount, Random r)
@@ -459,18 +471,18 @@ public class Room : IJsonOnDeserialized, IDeterministicHash
 
     public bool HasTag(string tag) => Tags != null && Tags.Contains(tag);
 
-    public int Keys(IReadOnlyCollection<RequirementType> requireables, bool bossesDropKeys)
+    public int Keys(IReadOnlyCollection<RequirementType> requireables, bool bossesDropKeys, Direction? enterFrom = null)
     {
+        if (!LinkRequirements.KeyIsAccessible(requireables, enterFrom))
+        {
+            return 0;
+        }
+
         // probably add this to rooms file for optimization?
         SideviewEditable<PalaceObject> sv = new(SideView);
         int keys = sv.Commands
             .Count(cmd => cmd.IsItem(RandomizerCore.Collectable.KEY) &&
                           GetItemBit(cmd.Page));
-
-        if (!LinkRequirements.KeyIsAccessible(requireables))
-        {
-            keys = 0;
-        }
 
         if (bossesDropKeys && HasBoss)
         {
@@ -899,26 +911,41 @@ public class Room : IJsonOnDeserialized, IDeterministicHash
         return mirror;
     }
 
-    public bool TryAddKey(Random r)
-    {
-        SideviewEditable<PalaceObject> sv = new(SideView);
+    private bool HasComplexKeyRequirement => LinkRequirements.ComplexRequirements
+        .Any(requirement => requirement.Target == RequirementTarget.KEY);
 
-        if (!HasTag("NoKeyTransform"))
+    public bool TryTransmuteMinorItemToKey(Random r)
+    {
+        if (HasComplexKeyRequirement || HasTag("NoKeyTransform"))
         {
-            var minorItems = sv.Commands
-                .Where(cmd => cmd.IsMinorItem()
-                           && cmd.Extra != RandomizerCore.Collectable.KEY
-                           && GetItemBit(cmd.Page))
-                .ToList();
-            var replacement = minorItems.Sample(r);
-            if (replacement != null)
-            {
-                replacement.Extra = RandomizerCore.Collectable.KEY;
-                SideView = sv.Finalize();
-                return true;
-            }
+            return false; // do not create new keys that would inherit requirements
         }
 
+        SideviewEditable<PalaceObject> sv = new(SideView);
+        var minorItems = sv.Commands
+            .Where(cmd => cmd.IsMinorItem()
+                       && cmd.Extra != RandomizerCore.Collectable.KEY
+                       && GetItemBit(cmd.Page))
+            .ToList();
+        var replacement = minorItems.Sample(r);
+        if (replacement == null)
+        {
+            return false;
+        }
+
+        replacement.Extra = RandomizerCore.Collectable.KEY;
+        SideView = sv.Finalize();
+        return true;
+    }
+
+    public bool TryAddKeyOnFloor()
+    {
+        if (HasComplexKeyRequirement)
+        {
+            return false; // do not create new keys that would inherit requirements
+        }
+
+        SideviewEditable<PalaceObject> sv = new(SideView);
         var ee = new EnemiesEditable<EnemiesPalace125>(Enemies);
 
         var doors = sv.Commands.Where(cmd => cmd.IsLockedDoor());

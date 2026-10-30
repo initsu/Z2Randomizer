@@ -267,6 +267,17 @@ public partial class Palace(int number, bool palaceItemsAreShufflable)
                 UnopenedDoors = [],
             };
 
+            // A room may be reached from several sides; collect its keys only once,
+            // provided at least one reachable entry gives access to them.
+            var accessibleKeys = new Dictionary<Room, int>(ReferenceEqualityComparer.Instance);
+
+            void RecordAccessibleRoom(Direction enterFrom, Room room, bool doorOpened)
+            {
+                area.AccessibleRooms.Add(room);
+                int keys = room.Keys(doorOpened ? requireablesIncludingKey : requireables, bossesDropKeys, enterFrom);
+                accessibleKeys[room] = Math.Max(accessibleKeys.GetValueOrDefault(room), keys);
+            }
+
             var pending = new Queue<(Direction EnterFrom, Room Room)>();
             var visitedLockedDoorEntries = new Dictionary<Room, HashSet<Direction>>(ReferenceEqualityComparer.Instance);
             var visitedTraversableEntries = new HashSet<(Direction EnterFrom, Room Room)>(new RoomTupleComparer<Direction>());
@@ -305,7 +316,7 @@ public partial class Palace(int number, bool palaceItemsAreShufflable)
                         var key = (enterFrom, room);
                         if (visitedTraversableEntries.Add(key))
                         {
-                            area.AccessibleRooms.Add(room);
+                            RecordAccessibleRoom(enterFrom, room, doorOpened: true);
                             EnqueuePossibleDirections(enterFrom, room, doorOpened: true);
                         }
 
@@ -336,13 +347,13 @@ public partial class Palace(int number, bool palaceItemsAreShufflable)
                 var traversableKey = (enterFrom, room);
                 if (visitedTraversableEntries.Add(traversableKey))
                 {
-                    area.AccessibleRooms.Add(room);
+                    RecordAccessibleRoom(enterFrom, room, doorOpened: false);
                     EnqueuePossibleDirections(enterFrom, room, doorOpened: false);
                 }
             }
 
             area.KeysOnHand = startingKeys
-                + area.AccessibleRooms.Sum(room => room.Keys(requireables, bossesDropKeys))
+                + accessibleKeys.Values.Sum()
                 - openedDoors.Sum(room => room.LockedDoors());
 
             return area;
@@ -411,35 +422,22 @@ public partial class Palace(int number, bool palaceItemsAreShufflable)
                 List<Room> tryAddKeyRooms = [.. area.AccessibleRooms];
                 tryAddKeyRooms.FisherYatesShuffle(r!);
 
-                bool added = false;
-                while (tryAddKeyRooms.Count > 0)
+                // Exhaust transmutation across the accessible area before placing a new key.
+                // After each change, recompute reachability and try transmutation first again.
+                foreach (var room in tryAddKeyRooms.AsEnumerable().Reverse())
                 {
-                    // iterate from end since we remove items
-                    for (int i = tryAddKeyRooms.Count - 1; i >= 0; i--)
+                    if (room.TryTransmuteMinorItemToKey(r!))
                     {
-                        var room = tryAddKeyRooms[i];
-                        if (room.TryAddKey(r))
-                        {
-                            // keep (re-insert) the room last, in case it has room for more keys
-                            tryAddKeyRooms.RemoveAt(i);
-                            tryAddKeyRooms.Insert(0, room);
-                            added = true;
-                            break;
-                        }
-                        else
-                        {
-                            tryAddKeyRooms.RemoveAt(i);
-                        }
+                        return CheckRecursive(openedDoors); // we added a key; re-run the inner function from the top
                     }
+                }
 
-                    if (!added)
+                foreach (var room in tryAddKeyRooms.AsEnumerable().Reverse())
+                {
+                    if (room.TryAddKeyOnFloor())
                     {
-                        // no key could be created
-                        return false;
+                        return CheckRecursive(openedDoors);
                     }
-
-                    // we added a key; re-run this function
-                    return CheckRecursive(openedDoors);
                 }
 
                 // no key could be created

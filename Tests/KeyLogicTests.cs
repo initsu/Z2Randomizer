@@ -159,6 +159,34 @@ public class KeyLogicTests
     }
 
     [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void ItemReachabilityUsesTheSameBossKeyPolicyAsGeneration(bool bossItem)
+    {
+        var entrance = MakeRoom("E", keys: bossItem ? 1 : 0, isEntrance: true);
+        var boss = MakeRoom("Boss", hasBoss: true);
+        var item = MakeRoom("Item", lockedDoors: 1);
+        item.Collectable = Collectable.MAGIC_CONTAINER;
+        item.LinkRequirements = new Requirements([RequirementType.KEY]);
+        entrance.Right = boss;
+        boss.Left = entrance;
+        boss.Right = item;
+        item.Left = boss;
+        var palace = MakePalace(entrance, boss, item);
+        palace.ItemRooms.Add(item);
+        var props = new RandomizerProperties
+        {
+            KeyLogic = KeyLogicOption.KEYS_PER_PALACE_SOLVABLE,
+            BossItem = bossItem,
+        };
+
+        // A randomized boss item needs a floor key; a vanilla boss supplies its own.
+        Assert.IsTrue(new ReconstructedPalaceGenerator(System.Threading.CancellationToken.None).ValidateKeyLogic(props, palace, new Random(0)));
+        CollectionAssert.AreEqual(new[] { Collectable.MAGIC_CONTAINER },
+            palace.GetGettableItems(props, new HashSet<RequirementType>(), false));
+    }
+
+    [TestMethod]
     public void BossDropsKeys()
     {
         // Two locked doors in a row, but the only keys are the starting key and the one the
@@ -175,6 +203,199 @@ public class KeyLogicTests
 
         palace.SolveKeyLogic([], bossesDropKeys: true, startingKeys: 1, createKeys: true, new Random(0));
         Assert.IsTrue(palace.KeyLogicSolved);
+    }
+
+    [TestMethod]
+    [DataRow(true, 0, false)]
+    [DataRow(true, 1, true)]
+    [DataRow(false, 0, true)]
+    public void ContinuingBossKeyRequiresAnAccessibleEntry(bool enterFromEast, int startingKeys, bool expected)
+    {
+        var entrance = MakeRoom("E", isEntrance: true);
+        var boss = MakeRoom("Boss", hasBoss: true);
+        boss.AdjustContinuingBossRoom();
+        var after = MakeRoom("D", lockedDoors: 1);
+        if (enterFromEast)
+        {
+            entrance.Left = boss;
+            boss.Left = after;
+        }
+        else
+        {
+            entrance.Right = boss;
+            boss.Right = after;
+        }
+        var palace = MakePalace(entrance, boss, after);
+
+        Assert.AreEqual(expected, palace.SolveKeyLogic([], bossesDropKeys: true, startingKeys: startingKeys, createKeys: false, r: null));
+    }
+
+    [TestMethod]
+    public void BossDropRespectsKeyRequirements()
+    {
+        var entrance = MakeRoom("E", isEntrance: true);
+        var boss = MakeRoom("Boss", hasBoss: true);
+        boss.LinkRequirements = new Requirements([], [],
+            [new ComplexRequirement(RequirementTarget.KEY, [RequirementType.GLOVE], [])]);
+        var after = MakeRoom("D", lockedDoors: 1);
+        entrance.Right = boss;
+        boss.Right = after;
+        var palace = MakePalace(entrance, boss, after);
+
+        Assert.IsFalse(palace.SolveKeyLogic([], bossesDropKeys: true, startingKeys: 0, createKeys: false, r: null));
+        Assert.IsTrue(palace.SolveKeyLogic([RequirementType.GLOVE], bossesDropKeys: true, startingKeys: 0, createKeys: false, r: null));
+    }
+
+    [TestMethod]
+    public void BossKeyReachableFromBothSidesIsCountedOnce()
+    {
+        var entrance = MakeRoom("E", isEntrance: true);
+        var boss = MakeRoom("Boss", hasBoss: true);
+        boss.AdjustContinuingBossRoom();
+        var approach = MakeRoom("A");
+        var after = MakeRoom("D", lockedDoors: 2);
+        entrance.Left = boss; // First visit is from the blocked east side.
+        entrance.Right = approach;
+        approach.Right = boss; // A later visit reaches the key from the west.
+        boss.Up = after;
+        var palace = MakePalace(entrance, boss, approach, after);
+
+        Assert.IsFalse(palace.SolveKeyLogic([], bossesDropKeys: true, startingKeys: 0, createKeys: false, r: null));
+        Assert.IsTrue(palace.SolveKeyLogic([], bossesDropKeys: true, startingKeys: 1, createKeys: false, r: null));
+    }
+
+    [TestMethod]
+    [DataRow(Direction.WEST, true)]
+    [DataRow(Direction.NORTH, true)]
+    [DataRow(Direction.SOUTH, true)]
+    [DataRow(Direction.EAST, false)]
+    public void LeavingAndReturningToBossUsesTheReturnEntry(Direction exit, bool expected)
+    {
+        var entrance = MakeRoom("E", isEntrance: true);
+        var boss = MakeRoom("Boss", hasBoss: true);
+        boss.AdjustContinuingBossRoom();
+        var sideRoom = MakeRoom("Side");
+        var door = MakeRoom("D", lockedDoors: 1);
+        entrance.Left = boss;
+        boss.Right = entrance;
+        entrance.Up = door;
+        switch (exit)
+        {
+            case Direction.WEST: boss.Left = sideRoom; sideRoom.Right = boss; break;
+            case Direction.NORTH: boss.Up = sideRoom; sideRoom.Down = boss; break;
+            case Direction.SOUTH: boss.Down = sideRoom; sideRoom.Up = boss; break;
+            // The entrance already provides an east-side round trip.
+        }
+        var palace = MakePalace(entrance, boss, sideRoom, door);
+
+        Assert.AreEqual(expected, palace.SolveKeyLogic([], bossesDropKeys: true, startingKeys: 0, createKeys: false, r: null));
+    }
+
+    [TestMethod]
+    [DataRow(false, 1, false)]
+    [DataRow(true, 0, false)]
+    [DataRow(true, 1, true)]
+    public void LockedBossDoorMustBePaidBeforeRoundTripCanRecoverKey(bool canReturn, int startingKeys, bool expected)
+    {
+        var entrance = MakeRoom("E", isEntrance: true);
+        var boss = MakeRoom("Boss", hasBoss: true, lockedDoors: 1);
+        boss.AdjustContinuingBossRoom();
+        var sideRoom = MakeRoom("Side");
+        var after = MakeRoom("D", lockedDoors: 1);
+        entrance.Left = boss;
+        boss.Right = entrance;
+        boss.Left = sideRoom;
+        if (canReturn)
+        {
+            sideRoom.Right = boss;
+        }
+        sideRoom.Left = after;
+        var palace = MakePalace(entrance, boss, sideRoom, after);
+
+        Assert.AreEqual(expected, palace.SolveKeyLogic([], bossesDropKeys: true, startingKeys: startingKeys, createKeys: false, r: null));
+    }
+
+    private static Room MakeKeyPlacementRoom(string name, bool isEntrance = false, int minorItems = 0)
+    {
+        var room = MakeRoom(name, isEntrance: isEntrance);
+        // Flat floor with a left exit; each blue jar is on page zero.
+        List<byte> bytes = [0, 0x60, 0x00, 0x08];
+        for (int i = 0; i < minorItems; i++)
+        {
+            bytes.AddRange([0x82, 0x0F, (byte)Collectable.BLUE_JAR]);
+        }
+        bytes[0] = (byte)bytes.Count;
+        room.SideView = bytes.ToArray();
+        room.SetConnections([0, 0xFC, 0xFC, 0xFC]);
+        return room;
+    }
+
+    [TestMethod]
+    public void TransmutationAcrossRoomsPrecedesFloorPlacement()
+    {
+        // Try several shuffles so either room can be considered first.
+        for (int seed = 0; seed < 12; seed++)
+        {
+            var entrance = MakeKeyPlacementRoom("E", isEntrance: true);
+            var jars = MakeKeyPlacementRoom("Jars", minorItems: 2);
+            var door = MakeRoom("D", lockedDoors: 2);
+            entrance.Right = jars;
+            entrance.Up = door;
+            var palace = MakePalace(entrance, jars, door);
+            var originalEntrance = entrance.SideView.ToArray();
+
+            Assert.IsTrue(palace.SolveKeyLogic([], bossesDropKeys: false, startingKeys: 0, createKeys: true, r: new Random(seed)));
+            Assert.AreEqual(2, jars.Keys([], false));
+            CollectionAssert.AreEqual(originalEntrance, entrance.SideView);
+        }
+    }
+
+    [TestMethod]
+    public void FloorPlacementIsUsedAfterTransmutationRunsOut()
+    {
+        var entrance = MakeKeyPlacementRoom("E", isEntrance: true);
+        var jars = MakeKeyPlacementRoom("Jars", minorItems: 1);
+        var door = MakeRoom("D", lockedDoors: 2);
+        entrance.Right = jars;
+        entrance.Up = door;
+        var palace = MakePalace(entrance, jars, door);
+
+        Assert.IsTrue(palace.SolveKeyLogic([], bossesDropKeys: false, startingKeys: 0, createKeys: true, r: new Random(0)));
+        Assert.AreEqual(1, jars.Keys([], false));
+        Assert.AreEqual(1, entrance.Keys([], false));
+    }
+
+    [TestMethod]
+    public void KeyTargetRequirementPreventsBothKindsOfKeyCreation()
+    {
+        var jars = MakeKeyPlacementRoom("Jars", minorItems: 1);
+        var floor = MakeKeyPlacementRoom("Floor", isEntrance: true);
+        foreach (var room in new[] { jars, floor })
+        {
+            // This requirement is satisfied and only applies to one entry; placement
+            // must still skip the entire room.
+            room.LinkRequirements = new Requirements([], [],
+                [new ComplexRequirement(RequirementTarget.KEY, [RequirementType.GLOVE], [],
+                    [new RequirementRoute([Direction.EAST], null)])]);
+            var original = room.SideView.ToArray();
+            Assert.IsFalse(room.TryTransmuteMinorItemToKey(new Random(0)));
+            Assert.IsFalse(room.TryAddKeyOnFloor());
+            CollectionAssert.AreEqual(original, room.SideView);
+        }
+        floor.Right = jars;
+        var door = MakeRoom("D", lockedDoors: 1);
+        floor.Up = door;
+        var palace = MakePalace(floor, jars, door);
+        Assert.IsFalse(palace.SolveKeyLogic([RequirementType.GLOVE], bossesDropKeys: false, startingKeys: 0, createKeys: true, r: new Random(0)));
+    }
+
+    [TestMethod]
+    public void NoKeyTransformStillAllowsFloorPlacement()
+    {
+        var room = MakeKeyPlacementRoom("E", isEntrance: true);
+        room.Tags.Add("NoKeyTransform");
+        Assert.IsFalse(room.TryTransmuteMinorItemToKey(new Random(0)));
+        Assert.IsTrue(room.TryAddKeyOnFloor());
     }
 
     [TestMethod]
