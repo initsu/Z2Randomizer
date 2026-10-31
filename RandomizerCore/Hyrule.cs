@@ -1622,7 +1622,7 @@ public class Hyrule
             gottenItems = [];
             foreach (Location location in reachableLocations)
             {
-                IReadOnlyList<Collectable> gettableItems = GettableItems.GetGettableItemsAt(location, requireables);
+                IReadOnlyList<Collectable> gettableItems = GettableItems.GetGettableItemsAt(props, location, requireables);
 
                 foreach (Collectable item in gettableItems)
                 {

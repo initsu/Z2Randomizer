@@ -1468,25 +1468,29 @@ public partial class Palace(int number, bool palaceItemsAreShufflable)
         return false;
     }
 
-    public List<Collectable> GetGettableItems(IReadOnlyCollection<RequirementType> initialRequireables, bool shufflableItemsOnly, RandomizerProperties? props = null)
+    public List<Collectable> GetGettableItems(RandomizerProperties props, IReadOnlyCollection<RequirementType> initialRequireables, bool shufflableItemsOnly)
     {
         if (shufflableItemsOnly && !PalaceItemsAreShufflable)
         {
             return [];
         }
         HashSet<RequirementType> requireables = [.. initialRequireables];
-        if (props != null && props.KeyLogic == KeyLogicOption.KEYS_PER_PALACE_SOLVABLE
-            && Number < 7 && (Number < 6 || props.BlockersAnywhere))
+        if (props.KeyLogic == KeyLogicOption.KEYS_PER_PALACE_SOLVABLE)
         {
-            if (!KeyLogicSolved)
+            if (Number < 7 && (Number < 6 || props.BlockersAnywhere))
             {
-                throw new Exception("Key logic granted all requireables should have been solved at this point");
+                if (!KeyLogicSolved)
+                {
+                    throw new Exception("Key logic granted all requireables should have been solved at this point");
+                }
+                if (!SolveKeyLogic(initialRequireables, !props.BossItem, 0, false, null))
+                {
+                    return [];
+                }
             }
-            if (!SolveKeyLogic(initialRequireables, props.BossItem, 0, false, null))
-            {
-                return [];
-            }
-            // SolveKeyLogic has proven this palace is key-solvable
+            // Palace is key-solvable; add KEY to requireables.
+            // If BlockersAnywhere is off, P6 location has MAGIC_KEY in AccessRequirements.
+            // Currently I remove key doors from the GP room pool since keys don't carry over.
             requireables.Add(RequirementType.KEY);
         }
         var entrance = AllRooms.First(i => i.IsEntrance);
