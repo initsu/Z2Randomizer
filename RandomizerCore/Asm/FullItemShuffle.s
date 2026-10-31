@@ -583,3 +583,28 @@ ItemPaletteTable:
     .byte $01 ; Spell Spell
     .byte $01 ; Thunder Spell
     .byte $01 ; Dash Spell
+
+
+.segment "PRG0"
+
+UpdateFlashPalette := $9235
+UpdateLevelUpMenu := $9d54
+UpdatePauseMenu := $9d91
+.org $9d75
+    jsr LoadPaneStateAndFinishItemFlash
+.org $9dd0
+    jsr LoadPaneStateAndFinishItemFlash
+
+; Spell-item pickups start a flash, but the normal sideview spell routine stops
+; running while a pause/level-up pane owns the screen. Finish the flash before
+; drawing the pane so its last palette cannot remain stuck for the whole menu.
+.reloc
+LoadPaneStateAndFinishItemFlash:
+    lda LinkFlashingTimer
+    beq @LoadState
+        lda #$01 ; final vanilla palette step restores the normal colours
+        sta LinkFlashingTimer
+        jsr UpdateFlashPalette
+@LoadState:
+    lda $0524 ; displaced pane routine index load (including its N/Z flags)
+    rts

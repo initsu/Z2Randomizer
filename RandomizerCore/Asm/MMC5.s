@@ -53,6 +53,30 @@ FREE_UNTIL NewSideviewInit
     jmp $D4CE
 FREE_UNTIL $D4CE
 
+; The sideview pane runs inside NMI, before the normal main-loop split setup.
+; A long level-up draw can pass scanline 31 before reaching UpdateLevelUpMenu.
+; Arm the split before dispatching the pane, while the scroll shadows still hold
+; the frozen playfield position. Keep the existing first-capture guard: later
+; setup calls must not replace that snapshot after the IRQ has fired.
+
+UpdateMenusAndDialogs := $c1cd
+UpdateSideviewMenusAndDialogs := $c1dd
+.org $c1d7   ; Reached only in sideviews
+    jsr SetupPaneScrollSplit
+
+.reloc
+SetupPaneScrollSplit:
+    lda CurrentDialogType
+    cmp #$02
+    bcs @Dispatch
+    ora MenuState
+    beq @Dispatch
+        jsr SetupScanlineIRQ
+@Dispatch:
+    ; this will later jmp to UpdateSariaBridgeOpening and eventually RTS
+    ; back to SwapToSavedPRG
+    jmp UpdateSideviewMenusAndDialogs
+
 ; Do this for the other places that also wait for sprite zero like opening the menu
 .segment "PRG0"
 .org $9D56
@@ -64,7 +88,8 @@ FREE_UNTIL $9D75
     jmp SetupScanlineIRQ
 FREE_UNTIL $9DCC
 .segment "PRG0"
-.org $A7AB
+UpdateSariaBridgeOpening := $a7ab
+.org UpdateSariaBridgeOpening
     jsr SetupScanlineIRQ
     jmp $A7CD
 FREE_UNTIL $A7CD

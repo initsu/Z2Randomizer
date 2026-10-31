@@ -387,6 +387,7 @@ EnemySuspendTimer := $050d                ; countdown for bosses (Rebo, Barba, D
 OverworldDemonTimer := $050e              ; overworld demon active flag/timer, indexed by slot X; non-zero = active
 EncounterSpawnTimer := $0516
 LinkIFrameTimer := $0518
+MenuState := $0524                        ; from 00 (closed) to $0a (level up clear state) for the menu life cycle
 PpuMenuRowDrawCount := $0525              ; number of menu text rows; a PRG0 table of 3 values ($a688) is loaded into this
 PpuMenuRowTiles := $053e
 PpuMenuBlinkRow := $0543
@@ -476,7 +477,7 @@ LocationNumber := $0748                   ; Location index sideview exits to or 
 MagicSelectorPosition := $0749
 LinkFlashingTimer := $074b                ; Link changes palette and this value is counted down until it's 0. 0b10000000 bit determines if the background changes color.
 CurrentDialogType := $074c                ; 0=None, 1 = Level Up, 2 = Talking
-PausePanePage := $074e                    ; pause/level-up pane page, 0-3
+LevelUpSelection := $074e                 ; 0=Attack, 1=Magic, 2=Life, 3=Cancel
 HudSectionFlag := $074f                   ; 0x80=Draw Magic & Attack, 0x40=Draw Life & XP
 HudDrawState := $0750
 ExpToAddHi := $0755

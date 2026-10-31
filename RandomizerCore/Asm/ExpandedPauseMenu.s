@@ -19,6 +19,28 @@ CheckIfLevelingUp:
     cmp #$0b ; extend the menu just a little bit
     rts
 
+; Maps the selected stat upgrade to its pane row
+LevelUpSelectionRowTable := $a688  ; $04, $06, $09
+
+; Waits for the PPU buffer, redraws the selected upgrade text with a pulsing
+; effect, and advances when the confirmation delay finishes.
+UpdateLevelUpSelectionPulsing := $a0fe
+.org $a10e
+    jsr GetRowDrawCountForPage
+
+; PausePanePage has four cursor states, but the table only has three row
+; counts. We override this to protect against out of index reads. This
+; fixes occassional garbage PPU effects while levelling up while there's
+; another PPU effect (like a flash) happening.
+.reloc
+GetRowDrawCountForPage:
+    cpy #$03 ; Y = PausePanePage
+    bcc @InRange
+        ldy #$02
+@InRange:
+    lda LevelUpSelectionRowTable,y
+    rts
+
 .org $a5e8
     lda PauseMenuRow1Tiles,y
     sta $02
