@@ -1774,6 +1774,14 @@ on Controller 1</value>
 	<data name="UseCustomRooms" xml:space="preserve">
 		<value>Use Custom Rooms File</value>
 	</data>
+	<data name="LockedDoorsBlockFairy" xml:space="preserve">
+		<value>Locked Doors Block Fairy</value>
+	</data>
+	<data name="LockedDoorsBlockFairyToolTip" xml:space="preserve">
+	<value>Prevent Fairy from slipping through locked palace doors without a key.
+With Fairy or Magic Key logic, palaces require Magic Key instead of Fairy.
+Removing Magic Key requires Keys Per Palace Solvable key logic and disables Blockers Anywhere.</value>
+	</data>
   <data name="RemoveFairy" xml:space="preserve">
     <value>Remove Fairy</value>
   </data>
@@ -1789,6 +1797,6 @@ guaranteed to be beatable without it.
   <data name="RemoveMagicKeyToolTip" xml:space="preserve">
     <value>Play without Magic Key so you have to rely on keys (or Fairy) to open all doors.
 The Magic Key is removed and the seed is guaranteed to be beatable without it.
-    Removing both Fairy and Magic Key requires Keys Per Palace Solvable key logic and disables Blockers Anywhere.</value>
+    Removing both Magic Key and Fairy's ability to traverse doors requires Keys Per Palace Solvable key logic and disables Blockers Anywhere.</value>
   </data>
 </root>

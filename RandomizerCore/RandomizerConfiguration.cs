@@ -415,9 +415,12 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
     private bool removeMagicKey = false;
 
     [Reactive]
+    private bool lockedDoorsBlockFairy = false;
+
+    [Reactive]
     [ConditionallyIncludeInFlags]
     private bool blockingRoomsInAnyPalace = false;
-    public bool blockingRoomsInAnyPalaceIncluded() => palaceStylesAreNotAllVanilla() && !(removeFairy && removeMagicKey);
+    public bool blockingRoomsInAnyPalaceIncluded() => palaceStylesAreNotAllVanilla() && !((removeFairy || lockedDoorsBlockFairy) && removeMagicKey);
 
     [Reactive]
     private PalaceDropStyle palaceDropStyle = PalaceDropStyle.ANY_EXIT;
@@ -1300,6 +1303,7 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
         }
         properties.CustomRoomPool = customRoomPool;
         properties.KeyLogic = keyLogicIncluded() ? keyLogic : KeyLogicOption.FAIRY_OR_MAGICKEY;
+        properties.LockedDoorsBlockFairy = lockedDoorsBlockFairy;
         properties.BlockersAnywhere = blockingRoomsInAnyPalaceIncluded() && blockingRoomsInAnyPalace;
         properties.RemoveLongDeadEnds = removeLongDeadEndsIncluded() && removeLongDeadEnds;
         properties.IncludeExpertRooms = includeExpertRoomsIncluded() && includeExpertRooms;
@@ -1817,9 +1821,9 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
         {
             throw new UserFacingException("Incompatible Removal Flags", "Removing Fairy requires generated palace layouts. Choose styles other than Vanilla or Vanilla Shuffle for normal palaces and Great Palace.");
         }
-        if (removeFairy && removeMagicKey && (!keyLogicIncluded() || keyLogic != KeyLogicOption.KEYS_PER_PALACE_SOLVABLE))
+        if ((removeFairy || lockedDoorsBlockFairy) && removeMagicKey && (!keyLogicIncluded() || keyLogic != KeyLogicOption.KEYS_PER_PALACE_SOLVABLE))
         {
-            throw new UserFacingException("Incompatible Removal Flags", "Removing both Fairy and Magic Key requires Keys Per Palace Solvable key logic.");
+            throw new UserFacingException("Incompatible Removal Flags", "Removing Magic Key while Fairy is removed or blocked by locked doors requires Keys Per Palace Solvable key logic.");
         }
     }
 

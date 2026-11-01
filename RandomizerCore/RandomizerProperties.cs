@@ -133,7 +133,6 @@ public class RandomizerProperties
         && palaceNumber < 7
         && (palaceNumber < 6 || BlockersAnywhere || RemoveItems.Contains(Collectable.MAGIC_KEY));
 
-    //Always false for now; reserved as a future logic setting.
     public bool LockedDoorsBlockFairy { get; set; } = false;
     public bool RemoveLongDeadEnds { get; set; }
     public bool IncludeExpertRooms { get; set; }

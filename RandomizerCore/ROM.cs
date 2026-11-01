@@ -1318,6 +1318,11 @@ CheckController1ForUpAMagic:
         a.Code(Util.ReadResource("Z2Randomizer.RandomizerCore.Asm.Recoil.s"), "recoil.s");
     }
 
+    public void BlockFairyThroughLockedDoors(Assembler asm)
+    {
+        asm.Module().Code(Util.ReadResource("Z2Randomizer.RandomizerCore.Asm.LockedDoorsBlockFairy.s"), "locked_doors_block_fairy.s");
+    }
+
     public void AllowForChangingDoorYPosition(Assembler a)
     {
         a.Module().Code("""
