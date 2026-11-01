@@ -51,6 +51,26 @@ JankPowerOfTwo = $c28d
     jmp $b5ff
 .endmacro
 
+; A shuffled spell reward can already be flashing when its dialog ends.
+; Existing flashing timer takes precedence over ones set by closing dialog.
+FinishDialogText := $b672
+.org FinishDialogText
+    jmp PreserveFlashAtDialogEnd
+.assert * = FinishDialogText + 3
+FinishDialogTextContinue:
+
+.reloc
+PreserveFlashAtDialogEnd:
+    lda LinkFlashingTimer
+    pha                               ; stash flashing timer before we run dialog code
+        lda CurrentDialogType         ; original command we overwrote
+        jsr FinishDialogTextContinue  ; run remaining original routine
+    pla                               ; pop flashing timer
+    beq @Done                         ; restore popped timer unless 0
+        sta LinkFlashingTimer
+@Done:
+    rts
+
 .org MirrorWaterGetItem
     jmp MirrorOrWaterLocation
 FREE_UNTIL $b5b9
