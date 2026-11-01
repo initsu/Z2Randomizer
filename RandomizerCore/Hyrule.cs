@@ -3874,6 +3874,10 @@ FlagHudUpdate:
         rom.DontCountExpDuringTalking(engine);
         rom.FixElevatorPositionInFallRooms(engine);
         rom.AllowForChangingDoorYPosition(engine);
+        if (props.LockedDoorsBlockFairy)
+        {
+            rom.BlockFairyThroughLockedDoors(engine);
+        }
         rom.AllowForChangingElevatorYPosition(engine);
         rom.InstantText(engine);
         KeysPerPalace(engine, props.KeyLogic.UsesKeysPerPalace());
@@ -4111,7 +4115,9 @@ FlagHudUpdate:
                 }
                 break;
             case KeyLogicOption.FAIRY_OR_MAGICKEY:
-                palaceLocations.ForEach(loc => loc.AccessRequirements = Requirements.DEFAULT_PALACE_REQUIREMENTS);
+                palaceLocations.ForEach(loc => loc.AccessRequirements = props.LockedDoorsBlockFairy
+                    ? new Requirements([RequirementType.MAGIC_KEY])
+                    : Requirements.DEFAULT_PALACE_REQUIREMENTS);
                 break;
         }
     }

@@ -407,9 +407,12 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
     private bool removeMagicKey = false;
 
     [Reactive]
+    private bool lockedDoorsBlockFairy = false;
+
+    [Reactive]
     [ConditionallyIncludeInFlags]
     private bool blockingRoomsInAnyPalace = false;
-    public bool blockingRoomsInAnyPalaceIncluded() => palaceStylesAreNotAllVanilla();
+    public bool blockingRoomsInAnyPalaceIncluded() => palaceStylesAreNotAllVanilla() && !(lockedDoorsBlockFairy && removeMagicKey);
 
     [Reactive]
     private PalaceDropStyle palaceDropStyle = PalaceDropStyle.ANY_EXIT;
@@ -1289,6 +1292,7 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
         }
         properties.RoomPoolOption = roomPoolOption;
         properties.KeyLogic = keyLogicIncluded() ? keyLogic : KeyLogicOption.FAIRY_OR_MAGICKEY;
+        properties.LockedDoorsBlockFairy = lockedDoorsBlockFairy;
         properties.BlockersAnywhere = blockingRoomsInAnyPalaceIncluded() && blockingRoomsInAnyPalace;
         properties.RemoveLongDeadEnds = removeLongDeadEndsIncluded() && removeLongDeadEnds;
         properties.IncludeExpertRooms = includeExpertRoomsIncluded() && includeExpertRooms;
@@ -1816,6 +1820,14 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
             PalaceStyle.SHUFFLED => 2,
             _ => int.MaxValue,
         }).ToArray();
+    }
+
+    private void ValidateRemovalOptions()
+    {
+        if (lockedDoorsBlockFairy && removeMagicKey && (!keyLogicIncluded() || keyLogic != KeyLogicOption.KEYS_PER_PALACE_SOLVABLE))
+        {
+            throw new UserFacingException("Incompatible Removal Flags", "Removing Magic Key while Fairy is blocked by locked doors requires Keys Per Palace Solvable key logic.");
+        }
     }
 
     /// Let the user know when their combination of flags will not be

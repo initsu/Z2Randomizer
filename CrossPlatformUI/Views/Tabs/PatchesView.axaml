@@ -25,6 +25,7 @@
             <StackPanel Margin="0">
                 <TextBlock Text="Utility" Classes="SectionHeader" Margin="0,12,0,-7" />
                 <z:Z2ComboBox Flag="FireOption" />
+                <z:Z2CheckBox Flag="LockedDoorsBlockFairy" />
                 <z:Z2ComboBox Flag="FluteWarpMode" />
             </StackPanel>
 
