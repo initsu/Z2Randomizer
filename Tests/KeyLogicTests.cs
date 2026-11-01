@@ -9,6 +9,33 @@ namespace Z2Randomizer.Tests;
 [TestClass]
 public class KeyLogicTests
 {
+    [TestMethod]
+    [DataRow(KeyLogicOption.KEYS_PER_PALACE_SOLVABLE, false, false, false)]
+    [DataRow(KeyLogicOption.KEYS_PER_PALACE_SOLVABLE, true, false, true)]
+    [DataRow(KeyLogicOption.KEYS_PER_PALACE_SOLVABLE, false, true, true)]
+    [DataRow(KeyLogicOption.KEYS_PER_PALACE_SOLVABLE, true, true, true)]
+    [DataRow(KeyLogicOption.FAIRY_OR_MAGICKEY, false, false, false)]
+    [DataRow(KeyLogicOption.FAIRY_OR_MAGICKEY, true, false, false)]
+    [DataRow(KeyLogicOption.FAIRY_OR_MAGICKEY, false, true, false)]
+    [DataRow(KeyLogicOption.FAIRY_OR_MAGICKEY, true, true, false)]
+    public void SmallKeyValidationFollowsPalaceAndConfiguration(
+        KeyLogicOption keyLogic, bool blockersAnywhere, bool removeMagicKey, bool validateP6)
+    {
+        var props = new RandomizerProperties
+        {
+            KeyLogic = keyLogic,
+            BlockersAnywhere = blockersAnywhere,
+            RemoveItems = removeMagicKey ? [Collectable.MAGIC_KEY] : [],
+        };
+        for (int number = 1; number <= 5; number++)
+        {
+            Assert.AreEqual(keyLogic == KeyLogicOption.KEYS_PER_PALACE_SOLVABLE,
+                props.RequiresSmallKeyValidation(number));
+        }
+        Assert.AreEqual(validateP6, props.RequiresSmallKeyValidation(6));
+        Assert.IsFalse(props.RequiresSmallKeyValidation(7));
+    }
+
     private static Room MakeRoom(string name, int keys = 0, int lockedDoors = 0, bool isEntrance = false, bool hasBoss = false)
     {
         List<byte> bytes =

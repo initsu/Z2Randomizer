@@ -1479,7 +1479,7 @@ public partial class Palace(int number, bool palaceItemsAreShufflable)
         HashSet<RequirementType> requireables = [.. initialRequireables];
         if (props.KeyLogic == KeyLogicOption.KEYS_PER_PALACE_SOLVABLE)
         {
-            if (Number < 7 && (Number < 6 || props.BlockersAnywhere || props.RemoveItems.Contains(Collectable.MAGIC_KEY)))
+            if (props.RequiresSmallKeyValidation(Number))
             {
                 if (!KeyLogicSolved)
                 {
@@ -1492,7 +1492,7 @@ public partial class Palace(int number, bool palaceItemsAreShufflable)
             }
             // Palace is key-solvable; add KEY to requireables.
             // If BlockersAnywhere is off, P6 location has MAGIC_KEY in AccessRequirements.
-            // Currently I remove key doors from the GP room pool since keys don't carry over.
+            // GP is not covered by key logic. (Rooms with required locked doors are removed from the pool.)
             requireables.Add(RequirementType.KEY);
         }
         var entrance = AllRooms.First(i => i.IsEntrance);

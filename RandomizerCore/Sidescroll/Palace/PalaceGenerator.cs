@@ -17,15 +17,12 @@ public abstract class PalaceGenerator
 
     public virtual bool AddKeysForKeyLogic(RandomizerProperties props, Palace palace, bool createKeys, Random r)
     {
-        if (props.KeyLogic == KeyLogicOption.KEYS_PER_PALACE_SOLVABLE)
+        if (props.RequiresSmallKeyValidation(palace.Number))
         {
-            if (palace.Number < 7 && (palace.Number < 6 || props.BlockersAnywhere || props.RemoveItems.Contains(Collectable.MAGIC_KEY)))
+            bool solvable = palace.SolveKeyLogic(RequirementTypeExtensions.ALL, !props.BossItem, 0, createKeys, r);
+            if (!solvable)
             {
-                bool solvable = palace.SolveKeyLogic(RequirementTypeExtensions.ALL, !props.BossItem, 0, createKeys, r);
-                if (!solvable)
-                {
-                    return false;
-                }
+                return false;
             }
         }
         return true;
