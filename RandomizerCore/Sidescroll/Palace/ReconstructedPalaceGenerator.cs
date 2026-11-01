@@ -233,7 +233,7 @@ public class ReconstructedPalaceGenerator(CancellationToken ct) : PalaceGenerato
                 palace.ResetRooms();
                 count++;
                 palace.ShuffleRooms(r);
-                reachable = ValidateKeyLogic(props, palace, r) && AllReachable(props, palace);
+                reachable = AllReachable(props, palace);
                 tries++;
                 logger.Debug("Palace room shuffle attempt #" + tries);
             }

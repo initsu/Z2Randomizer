@@ -181,7 +181,7 @@ public class KeyLogicTests
         };
 
         // A randomized boss item needs a floor key; a vanilla boss supplies its own.
-        Assert.IsTrue(new ReconstructedPalaceGenerator(System.Threading.CancellationToken.None).ValidateKeyLogic(props, palace, new Random(0)));
+        Assert.IsTrue(new ReconstructedPalaceGenerator(System.Threading.CancellationToken.None).AddKeysForKeyLogic(props, palace, createKeys: true, r: new Random(0)));
         CollectionAssert.AreEqual(new[] { Collectable.MAGIC_CONTAINER },
             palace.GetGettableItems(props, new HashSet<RequirementType>(), false));
     }
@@ -328,6 +328,81 @@ public class KeyLogicTests
         room.SideView = bytes.ToArray();
         room.SetConnections([0, 0xFC, 0xFC, 0xFC]);
         return room;
+    }
+
+    [TestMethod]
+    [DataRow(0)]
+    [DataRow(1)]
+    public void KeyPlacementClonesMutableBuffers(int minorItems)
+    {
+        var entrance = MakeKeyPlacementRoom("E", isEntrance: true, minorItems: minorItems);
+        // Floor placement must turn an initially clear presence bit on.
+        if (minorItems == 0) entrance.ItemPresenceBits = [0];
+        var door = MakeRoom("Door", lockedDoors: 1);
+        entrance.Right = door;
+        var palace = MakePalace(entrance, door);
+        var sharedSideView = entrance.SideView;
+        var sharedBits = entrance.ItemPresenceBits;
+        var originalSideView = sharedSideView.ToArray();
+        var originalBits = sharedBits.ToArray();
+
+        Assert.IsTrue(palace.SolveKeyLogic([], false, 0, true, new Random(0)));
+        Assert.AreEqual(1, entrance.Keys([], false));
+        Assert.AreNotSame(sharedSideView, entrance.SideView);
+        Assert.AreNotSame(sharedBits, entrance.ItemPresenceBits);
+        CollectionAssert.AreEqual(originalSideView, sharedSideView);
+        CollectionAssert.AreEqual(originalBits, sharedBits);
+        Assert.IsTrue(palace.SolveKeyLogic([], false, 0, false, null));
+    }
+
+    [TestMethod]
+    public void FullInventoryCannotSatisfyOutOfLogic()
+    {
+        Assert.IsFalse(RequirementTypeExtensions.ALL.Contains(RequirementType.OUT_OF_LOGIC));
+        foreach (var requirement in Enum.GetValues<RequirementType>().Where(r => r != RequirementType.OUT_OF_LOGIC))
+        {
+            Assert.IsTrue(RequirementTypeExtensions.ALL.Contains(requirement), $"Missing {requirement}");
+        }
+        Assert.IsFalse(new Requirements([RequirementType.OUT_OF_LOGIC]).AreSatisfiedBy(RequirementTypeExtensions.ALL));
+    }
+
+    [TestMethod]
+    public void GenerationDoesNotRelyOnOutOfLogicKeys()
+    {
+        var entrance = MakeKeyPlacementRoom("E", isEntrance: true, minorItems: 1);
+        var inaccessibleKey = MakeRoom("Out of logic key", keys: 1);
+        inaccessibleKey.LinkRequirements = new Requirements([], [],
+            [new ComplexRequirement(RequirementTarget.KEY, [RequirementType.OUT_OF_LOGIC], [], [])]);
+        var door = MakeRoom("Door", lockedDoors: 1);
+        entrance.Right = inaccessibleKey;
+        inaccessibleKey.Right = door;
+        var palace = MakePalace(entrance, inaccessibleKey, door);
+        var props = new RandomizerProperties { KeyLogic = KeyLogicOption.KEYS_PER_PALACE_SOLVABLE };
+        var generator = new ReconstructedPalaceGenerator(System.Threading.CancellationToken.None);
+
+        Assert.IsTrue(generator.AddKeysForKeyLogic(props, palace, createKeys: true, r: new Random(0)));
+        Assert.AreEqual(1, entrance.Keys([], false));
+        Assert.IsTrue(generator.AddKeysForKeyLogic(props, palace, createKeys: false, r: new Random(0)));
+    }
+
+    [TestMethod]
+    public void ValidateKeyLogicHonorsCreateKeys()
+    {
+        var entrance = MakeKeyPlacementRoom("E", isEntrance: true, minorItems: 1);
+        var door = MakeRoom("Door", lockedDoors: 1);
+        entrance.Right = door;
+        var palace = MakePalace(entrance, door);
+        var props = new RandomizerProperties { KeyLogic = KeyLogicOption.KEYS_PER_PALACE_SOLVABLE };
+        var generator = new ReconstructedPalaceGenerator(System.Threading.CancellationToken.None);
+        var originalSideView = entrance.SideView;
+        var originalBits = entrance.ItemPresenceBits;
+
+        Assert.IsFalse(generator.AddKeysForKeyLogic(props, palace, createKeys: false, r: new Random(0)));
+        Assert.AreSame(originalSideView, entrance.SideView);
+        Assert.AreSame(originalBits, entrance.ItemPresenceBits);
+        Assert.AreEqual(0, entrance.Keys([], false));
+        Assert.IsTrue(generator.AddKeysForKeyLogic(props, palace, createKeys: true, r: new Random(0)));
+        Assert.AreEqual(1, entrance.Keys([], false));
     }
 
     [TestMethod]

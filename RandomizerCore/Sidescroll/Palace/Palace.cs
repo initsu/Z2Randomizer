@@ -245,6 +245,17 @@ public partial class Palace(int number, bool palaceItemsAreShufflable)
     /// <returns>True if the palace is solvable (or was made solvable by adding keys)</returns>
     public bool SolveKeyLogic(IReadOnlyCollection<RequirementType> initialRequireables, bool bossesDropKeys, int startingKeys, bool createKeys, Random? r)
     {
+        if (createKeys)
+        {
+            // Generators already create distinct Room instances. Key placement only
+            // writes SideView (transmutation/floor placement) and ItemPresenceBits.
+            foreach (Room room in AllRooms)
+            {
+                room.SideView = room.SideView.ToArray();
+                room.ItemPresenceBits = room.ItemPresenceBits.ToArray();
+            }
+        }
+
         var entrance = AllRooms.First(room => room.IsEntrance);
         var doorRooms = AllRooms.Where(room => room.LockedDoors() > 0).ToImmutableSortedSet(new RoomReferenceComparer());
         int doorsTotal = doorRooms.Sum(room => room.LockedDoors());
@@ -529,15 +540,6 @@ public partial class Palace(int number, bool palaceItemsAreShufflable)
             tBirdRequired: props.RequireTbird))
         {
             return false;
-        }
-        if (props.KeyLogic == KeyLogicOption.KEYS_PER_PALACE_SOLVABLE &&
-            Number < 7 &&
-            (Number < 6 || props.BlockersAnywhere))
-        {
-            if (!KeyLogicSolved)
-            {
-                throw new Exception("Key logic should be solved at this point");
-            }
         }
         return true;
     }

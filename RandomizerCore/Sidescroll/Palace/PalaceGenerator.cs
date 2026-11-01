@@ -15,14 +15,13 @@ public abstract class PalaceGenerator
 
     internal abstract Task<Palace> GeneratePalace(RandomizerProperties props, RoomPool rooms, Random r, int roomCount, int palaceNumber, int attempt);
 
-    public virtual bool ValidateKeyLogic(RandomizerProperties props, Palace palace, Random r)
+    public virtual bool AddKeysForKeyLogic(RandomizerProperties props, Palace palace, bool createKeys, Random r)
     {
-        // Solve key logic for palaces using KEYS_PER_PALACE_SOLVABLE mode
         if (props.KeyLogic == KeyLogicOption.KEYS_PER_PALACE_SOLVABLE)
         {
             if (palace.Number < 7 && (palace.Number < 6 || props.BlockersAnywhere))
             {
-                bool solvable = palace.SolveKeyLogic(RequirementTypeExtensions.ALL, !props.BossItem, 0, true, r);
+                bool solvable = palace.SolveKeyLogic(RequirementTypeExtensions.ALL, !props.BossItem, 0, createKeys, r);
                 if (!solvable)
                 {
                     return false;
