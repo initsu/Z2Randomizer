@@ -63,7 +63,8 @@ public class RoomPoolTests
             BlockersAnywhere = blockersAnywhere,
             ReplaceFireWithDash = replaceFireWithDash,
             NoDuplicateRooms = false,
-            NoDuplicateRoomsBySideview = false
+            NoDuplicateRoomsBySideview = false,
+            RemoveItems = removeItems ?? []
         };
     }
 
@@ -92,6 +93,22 @@ public class RoomPoolTests
             CreateMockRoom("StubUp", RoomGroup.STUBS, hasUpExit: true)
         ]);
         return new PalaceRooms(allRooms);
+    }
+
+    [TestMethod]
+    public void RemovedFairyExcludesTargetedPassagesButKeepsJumpAlternatives()
+    {
+        var blocked = CreateMockRoom("FairyExit", RoomGroup.VANILLA, palaceNumber: 1, hasRightExit: true);
+        blocked.LinkRequirements = new Requirements([], [], [
+            new ComplexRequirement(RequirementTarget.EXIT, [RequirementType.FAIRY], [],
+                [new RequirementRoute(null, [Direction.EAST])])]);
+        var alternate = CreateMockRoom("JumpOrFairy", RoomGroup.VANILLA, palaceNumber: 1, hasRightExit: true);
+        alternate.LinkRequirements = new Requirements([RequirementType.JUMP, RequirementType.FAIRY]);
+        var rooms = CreateMockPalaceRooms([blocked, alternate]);
+        var props = CreateMockProps(removeItems: [Collectable.FAIRY_SPELL]);
+        var pool = new RoomPool(rooms, 1, props);
+        pool.NormalRooms.Should().NotContain(r => r.Name == "FairyExit");
+        pool.NormalRooms.Should().Contain(r => r.Name == "JumpOrFairy");
     }
 
     #region Test Spec Presets

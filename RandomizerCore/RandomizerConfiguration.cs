@@ -407,10 +407,17 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
     private KeyLogicOption keyLogic = KeyLogicOption.KEYS_PER_PALACE_SOLVABLE;
     public bool keyLogicIncluded() => palaceStylesAreNotAllVanilla();
 
+    // Must precede Blockers Anywhere so its flag inclusion can be decoded.
+    [Reactive]
+    private bool removeFairy = false;
+
+    [Reactive]
+    private bool removeMagicKey = false;
+
     [Reactive]
     [ConditionallyIncludeInFlags]
     private bool blockingRoomsInAnyPalace = false;
-    public bool blockingRoomsInAnyPalaceIncluded() => palaceStylesAreNotAllVanilla();
+    public bool blockingRoomsInAnyPalaceIncluded() => palaceStylesAreNotAllVanilla() && !(removeFairy && removeMagicKey);
 
     [Reactive]
     private PalaceDropStyle palaceDropStyle = PalaceDropStyle.ANY_EXIT;
@@ -995,6 +1002,7 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
 
     public RandomizerProperties Export(Random r, bool includeDifficulty = true)
     {
+        ValidateRemovalOptions();
         RandomizerProperties properties = new()
         {
             Flags = SerializeFlags(),
@@ -1007,6 +1015,9 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
             //ROM Info
             Seed = seed
         };
+
+        if (removeFairy) { properties.RemoveItems.Add(Collectable.FAIRY_SPELL); }
+        if (removeMagicKey) { properties.RemoveItems.Add(Collectable.MAGIC_KEY); }
 
         ExportBiomes(properties, r);
 
@@ -1033,7 +1044,7 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
             {
                 Debug.Assert(GpStyle == PalaceStyle.RANDOM);
                 allowedPalaceStyles = [.. Enums.GetShufflableList<PalaceStyle>().Where(i => i.IsGpStyle())];
-                if (!randomStylesAllowVanilla)
+                if (!randomStylesAllowVanilla || removeFairy)
                 {
                     allowedPalaceStyles.RemoveAll(i => i.UsesVanillaRoomPool());
                 }
@@ -1048,7 +1059,7 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
             if (NormalPalaceStyle.IsMetastyle())
             {
                 allowedPalaceStyles = [.. Enums.GetShufflableList<PalaceStyle>().Where(i => i.NormalPalaceStyle())];
-                if (!randomStylesAllowVanilla)
+                if (!randomStylesAllowVanilla || removeFairy)
                 {
                     allowedPalaceStyles.RemoveAll(i => i.UsesVanillaRoomPool());
                 }
@@ -1120,7 +1131,8 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
         //Handle Fire
         Collectable RollLinkedFireSpell()
         {
-            return POSSIBLE_LINKED_FIRE_SPELLS[r.Next(POSSIBLE_LINKED_FIRE_SPELLS.Length)];
+            var options = POSSIBLE_LINKED_FIRE_SPELLS.Where(c => !properties.RemoveItems.Contains(c)).ToArray();
+            return options[r.Next(options.Length)];
         }
         switch (fireOption)
         {
@@ -1799,6 +1811,18 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
         }).ToArray();
     }
 
+    private void ValidateRemovalOptions()
+    {
+        if (removeFairy && (normalPalaceStyle.UsesVanillaRoomPool() || gpStyle.UsesVanillaRoomPool()))
+        {
+            throw new UserFacingException("Incompatible Removal Flags", "Removing Fairy requires generated palace layouts. Choose styles other than Vanilla or Vanilla Shuffle for normal palaces and Great Palace.");
+        }
+        if (removeFairy && removeMagicKey && (!keyLogicIncluded() || keyLogic != KeyLogicOption.KEYS_PER_PALACE_SOLVABLE))
+        {
+            throw new UserFacingException("Incompatible Removal Flags", "Removing both Fairy and Magic Key requires Keys Per Palace Solvable key logic.");
+        }
+    }
+
     /// Let the user know when their combination of flags will not be
     /// possible to achieve.
     /// 
@@ -1806,6 +1830,7 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
     /// scenario should work.
     public void CheckForFlagConflicts()
     {
+        ValidateRemovalOptions();
         (int overworldMinorItemCount, int palaceMinorItemCount) = CountPossibleMinorItems();
         if (mixOverworldAndPalaceItems == true)
         {
@@ -1914,7 +1939,7 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
             {
                 break;
             }
-            if (StartsWithCollectable(collectable))
+            if (StartsWithCollectable(collectable) && !properties.RemoveItems.Contains(collectable))
             {
                 startingItems.Add(collectable);
             }
@@ -1928,7 +1953,7 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
                 {
                     break;
                 }
-                if (!StartsWithCollectable(collectable))
+                if (!StartsWithCollectable(collectable) && !properties.RemoveItems.Contains(collectable))
                 {
                     if (r.Next(4) == 0)
                     {
@@ -2086,7 +2111,7 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
         }
         if (shuffleOverworldItems != false && eastBiome.InItemShuffle())
         {
-            overworldStartMinorItemCount += shuffleStartingItems || startWithMagicKey ? 1 : 0;
+            overworldStartMinorItemCount += shuffleStartingItems || startWithMagicKey || removeMagicKey ? 1 : 0;
         }
 
         int startItemsOverflow = Math.Min(0, palaceStartMinorItemCount + overworldStartMinorItemCount - (shuffleStartingItems ? startItemsLimit.AsInt() : 0));
@@ -2100,7 +2125,7 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
             spellStartMinorItemCount += shuffleStartingSpells || startWithShield ? 1 : 0;
             spellStartMinorItemCount += shuffleStartingSpells || startWithJump ? 1 : 0;
             spellStartMinorItemCount += shuffleStartingSpells || startWithLife ? 1 : 0;
-            spellStartMinorItemCount += shuffleStartingSpells || startWithFairy ? 1 : 0;
+            spellStartMinorItemCount += shuffleStartingSpells || startWithFairy || removeFairy ? 1 : 0;
             spellStartMinorItemCount += shuffleStartingSpells || startWithFire ? 1 : 0;
             spellStartMinorItemCount += shuffleStartingSpells || startWithReflect ? 1 : 0;
             spellStartMinorItemCount += shuffleStartingSpells || startWithSpellSpell ? 1 : 0;

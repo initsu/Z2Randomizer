@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text.Json.Serialization;
@@ -196,6 +197,11 @@ public class RandomizerProperties
     public bool PbagItemShuffle { get; set; }
     public bool StartWithSpellItems { get; set; }
     public bool ShufflePbagXp { get; set; }
+
+    public HashSet<Collectable> RemoveItems { get; set; } = [];
+
+    // A removed spell leaves a minor reward at its wizard, so use vanilla menu slots.
+    public bool CustomSpellOrder() => !IncludeSpellsInShuffle && !RemoveItems.Any(c => c.IsSpell());
 
     //Drops
     public bool ShuffleItemDropFrequency { get; set; }
@@ -414,7 +420,7 @@ public class RandomizerProperties
         }
         if (ShuffleOverworldItems && EastBiome.InItemShuffle())
         {
-            overworldMinorItemCount += StartKey ? 1 : 0;
+            overworldMinorItemCount += StartKey || RemoveItems.Contains(Collectable.MAGIC_KEY) ? 1 : 0;
         }
 
         if (IncludeSpellsInShuffle)
@@ -424,7 +430,7 @@ public class RandomizerProperties
                 overworldMinorItemCount += StartShield ? 1 : 0;
                 overworldMinorItemCount += StartJump ? 1 : 0;
                 overworldMinorItemCount += StartLife ? 1 : 0;
-                overworldMinorItemCount += StartFairy ? 1 : 0;
+                overworldMinorItemCount += StartFairy || RemoveItems.Contains(Collectable.FAIRY_SPELL) ? 1 : 0;
             }
             if (EastBiome.InItemShuffle())
             {

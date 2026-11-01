@@ -234,6 +234,7 @@ public class Hyrule
                 .Excluding(
                     props.ReplaceFireWithDash ? Collectable.FIRE_SPELL : Collectable.DASH_SPELL,
                     props.MarioMode ? Collectable.JUMP_SPELL : Collectable.TANOOKI)
+                .Excluding(props.RemoveItems)
                 .StartingWith(Enum.GetValues<Collectable>().Where(collectable => props.StartsWithCollectable(collectable)))
                 .Build();
 
@@ -331,7 +332,7 @@ public class Hyrule
 
             if (props.LinkedFireSpell != null)
             {
-                ROMData.CombineFireSpell(assembler, props.LinkedFireSpell.Value, spellListOrder);
+                ROMData.CombineFireSpell(assembler, props.LinkedFireSpell.Value, props.CustomSpellOrder() ? spellListOrder : null);
             }
 
             if (props.StartsWithCollectable(westHyrule.ruto.Town?.GetWizard()?.Collectable))
@@ -732,7 +733,7 @@ public class Hyrule
             //Mario's spell list is inherently always vanilla (until we either update mario to not break with a shuffled spell list)
             //or we add the option to choose vanilla spell order, in which case properties should always set that to true for mario
             //and this conditional should be that one
-            if (!props.MarioMode)
+            if (!props.MarioMode && props.CustomSpellOrder())
             {
                 spellListOrder = possibleItemLocations.Where(i => i.Town != null && i?.Town?.Type != TownType.BAGU)
                     .OrderBy(i => (int)i.Town!.Type!)
@@ -934,6 +935,16 @@ public class Hyrule
         //Placing unmixed vanilla locations could have replaced unwanted spell items, so recheck them
         HandleStartingSpellItems(ItemLocations().ToList());
 
+        if (props.RemoveItems.Count > 0)
+        {
+            foreach (Location location in possibleItemLocations)
+            {
+                foreach (Collectable collectable in location.GetAllCollectables().Where(props.RemoveItems.Contains).ToList())
+                {
+                    location.ReplaceCollectable(collectable, minorItems.Sample(r));
+                }
+            }
+        }
 
         int heartContainersInItemPool = props.MaxHearts - props.StartHearts;
         int magicContainersInItemPool = props.MaxMagicContainers - props.StartMagicContainers;
@@ -1106,7 +1117,7 @@ public class Hyrule
                 ];
             }
 
-            importantItemsToDuplicate = importantItemsToDuplicate.Where(shufflableItems.Contains).ToList();
+            importantItemsToDuplicate = importantItemsToDuplicate.Where(c => shufflableItems.Contains(c) && !props.RemoveItems.Contains(c)).ToList();
 
             var minorItemLocations = duplicateItemPlacementCandidates.Where(i => i.GetShufflableCollectables().Any(c => c.IsMinorItem())).ToList();
             int replaceableMinorItemCount = duplicateItemPlacementCandidates.Sum(l => l.GetShufflableCollectables().Count(c => c.IsMinorItem()));
@@ -2749,7 +2760,7 @@ public class Hyrule
 
         // Use the vanilla spell order for the spells if the wizards aren't guaranteed to have a spell
         // This was overwhelmingly the favorite in the community vote;
-        if (props.IncludeSpellsInShuffle)
+        if (!props.CustomSpellOrder())
         {
             //but we still need to give out starting spells
             ROMData.Put(TownExtensions.SPELL_GET_START_ADDRESS, props.StartShield ? (byte)1 : (byte)0);
@@ -3181,7 +3192,7 @@ CustomFileSelectData:
         {
             a.Set($"{val.ToString()}_DIALOG_EAST_INDEX", (int)val);
         }
-        if (props.ShuffleSpellLocations)
+        if (props.ShuffleSpellLocations && props.CustomSpellOrder())
         {
             var spellBytes = new byte[8];
             for (byte i = 0; i < 8; i++)
@@ -3195,7 +3206,7 @@ CustomFileSelectData:
         }
         a.Set("_CHECK_WIZARD_MAGIC_CONTAINER", props.DisableMagicRecs ? 0 : 1);
         a.Set("_DO_SPELL_SHUFFLE_WIZARD_UPDATE", 1); // always on now, so starting spells can be replaced by minor items
-        a.Set("SHUFFLED_SPELL_LIST", props.ShuffleSpellLocations ? 1 : 0);
+        a.Set("SHUFFLED_SPELL_LIST", props.ShuffleSpellLocations && props.CustomSpellOrder() ? 1 : 0);
         a.Assign("ENABLE_Z2_MARIO", props.MarioMode ? 1 : 0);
         a.Code(Util.ReadResource("Z2Randomizer.RandomizerCore.Asm.FullItemShuffle.s"), "full_item_shuffle.s");
     }
@@ -4313,7 +4324,7 @@ FlagHudUpdate:
                 {
                     var palace = loc.Palace!;
                     if (palace.Number < 6
-                        || !props.BlockersAnywhere && palace.Number == 6)
+                        || (!props.BlockersAnywhere || props.RemoveItems.Contains(Collectable.MAGIC_KEY)) && palace.Number == 6)
                     {
                         loc.AccessRequirements = Requirements.NONE;
                     }
