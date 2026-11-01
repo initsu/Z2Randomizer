@@ -404,6 +404,7 @@ OverworldDemonXVelocity := $0575          ; overworld demon X velocity, indexed 
 LinkYVelocityHi := $057d
 EnemyYVelocity := $057e
 Enemy0YVelocity := $057e
+ProjectileYVelocity := $0584
 TownfolkTimer0 := $05bd
 TownfolkTimer1 := $05be
 TownfolkTimer2 := $05bf

@@ -1,5 +1,17 @@
 .include "z2r.inc"
 
+; Reset Carock projectile data when spawning projectiles
+.segment "PRG7"
+.org $dc10
+    jsr InitializeProjectileData
+.assert * = $dc13
+
+.reloc
+InitializeProjectileData:
+    sta ProjectileYVelocity,y  ; A is 0 here
+    sta ProjectileEnemyData,y
+    rts
+
 .segment "PRG4"
 
 ; SinWaveVelocityIncrement = $ba1c
