@@ -1883,6 +1883,31 @@ SetDripperHp:
         a.Byt(splitHp);
     }
 
+    // The bubble generator's spawner writes the projectile type but never Projectile0XVelocity.
+    // A bubble that reuses a slot previously held by a Fokka beam inherits that horizontal
+    // speed and drifts diagonally.
+    public void FixBubbleProjectileXVelocity(Assembler asm)
+    {
+        var a = asm.Module();
+        a.Code(/* lang=s */"""
+.include "z2r.inc"
+
+.segment "PRG7"
+
+bank7_Enemy_Routines1_Raising_Bubbles := $dc15
+.org $DC24  ; was sta Projectile0Type,y
+    jsr StoreBubbleProjectileType
+
+.reloc
+StoreBubbleProjectileType:
+    sta Projectile0Type,y
+    lda #$00
+    sta Projectile0XVelocity,y
+    ; the next instruction is LDA so it doesn't matter that we set A = 0
+    rts
+""", "FixBubbleProjectileXVelocity.s");
+    }
+
     public void SetStartingLocation(Assembler asm, Location location, List<Palace> palaces)
     {
         if (location.ID == LocationID.WEST_NORTH_PALACE)

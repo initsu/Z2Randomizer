@@ -3898,6 +3898,7 @@ FlagHudUpdate:
             rom.OptimizeOverworldByteDecode(engine);
         }
         rom.FixBigBubbleSplit(engine, randomizedStats);
+        rom.FixBubbleProjectileXVelocity(engine);
         rom.ApplyBossPatches(engine, props, randomizedStats, palaces);
         StatTracking(props, engine);
         AddCredits(engine, props);
