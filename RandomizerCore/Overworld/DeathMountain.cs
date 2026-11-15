@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using SD.Tools.BCLExtensions.CollectionsRelated;
 using Z2Randomizer.RandomizerCore.Enemy;
 
 namespace Z2Randomizer.RandomizerCore.Overworld;
@@ -546,8 +545,8 @@ sealed class DeathMountain : World
             hammerCave,
             specRock
         };
-        requiredLocations.AddRange(connectionsDM.Keys);
-        requiredLocations.AddRange(GetContinentConnections());
+        requiredLocations.UnionWith(connectionsDM.Keys);
+        requiredLocations.UnionWith(GetContinentConnections());
 
         return requiredLocations.Where(i => i != null);
     }

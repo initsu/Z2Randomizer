@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using NLog;
-using SD.Tools.BCLExtensions.CollectionsRelated;
 using ReactiveUI;
 using ReactiveUI.Binding;
 using RUISG = ReactiveUI.SourceGenerators;
@@ -41,7 +40,7 @@ public partial class RomFileViewModel : ViewModelBase, IRoutableViewModel
     public IObservable<byte[]> RomDataObservable => this.WhenAnyValue(x => x.RomData);
 
     [JsonIgnore]
-    public bool HasRomData => !RomData.IsNullOrEmpty();
+    public bool HasRomData => RomData is { Length: > 0 };
 
     [JsonIgnore]
     public IObservable<bool> HasRomDataObservable => this.WhenAnyValue(x => x.HasRomData);

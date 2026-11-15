@@ -35,7 +35,6 @@
     <PackageReference Include="DynamicData" />
     <PackageReference Include="js65.interop" />
     <PackageReference Include="NLog" />
-    <PackageReference Include="SD.Tools.Algorithmia" />
     <PackageReference Include="SkiaSharp" />
     <PackageReference Include="YamlDotNet" />
     <PackageReference Include="Vecc.YamlDotNet.Analyzers.StaticGenerator" />

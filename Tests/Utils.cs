@@ -1,5 +1,4 @@
 ﻿
-using SD.Tools.Algorithmia.GeneralDataStructures;
 using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -118,22 +117,18 @@ public class Utils
 
         //Normal, NON-DROP
         Debug.WriteLine("Normal, Any");
-        MultiValueDictionary<RoomExitType, Room> categorizedRooms = [];
-        foreach (Room room in normalRooms)
-        {
-            categorizedRooms.Add(room.CategorizeExits(), room);
-        }
+        var categorizedRooms = normalRooms.ToLookup(room => room.CategorizeExits());
 
         List<RoomExitType> missingExitTypes =
             Enum.GetValues(typeof(RoomExitType))
-            .Cast<RoomExitType>().Where(i => !categorizedRooms.ContainsKey(i))
+            .Cast<RoomExitType>().Where(i => !categorizedRooms.Contains(i))
             .Where(i => i != RoomExitType.NO_ESCAPE)
             .ToList();
 
         List<(RoomExitType, int)> counts = [];
-        foreach (RoomExitType key in categorizedRooms.Keys)
+        foreach (var category in categorizedRooms)
         {
-            counts.Add((key, categorizedRooms[key].Count));
+            counts.Add((category.Key, category.Count()));
         }
         missingExitTypes.ForEach(i => counts.Add((i, 0)));
         counts = counts.Where(i => i.Item2 <= displayThreshold).ToList();
@@ -141,22 +136,18 @@ public class Utils
 
         //Normal, DROP
         Debug.WriteLine("\nNormal, DropZone");
-        categorizedRooms.Clear();
-        foreach (Room room in normalRooms.Where(i => i.IsDropZone))
-        {
-            categorizedRooms.Add(room.CategorizeExits(), room);
-        }
+        categorizedRooms = normalRooms.Where(room => room.IsDropZone).ToLookup(room => room.CategorizeExits());
 
         missingExitTypes =
             Enum.GetValues(typeof(RoomExitType))
-            .Cast<RoomExitType>().Where(i => !categorizedRooms.ContainsKey(i))
+            .Cast<RoomExitType>().Where(i => !categorizedRooms.Contains(i))
             .Where(i => i != RoomExitType.NO_ESCAPE)
             .ToList();
 
         counts.Clear();
-        foreach (RoomExitType key in categorizedRooms.Keys)
+        foreach (var category in categorizedRooms)
         {
-            counts.Add((key, categorizedRooms[key].Count));
+            counts.Add((category.Key, category.Count()));
         }
         missingExitTypes.ForEach(i => counts.Add((i, 0)));
         counts = counts.Where(i => i.Item2 <= displayThreshold && (!ignoreDropZonesWithUps || !i.Item1.ContainsUp())).ToList();
@@ -164,22 +155,18 @@ public class Utils
 
         //GP, NON-DROP
         Debug.WriteLine("\nGP, Any");
-        categorizedRooms.Clear();
-        foreach (Room room in gpRooms)
-        {
-            categorizedRooms.Add(room.CategorizeExits(), room);
-        }
+        categorizedRooms = gpRooms.ToLookup(room => room.CategorizeExits());
 
         missingExitTypes =
             Enum.GetValues(typeof(RoomExitType))
-            .Cast<RoomExitType>().Where(i => !categorizedRooms.ContainsKey(i))
+            .Cast<RoomExitType>().Where(i => !categorizedRooms.Contains(i))
             .Where(i => i != RoomExitType.NO_ESCAPE)
             .ToList();
 
         counts.Clear();
-        foreach (RoomExitType key in categorizedRooms.Keys)
+        foreach (var category in categorizedRooms)
         {
-            counts.Add((key, categorizedRooms[key].Count));
+            counts.Add((category.Key, category.Count()));
         }
         missingExitTypes.ForEach(i => counts.Add((i, 0)));
         counts = counts.Where(i => i.Item2 <= displayThreshold).ToList();
@@ -187,22 +174,18 @@ public class Utils
 
         //GP, DROP
         Debug.WriteLine("\nGP, DropZone");
-        categorizedRooms.Clear();
-        foreach (Room room in gpRooms.Where(i => i.IsDropZone))
-        {
-            categorizedRooms.Add(room.CategorizeExits(), room);
-        }
+        categorizedRooms = gpRooms.Where(room => room.IsDropZone).ToLookup(room => room.CategorizeExits());
 
         missingExitTypes =
             Enum.GetValues(typeof(RoomExitType))
-            .Cast<RoomExitType>().Where(i => !categorizedRooms.ContainsKey(i))
+            .Cast<RoomExitType>().Where(i => !categorizedRooms.Contains(i))
             .Where(i => i != RoomExitType.NO_ESCAPE)
             .ToList();
 
         counts.Clear();
-        foreach (RoomExitType key in categorizedRooms.Keys)
+        foreach (var category in categorizedRooms)
         {
-            counts.Add((key, categorizedRooms[key].Count));
+            counts.Add((category.Key, category.Count()));
         }
         missingExitTypes.ForEach(i => counts.Add((i, 0)));
         counts = counts.Where(i => i.Item2 <= displayThreshold && (!ignoreDropZonesWithUps || !i.Item1.ContainsUp())).ToList();
@@ -210,18 +193,14 @@ public class Utils
 
         //Item room counts
         Debug.WriteLine("\nItem Rooms");
-        categorizedRooms.Clear();
         normalRooms = [
             .. palaceRooms.ItemRooms(RoomGroup.V5_0)
         ];
-        foreach (Room room in normalRooms.Where(i => i.HasItem))
-        {
-            categorizedRooms.Add(room.CategorizeExits(), room);
-        }
+        categorizedRooms = normalRooms.Where(room => room.HasItem).ToLookup(room => room.CategorizeExits());
         counts.Clear();
-        foreach (RoomExitType key in categorizedRooms.Keys)
+        foreach (var category in categorizedRooms)
         {
-            counts.Add((key, categorizedRooms[key].Count));
+            counts.Add((category.Key, category.Count()));
         }
         counts.OrderByDescending(i => i.Item2).ToList().ForEach(i => Debug.WriteLine(i.Item1 + " : " + i.Item2));
     }

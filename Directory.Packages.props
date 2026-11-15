@@ -1,4 +1,4 @@
-<Project>
+﻿<Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally Condition="'$(MSBuildProjectName)' != 'FtRandoLib'">true</ManagePackageVersionsCentrally>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
@@ -49,7 +49,6 @@
     <!-- Misc -->
     <PackageVersion Include="Aigamo.ResXGenerator" Version="4.4.0" />
     <PackageVersion Include="NLog" Version="6.2.2" />
-    <PackageVersion Include="SD.Tools.Algorithmia" Version="1.4.0" />
     <PackageVersion Include="Xaml.Behaviors.Interactions" Version="12.2.0" />
     <PackageVersion Include="McMaster.Extensions.CommandLineUtils" Version="5.1.0" />
     <!-- FtRandoLib -->

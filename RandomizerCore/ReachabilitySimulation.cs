@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using SD.Tools.BCLExtensions.CollectionsRelated;
 using Z2Randomizer.RandomizerCore.Diagnostics;
 using Z2Randomizer.RandomizerCore.Overworld;
 
@@ -307,7 +306,7 @@ internal sealed class ReachabilitySimulation(Func<IEnumerable<Location>> itemLoc
             requireables.Add(RequirementType.UPSTAB);
         }
 
-        requireables.AddRange(RequirementTypeExtensions.UpToXContainers(accessibleMagicContainers));
+        requireables.UnionWith(RequirementTypeExtensions.UpToXContainers(accessibleMagicContainers));
 
         // Now there are KEY requirements in palace rooms, and that responsibility is handled by
         // AccessRequirements in the old mode - we just add KEY here
