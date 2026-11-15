@@ -18,34 +18,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <None Remove="Asm\DashSpell.s" />
-    <None Remove="Asm\ExpandedPauseMenu.s" />
-    <None Remove="Asm\Graphics\dash.chr" />
-    <None Remove="Asm\Graphics\FireFlower.chr" />
-    <None Remove="Asm\Graphics\item_sprites.chr" />
-    <None Remove="Asm\Graphics\linkedFire.chr" />
-    <None Remove="Asm\Graphics\Mario_Downstab_Dude.chr" />
-    <None Remove="Asm\Graphics\Mario_Downstab_Varcal.chr" />
-    <None Remove="Asm\Graphics\Mario_Upstab_Varcal.chr" />
-    <None Remove="Asm\Graphics\randomizer_text.chr" />
-    <None Remove="Asm\Graphics\Tanooki.chr" />
-    <None Remove="Asm\Graphics\whirlwind.chr" />
-    <None Remove="Asm\Recoil.s" />
-    <None Remove="Asm\StatTracking.s" />
-    <None Remove="Asm\z2ft.s" />
-    <None Remove="Asm\Bosses.s" />
-    <None Remove="Asm\BuffCarock.s" />
-    <None Remove="Asm\MMC5.s" />
-    <None Remove="Asm\ram.inc" />
-    <None Remove="Asm\z2r.inc" />
-    <None Remove="Asm\z2rndft.ips" />
-    <None Update="Music\Faxanadu.json5">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Music\README.txt" CopyToOutputDirectory="PreserveNewest" />
-    <None Update="Sprites\*.ips" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="nlog.config" CopyToOutputDirectory="Always" />
     <Content Include="PalaceRooms.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -72,46 +44,28 @@
     <TrimmerRootAssembly Include="FtRandoLib" />
     <TrimmerRootAssembly Include="CoreSourceGenerator" />
   </ItemGroup>
-  <ItemGroup>
+  <ItemGroup Label="Asm">
     <EmbeddedResource Include="Asm\*.s" />
+    <EmbeddedResource Include="Asm\ram.inc" />
+    <EmbeddedResource Include="Asm\z2r.inc" />
+    <EmbeddedResource Include="Asm\z2rndft.ips" />
     <EmbeddedResource Include="Asm\Graphics\dash.chr" />
     <EmbeddedResource Include="Asm\Graphics\FireFlower.chr" />
     <EmbeddedResource Include="Asm\Graphics\item_sprites.chr" />
     <EmbeddedResource Include="Asm\Graphics\linkedFire.chr" />
     <EmbeddedResource Include="Asm\Graphics\Mario_Downstab_Dude.chr" />
-    <EmbeddedResource Include="Asm\Graphics\Mario_Downstab_Varcal.chr" />
     <EmbeddedResource Include="Asm\Graphics\Mario_Upstab_Varcal.chr" />
     <EmbeddedResource Include="Asm\Graphics\randomizer_text.chr" />
     <EmbeddedResource Include="Asm\Graphics\Tanooki.chr" />
     <EmbeddedResource Include="Asm\Graphics\whirlwind.chr" />
-    <EmbeddedResource Include="Asm\z2mario\fireball_explosion.chr" />
-    <EmbeddedResource Include="Asm\ram.inc" />
-    <EmbeddedResource Include="Asm\z2r.inc" />
-    <EmbeddedResource Include="Asm\z2rndft.ips" />
-    <None Remove="Asm\z2mario\integration.s" />
-    <EmbeddedResource Include="Asm\z2mario\integration.s" />
-    <None Remove="Asm\z2mario\map.s" />
-    <EmbeddedResource Include="Asm\z2mario\map.s" />
-    <None Remove="Asm\z2mario\map_mario.chr" />
-    <EmbeddedResource Include="Asm\z2mario\map_mario.chr" />
-    <None Remove="Asm\z2mario\metasprite.s" />
-    <EmbeddedResource Include="Asm\z2mario\metasprite.s" />
-    <None Remove="Asm\z2mario\sfx.s" />
-    <EmbeddedResource Include="Asm\z2mario\sfx.s" />
-    <None Remove="Asm\z2mario\mario.s" />
-    <EmbeddedResource Include="Asm\z2mario\mario.s" />
-    <None Remove="Asm\z2mario\sprites_mario_hammer.chr" />
-    <EmbeddedResource Include="Asm\z2mario\sprites_mario_hammer.chr" />
-    <None Remove="Asm\z2mario\sprites_mario_tanooki.chr" />
-    <EmbeddedResource Include="Asm\z2mario\sprites_mario_tanooki.chr" />
-    <None Remove="Asm\z2mario\tanooki_tail.chr" />
-    <EmbeddedResource Include="Asm\z2mario\tanooki_tail.chr" />
-    <None Remove="Asm\Graphics\fireball_explosion.chr" />
-    <None Remove="Asm\z2mario\boss.s" />
-    <EmbeddedResource Include="Asm\z2mario\boss.s" />
-    <None Remove="Asm\z2mario\mario_title.chr" />
-    <EmbeddedResource Include="Asm\z2mario\mario_title.chr" />
-    <None Remove="Asm\z2mario\CustomTitleScreen.s" />
-    <EmbeddedResource Include="Asm\z2mario\CustomTitleScreen.s" />
+    <EmbeddedResource Include="Asm\z2mario\*.s" />
+    <EmbeddedResource Include="Asm\z2mario\*.chr" />
+  </ItemGroup>
+  <ItemGroup Label="Sprites">
+    <None Update="Sprites\*.ips" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup Label="Music">
+    <None Update="Music\README.txt" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Music\*.json5" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
