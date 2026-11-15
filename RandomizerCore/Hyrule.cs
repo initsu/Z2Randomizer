@@ -122,7 +122,7 @@ public class Hyrule
     public int timeSpentBuildingMI = 0;
 
     public ROM ROMData { get; set; }
-    public RandomizerCore.Random r { get; set; }
+    public RandomizerCore.Primitives.Random r { get; set; }
     public string Flags { get; private set; }
     public int SeedHash { get; private set; }
     public RandomizerProperties Props

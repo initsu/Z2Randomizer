@@ -428,7 +428,7 @@ public abstract partial class World
                     {
                         var search = LocationPlacementSearch.FindHiddenPosition(map, MapRows, MapColumns,
                             location, AllLocations, continentConnectorReservations, RNG);
-                        location.Pos = search.Position ?? IntVector2.NOT_ON_MAP;
+                        location.Pos = search.Position ?? Location.NOT_ON_MAP;
                         location.CanShuffle = false;
                     }
                 }

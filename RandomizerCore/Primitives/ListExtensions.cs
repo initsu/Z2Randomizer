@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Z2Randomizer.RandomizerCore;
+namespace Z2Randomizer.RandomizerCore.Primitives;
 
 internal static class ListExtensions
 {

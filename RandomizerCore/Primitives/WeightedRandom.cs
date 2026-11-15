@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
-namespace Z2Randomizer.RandomizerCore;
+namespace Z2Randomizer.RandomizerCore.Primitives;
 
 public interface IWeightedSampler<T> where T : notnull
 {

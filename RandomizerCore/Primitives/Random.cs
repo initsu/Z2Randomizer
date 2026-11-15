@@ -14,7 +14,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace Z2Randomizer.RandomizerCore;
+namespace Z2Randomizer.RandomizerCore.Primitives;
 
 public interface IRandom
 {

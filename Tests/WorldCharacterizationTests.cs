@@ -1,7 +1,7 @@
 using FluentAssertions;
 using Z2Randomizer.RandomizerCore;
 using Z2Randomizer.RandomizerCore.Overworld;
-using Random = Z2Randomizer.RandomizerCore.Random;
+using Random = Z2Randomizer.RandomizerCore.Primitives.Random;
 
 namespace Z2Randomizer.Tests;
 
@@ -88,7 +88,7 @@ public class WorldCharacterizationTests
 
         world.ResetPlacement();
 
-        location.Pos.Should().Be(vanilla ? new IntVector2(2, 1) : IntVector2.NOT_ON_MAP);
+        location.Pos.Should().Be(vanilla ? new IntVector2(2, 1) : Location.NOT_ON_MAP);
         location.IsPassthrough.Should().BeTrue();
         location.CanShuffle.Should().BeTrue();
         location.Reachable.Should().BeTrue();

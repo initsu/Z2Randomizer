@@ -20,7 +20,7 @@ public class AttackStats
         List<int> attacks7 = new List<int>();
         List<int> attacks8 = new List<int>();
 
-        Random RNG = new Random();
+        System.Random RNG = new System.Random();
 
         for (int monteCarloIteration = 1; monteCarloIteration <= LIMIT; monteCarloIteration++)
         {
@@ -84,7 +84,7 @@ public class AttackStats
         List<int> attacks7 = new List<int>();
         List<int> attacks8 = new List<int>();
 
-        Random RNG = new Random();
+        System.Random RNG = new System.Random();
 
         for (int monteCarloIteration = 1; monteCarloIteration <= LIMIT; monteCarloIteration++)
         {

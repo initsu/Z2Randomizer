@@ -1,7 +1,7 @@
 using FluentAssertions;
 using Z2Randomizer.RandomizerCore;
 using Z2Randomizer.RandomizerCore.Overworld;
-using Random = Z2Randomizer.RandomizerCore.Random;
+using Random = Z2Randomizer.RandomizerCore.Primitives.Random;
 using TestWorld = Z2Randomizer.Tests.WorldCharacterizationTests.TestWorld;
 
 namespace Z2Randomizer.Tests;
@@ -59,7 +59,7 @@ public class LocationPlacementSearchTests
 
         world.PlaceOrdinaryLocations().Should().BeTrue();
 
-        location.Pos.Should().Be(hammer ? new IntVector2(3, 3) : IntVector2.NOT_ON_MAP);
+        location.Pos.Should().Be(hammer ? new IntVector2(3, 3) : Location.NOT_ON_MAP);
         location.AccessRequirements.HasHardRequirement(RequirementType.HAMMER).Should().Be(hammer);
     }
 
@@ -79,7 +79,7 @@ public class LocationPlacementSearchTests
 
         world.PlaceWithHiddenLocations(kasuto, palace).Should().Be(alternativeArea);
 
-        kasuto.Pos.Should().Be(alternativeArea ? new IntVector2(8, 4) : IntVector2.NOT_ON_MAP);
+        kasuto.Pos.Should().Be(alternativeArea ? new IntVector2(8, 4) : Location.NOT_ON_MAP);
         palace.Pos.Should().Be(new IntVector2(3, 1));
     }
 
@@ -135,7 +135,7 @@ public class LocationPlacementSearchTests
 
         world.PlaceHiddenLocations(LessImportantLocationsOption.HIDE);
 
-        minor.Pos.Should().Be(IntVector2.NOT_ON_MAP);
+        minor.Pos.Should().Be(Location.NOT_ON_MAP);
         minor.CanShuffle.Should().BeFalse();
         blocker.Pos.Should().Be(new IntVector2(2 + dx, 2 + dy));
     }
@@ -170,7 +170,7 @@ public class LocationPlacementSearchTests
 
         world.PlaceHiddenLocations(LessImportantLocationsOption.HIDE);
 
-        minor.Pos.Should().Be(diagonal ? new IntVector2(2, 2) : IntVector2.NOT_ON_MAP);
+        minor.Pos.Should().Be(diagonal ? new IntVector2(2, 2) : Location.NOT_ON_MAP);
     }
 
     [TestMethod]
@@ -200,7 +200,7 @@ public class LocationPlacementSearchTests
         world.PlaceHiddenLocations(LessImportantLocationsOption.HIDE);
 
         first.Pos.Should().Be(new IntVector2(2, 2));
-        second.Pos.Should().Be(IntVector2.NOT_ON_MAP);
+        second.Pos.Should().Be(Location.NOT_ON_MAP);
         first.CanShuffle.Should().BeFalse();
         second.CanShuffle.Should().BeFalse();
     }
@@ -217,7 +217,7 @@ public class LocationPlacementSearchTests
 
         world.PlaceHiddenLocations(mode);
 
-        minor.Pos.Should().Be(IntVector2.NOT_ON_MAP);
+        minor.Pos.Should().Be(Location.NOT_ON_MAP);
         minor.CanShuffle.Should().BeFalse();
         minor.IsExternalWorld.Should().BeTrue();
         minor.EntranceNumber.Should().Be(2);
@@ -278,7 +278,7 @@ public class LocationPlacementSearchTests
         result.Position.Should().Be(available ? new IntVector2(0, 0) : null);
         result.Samples.Should().BeInRange(1, 100);
         if (!available) result.Samples.Should().Be(100);
-        moving.Pos.Should().Be(IntVector2.NOT_ON_MAP);
+        moving.Pos.Should().Be(Location.NOT_ON_MAP);
         moving.CanShuffle.Should().BeTrue();
         Snapshot(map).Should().Equal(before);
     }

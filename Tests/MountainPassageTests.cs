@@ -121,7 +121,7 @@ public class MountainPassageTests
     {
         var location = new Location(id, 30, 0, 0, Continent.EAST)
         {
-            Pos = IntVector2.NOT_ON_MAP,
+            Pos = Location.NOT_ON_MAP,
             TerrainType = Terrain.DESERT,
             CanShuffle = true
         };

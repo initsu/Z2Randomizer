@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Z2Randomizer.RandomizerCore;
 using Z2Randomizer.RandomizerCore.Sidescroll;
-using Random = Z2Randomizer.RandomizerCore.Random;
+using Random = Z2Randomizer.RandomizerCore.Primitives.Random;
 using Z2Randomizer.RandomizerCore.Sidescroll.Palace;
 
 namespace Z2Randomizer.Tests;

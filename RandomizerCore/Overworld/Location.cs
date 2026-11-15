@@ -11,6 +11,9 @@ namespace Z2Randomizer.RandomizerCore.Overworld;
 [DebuggerDisplay("{" + nameof(GetDebuggerDisplay) + "(),nq}")]
 public class Location
 {
+    /// <summary>Off-map locations have RawY = 0, which translates to Y = -30.</summary>
+    public static readonly IntVector2 NOT_ON_MAP = new(0, -30);
+
     Logger logger = LogManager.GetCurrentClassLogger();
 
     public LocationID ID { get; set; }
@@ -276,7 +279,7 @@ public class Location
         }
         else
         {
-            Pos = IntVector2.NOT_ON_MAP;
+            Pos = NOT_ON_MAP;
         }
     }
 

@@ -137,7 +137,7 @@ public class RiverLayoutTests
             terrain.Should().Be(map[pos], "the policy receives current terrain");
             reservationsChecked++;
             return terrain == Terrain.GRASS;
-        }, new Z2Randomizer.RandomizerCore.Random(42));
+        }, new Z2Randomizer.RandomizerCore.Primitives.Random(42));
 
         reservationsChecked.Should().BeGreaterThan(0);
         occupied.Select(p => map[p]).Should().OnlyContain(t => t == Terrain.GRASS);

@@ -134,7 +134,7 @@ public abstract partial class World
         {
             foreach (Location location in AllLocations.Where(location => location.Town?.Type == TownType.SARIA))
             {
-                location.Pos = IntVector2.NOT_ON_MAP;
+                location.Pos = Location.NOT_ON_MAP;
             }
         }
 
@@ -152,8 +152,8 @@ public abstract partial class World
     private void ResetEncounterPairPositions(CrossingFeatures feature)
     {
         var (first, second, _) = GetEncounterCrossingLayout(feature);
-        if (first is not null) first.Pos = IntVector2.NOT_ON_MAP;
-        if (second is not null) second.Pos = IntVector2.NOT_ON_MAP;
+        if (first is not null) first.Pos = Location.NOT_ON_MAP;
+        if (second is not null) second.Pos = Location.NOT_ON_MAP;
     }
 
     private readonly record struct RegionCrossingSpan(IntVector2 Start, IntVector2 End, IntVector2 Forward, int Length, int StartRegion, int EndRegion)

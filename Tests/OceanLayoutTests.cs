@@ -210,7 +210,7 @@ public class OceanLayoutTests
             for (int x = 0; x < 30; x++) map[y, x] = fill;
 
         var result = TerrainLayout.DrawOcean(map, 21, 30, Direction.EAST,
-            Terrain.PREPLACED_WATER_WALKABLE, overwrite, new Z2Randomizer.RandomizerCore.Random(42));
+            Terrain.PREPLACED_WATER_WALKABLE, overwrite, new Z2Randomizer.RandomizerCore.Primitives.Random(42));
 
         result.Should().Be(expected);
         var edge = Enumerable.Range(0, 21).Select(y => map[y, 29]).ToArray();
@@ -228,7 +228,7 @@ public class OceanLayoutTests
         var map = new OverworldMap(4, 30, Terrain.NONE);
 
         TerrainLayout.DrawOcean(map, 21, 30, Direction.WEST, Terrain.PREPLACED_WATER,
-            overwrite: false, new Z2Randomizer.RandomizerCore.Random(0))
+            overwrite: false, new Z2Randomizer.RandomizerCore.Primitives.Random(0))
             .Should().Be(OceanPaintResult.BackingMapBoundsFailure);
 
         for (int y = 0; y < 4; y++)

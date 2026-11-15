@@ -162,7 +162,7 @@ public class LocationLifecycleTests
         location.ResetCoords(isVanilla: false);
 
         location.YRaw.Should().Be(0);
-        location.Pos.Should().Be(IntVector2.NOT_ON_MAP);
+        location.Pos.Should().Be(Location.NOT_ON_MAP);
         location.IsEnabled().Should().BeFalse();
         location.CanShuffle.Should().Be(canShuffle, "resetting coordinates must not disable placement");
         location.IsHidden.Should().Be(hidden);

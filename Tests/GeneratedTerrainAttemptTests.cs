@@ -117,7 +117,7 @@ public class GeneratedTerrainAttemptTests
             location.Disable();
             world.NextRandom();
         }
-        var control = new Z2Randomizer.RandomizerCore.Random(42);
+        var control = new Z2Randomizer.RandomizerCore.Primitives.Random(42);
         control.Next();
         using (world.BeginGeneratedTerrainAttempt(profile)) world.NextRandom().Should().Be(control.Next());
         world.AllReached.Should().BeTrue();

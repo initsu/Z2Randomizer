@@ -113,7 +113,7 @@ public class SimpleCrossingTests
         foreach (var id in new[] { LocationID.WEST_TOWN_SARIA_NORTH, LocationID.WEST_TOWN_SARIA_SOUTH })
             world.AddLocation(new Location(id, 30, 0, 0, Continent.WEST)
             {
-                Pos = IntVector2.NOT_ON_MAP,
+                Pos = Location.NOT_ON_MAP,
                 TerrainType = Terrain.TOWN,
                 Town = town
             });
@@ -170,7 +170,7 @@ public class SimpleCrossingTests
             .First(id => world.AllLocations.All(l => l.ID != id));
         var location = new Location(id, 30, 0, 0, Continent.WEST)
         {
-            Pos = IntVector2.NOT_ON_MAP,
+            Pos = Location.NOT_ON_MAP,
             TerrainType = terrain,
             CanShuffle = available
         };

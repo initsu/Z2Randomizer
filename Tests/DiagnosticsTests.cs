@@ -7,7 +7,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Z2Randomizer.RandomizerCore;
 using Z2Randomizer.RandomizerCore.Diagnostics;
 using Z2Randomizer.RandomizerCore.Sidescroll.Palace;
-using Random = Z2Randomizer.RandomizerCore.Random;
+using Random = Z2Randomizer.RandomizerCore.Primitives.Random;
 
 namespace Z2Randomizer.Tests;
 

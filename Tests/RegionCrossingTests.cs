@@ -57,7 +57,7 @@ public class RegionCrossingTests
 
         world.PlaceCrossings(0, longBridge: true);
 
-        encounter.Pos.Should().Be(IntVector2.NOT_ON_MAP);
+        encounter.Pos.Should().Be(Location.NOT_ON_MAP);
         unrelated.Pos.Should().Be(new IntVector2(3, 2));
     }
 

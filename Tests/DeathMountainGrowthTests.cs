@@ -1,7 +1,7 @@
 using FluentAssertions;
 using Z2Randomizer.RandomizerCore;
 using Z2Randomizer.RandomizerCore.Overworld;
-using Random = Z2Randomizer.RandomizerCore.Random;
+using Random = Z2Randomizer.RandomizerCore.Primitives.Random;
 
 namespace Z2Randomizer.Tests;
 

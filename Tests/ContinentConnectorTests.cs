@@ -2,7 +2,7 @@ using FluentAssertions;
 using Z2Randomizer.RandomizerCore;
 using Z2Randomizer.RandomizerCore.Overworld;
 using static Z2Randomizer.Tests.WorldCharacterizationTests;
-using Random = Z2Randomizer.RandomizerCore.Random;
+using Random = Z2Randomizer.RandomizerCore.Primitives.Random;
 
 namespace Z2Randomizer.Tests;
 
@@ -51,7 +51,7 @@ public class ContinentConnectorTests
         var reservation = ContinentConnectorReservation.Plan(new Random(42), world.map, world.biome,
             raft ? World.ConnectorKind.Raft : World.ConnectorKind.Bridge, edge, [Terrain.GRASS], [], [])!;
         reservation.Should().NotBeNull();
-        connector.Pos.Should().Be(IntVector2.NOT_ON_MAP, "planning does not publish coordinates");
+        connector.Pos.Should().Be(Location.NOT_ON_MAP, "planning does not publish coordinates");
         reservation.Seed(world.map, Terrain.PREPLACED_WATER, Terrain.GRASS);
         var ordinary = new Location(LocationID.WEST_GRASS, 0, 0, 0, Continent.WEST)
             { TerrainType = Terrain.GRASS, AppearsOnMap = true };
@@ -111,7 +111,7 @@ public class ContinentConnectorTests
 
         world.PlaceEdgeConnectorCaves(connections).Should().Be(succeeds);
 
-        cave.Pos.Should().Be(IntVector2.NOT_ON_MAP);
+        cave.Pos.Should().Be(Location.NOT_ON_MAP);
         for (int y = 0; y < 9; y++)
         for (int x = 0; x < 9; x++)
             world.map[y, x].Should().Be(Terrain.MOUNTAIN);
@@ -185,8 +185,8 @@ public class ContinentConnectorTests
 
             for (int y = 0; y < 15; y++)
             for (int x = 0; x < 15; x++) world.map[y, x].Should().Be(before[y, x]);
-            world.raft.Pos.Should().Be(IntVector2.NOT_ON_MAP);
-            world.bridge.Pos.Should().Be(IntVector2.NOT_ON_MAP);
+            world.raft.Pos.Should().Be(Location.NOT_ON_MAP);
+            world.bridge.Pos.Should().Be(Location.NOT_ON_MAP);
         }
     }
 
@@ -271,7 +271,7 @@ public class ContinentConnectorTests
         var connector = Connector(true);
         world.raft = connector;
         world.ReserveContinentConnectors(new RandomizerProperties(), Profile(true)).Should().BeFalse();
-        connector.Pos.Should().Be(IntVector2.NOT_ON_MAP);
+        connector.Pos.Should().Be(Location.NOT_ON_MAP);
         Enumerable.Range(0, 9).SelectMany(y => Enumerable.Range(0, 9).Select(x => world.map[y, x]))
             .Should().OnlyContain(t => t == Terrain.MOUNTAIN);
     }
@@ -335,7 +335,7 @@ public class ContinentConnectorTests
             .First(p => world.Reserved(p) && !world.map[p].IsWater());
         world.map[reserved] = Terrain.ROCK;
         world.FinalizeContinentConnectors().Should().BeFalse();
-        world.raft.Pos.Should().Be(IntVector2.NOT_ON_MAP);
+        world.raft.Pos.Should().Be(Location.NOT_ON_MAP);
         world.map[reserved].Should().Be(Terrain.ROCK);
     }
 
@@ -354,7 +354,7 @@ public class ContinentConnectorTests
         // The only tiles of this terrain are reserved. Hiding must leave the
         // minor location off-map, rather than consuming the connector approach.
         world.PlaceHiddenLocations(LessImportantLocationsOption.HIDE);
-        minor.Pos.Should().Be(IntVector2.NOT_ON_MAP);
+        minor.Pos.Should().Be(Location.NOT_ON_MAP);
         world.FinalizeContinentConnectors().Should().BeTrue();
     }
 
@@ -418,7 +418,7 @@ public class ContinentConnectorTests
             world.StageTerrainMap().Should().BeFalse();
         }
         rom.rawdata.Should().OnlyContain(b => b == 0xCC);
-        world.raft.Pos.Should().Be(IntVector2.NOT_ON_MAP);
+        world.raft.Pos.Should().Be(Location.NOT_ON_MAP);
     }
 
     [TestMethod]
@@ -627,7 +627,7 @@ public class ContinentConnectorTests
         {
             world.StartGeneratedMap();
             world.Reserved(oldLanding).Should().BeFalse();
-            world.raft.Pos.Should().Be(IntVector2.NOT_ON_MAP);
+            world.raft.Pos.Should().Be(Location.NOT_ON_MAP);
             world.ReserveContinentConnectors(new RandomizerProperties(), Profile(true)).Should().BeTrue();
             world.GrowClassicTerrain();
             world.FinalizeContinentConnectors().Should().BeTrue();

@@ -1,6 +1,6 @@
 using FluentAssertions;
 using Z2Randomizer.RandomizerCore;
-using Random = Z2Randomizer.RandomizerCore.Random;
+using Random = Z2Randomizer.RandomizerCore.Primitives.Random;
 
 namespace Z2Randomizer.Tests;
 

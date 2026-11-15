@@ -155,7 +155,7 @@ public class SaneCavePlacementTests
         for (int seed = 0; seed < 16; seed++)
         {
             var pair = SaneCavePlacement.Find(world.map, world.MapRows, world.MapColumns,
-                new Z2Randomizer.RandomizerCore.Random(seed), minimum, maximum, null);
+                new Z2Randomizer.RandomizerCore.Primitives.Random(seed), minimum, maximum, null);
             pair.HasValue.Should().Be(fits);
             if (pair is { } placement)
                 new[] { placement.First, placement.Second }.Should().BeEquivalentTo([new IntVector2(10, 10), new IntVector2(10 + spacing, 10)]);

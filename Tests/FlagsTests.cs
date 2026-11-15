@@ -2,7 +2,7 @@
 using CrossPlatformUI.Presets;
 using Z2Randomizer.RandomizerCore;
 using Z2Randomizer.RandomizerCore.Flags;
-using Random = Z2Randomizer.RandomizerCore.Random;
+using Random = Z2Randomizer.RandomizerCore.Primitives.Random;
 
 namespace Z2Randomizer.Tests;
 
@@ -241,7 +241,7 @@ public class FlagsTests
             EnemyXPDrops = XPEffectiveness.NONE
         };
 
-        RandomizerProperties properties = config.Export(new RandomizerCore.Random(1234), includeDifficulty: false);
+        RandomizerProperties properties = config.Export(new RandomizerCore.Primitives.Random(1234), includeDifficulty: false);
 
         Assert.IsFalse(properties.StartCandle);
         Assert.IsFalse(properties.StartCross);
