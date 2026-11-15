@@ -16,18 +16,13 @@
         <v:FlexColumnsPanel Margin="4 16">
             <DockPanel Margin="0">
                 <HyperlinkButton Classes="WikiLink" DockPanel.Dock="Right" Margin="8,12,18,0"
-                                    IsVisible="{OnPlatform Default=True, Browser=False}"
+                                    Name="CustomMusicWiki" IsVisible="False"
                                     Content="[Wiki: Custom Music]"
                                     NavigateUri="https://github.com/Ellendar/Z2Randomizer/wiki/Custom-Music" />
                 <TextBlock Text="Music" Classes="SectionHeader" VerticalAlignment="Top" />
             </DockPanel>
             <z:Z2CheckBox Flag="DisableMusic" />
-            <StackPanel Margin="0" IsVisible="{OnPlatform Default=True, Browser=False}">
-                <z:Z2CheckBox Flag="RandomizeMusic" />
-                <z:Z2CheckBox Flag="MixCustomAndOriginalMusic" />
-                <z:Z2CheckBox Flag="IncludeDiverseMusic" />
-                <z:Z2CheckBox Flag="DisableUnsafeMusic" />
-            </StackPanel>
+            <StackPanel Name="CustomMusicControls" Margin="0" IsVisible="False" />
 
             <StackPanel Margin="0">
                 <TextBlock Text="Sprites" Classes="SectionHeader"  Margin="0,12,0,-7" />

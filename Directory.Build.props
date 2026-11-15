@@ -1,4 +1,9 @@
 <Project>
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'RandomizerCore.Browser' Or '$(MSBuildProjectName)' == 'CrossPlatformUI.BrowserShared'">
+    <BaseIntermediateOutputPath>obj\Browser\</BaseIntermediateOutputPath>
+    <BaseOutputPath>bin\Browser\</BaseOutputPath>
+    <DefaultItemExcludes>$(DefaultItemExcludes);obj\**;bin\**</DefaultItemExcludes>
+  </PropertyGroup>
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>

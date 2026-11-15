@@ -6,7 +6,9 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
-    <AssemblyName>$(MSBuildProjectName)</AssemblyName>
+    <AssemblyName>CrossPlatformUI</AssemblyName>
+    <EnableCustomMusic Condition="'$(EnableCustomMusic)' == ''">true</EnableCustomMusic>
+    <DefineConstants Condition="'$(EnableCustomMusic)' == 'true'">CUSTOM_MUSIC;$(DefineConstants)</DefineConstants>
     <RootNamespace>Z2Randomizer.CrossPlatformUI</RootNamespace>
     <Configurations>Debug;Release;Unsafe Debug</Configurations>
     <Platforms>AnyCPU</Platforms>
@@ -43,7 +45,8 @@
     <RuntimeHostConfigurationOption Include="MaterialThemeIncludeTreeDataGrid" Value="false" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\RandomizerCore\RandomizerCore.csproj" />
+    <ProjectReference Include="..\RandomizerCore\RandomizerCore.csproj" Condition="'$(MSBuildProjectName)' != 'CrossPlatformUI.BrowserShared'" />
+    <ProjectReference Include="..\RandomizerCore\RandomizerCore.Browser.csproj" Condition="'$(MSBuildProjectName)' == 'CrossPlatformUI.BrowserShared'" />
     <ProjectReference Include="..\CrossPlatformUI.SourceGenerator\CrossPlatformUI.SourceGenerator.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
   </ItemGroup>
   <Target Name="GenerateGitInfo" BeforeTargets="BeforeBuild">

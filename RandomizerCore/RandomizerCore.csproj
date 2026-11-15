@@ -7,13 +7,15 @@
     <Nullable>enable</Nullable>
     <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-    <AssemblyName>$(MSBuildProjectName)</AssemblyName>
+    <AssemblyName>RandomizerCore</AssemblyName>
     <RootNamespace>Z2Randomizer.RandomizerCore</RootNamespace>
     <LangVersion>default</LangVersion>
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     <DefineConstants Condition="'$(Configuration)' == 'Unsafe Debug'">UNSAFE_DEBUG;$(DefineConstants)</DefineConstants>
     <!-- Compile-time generator tracing. See Diagnostics/README.md. -->
     <DefineConstants Condition="'$(Z2RTrace)' == 'true'">Z2R_DIAGNOSTICS;$(DefineConstants)</DefineConstants>
+    <EnableCustomMusic Condition="'$(EnableCustomMusic)' == ''">true</EnableCustomMusic>
+    <DefineConstants Condition="'$(EnableCustomMusic)' == 'true'">CUSTOM_MUSIC;$(DefineConstants)</DefineConstants>
     <PublishTrimmed>true</PublishTrimmed>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
@@ -39,15 +41,16 @@
     <PackageReference Include="YamlDotNet" />
     <PackageReference Include="Vecc.YamlDotNet.Analyzers.StaticGenerator" />
     <ProjectReference Include="..\CoreSourceGenerator\CoreSourceGenerator.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
+    <TrimmerRootAssembly Include="CoreSourceGenerator" />
+  </ItemGroup>
+  <ItemGroup Label="Music" Condition="'$(EnableCustomMusic)' == 'true'">
     <ProjectReference Include="..\FtRandoLib\FtRandoLib.csproj" />
     <TrimmerRootAssembly Include="FtRandoLib" />
-    <TrimmerRootAssembly Include="CoreSourceGenerator" />
   </ItemGroup>
   <ItemGroup Label="Asm">
     <EmbeddedResource Include="Asm\*.s" />
     <EmbeddedResource Include="Asm\ram.inc" />
     <EmbeddedResource Include="Asm\z2r.inc" />
-    <EmbeddedResource Include="Asm\z2rndft.ips" />
     <EmbeddedResource Include="Asm\Graphics\dash.chr" />
     <EmbeddedResource Include="Asm\Graphics\FireFlower.chr" />
     <EmbeddedResource Include="Asm\Graphics\item_sprites.chr" />
@@ -63,8 +66,13 @@
   <ItemGroup Label="Sprites">
     <None Update="Sprites\*.ips" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
-  <ItemGroup Label="Music">
+  <ItemGroup Label="Music" Condition="'$(EnableCustomMusic)' == 'true'">
+    <EmbeddedResource Include="Asm\z2rndft.ips" />
     <None Update="Music\README.txt" CopyToOutputDirectory="PreserveNewest" />
     <None Update="Music\*.json5" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(EnableCustomMusic)' != 'true'">
+    <Compile Remove="Music.cs" />
+    <EmbeddedResource Remove="Asm\z2ft.s" />
   </ItemGroup>
 </Project>

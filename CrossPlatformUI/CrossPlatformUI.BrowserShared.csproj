@@ -1,0 +1,6 @@
+<Project TreatAsLocalProperty="EnableCustomMusic">
+  <PropertyGroup>
+    <EnableCustomMusic>false</EnableCustomMusic>
+  </PropertyGroup>
+  <Import Project="CrossPlatformUI.csproj" />
+</Project>

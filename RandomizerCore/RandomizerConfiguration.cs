@@ -1306,9 +1306,9 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
         {
             do
             {
-            properties.AllowVanillaRooms = includeVanillaRooms ?? GetIndeterminateFlagValue(r);
-            properties.AllowV4Rooms = includev4_0Rooms ?? GetIndeterminateFlagValue(r);
-            properties.AllowV5_0Rooms = includev5_0Rooms ?? GetIndeterminateFlagValue(r);
+                properties.AllowVanillaRooms = includeVanillaRooms ?? GetIndeterminateFlagValue(r);
+                properties.AllowV4Rooms = includev4_0Rooms ?? GetIndeterminateFlagValue(r);
+                properties.AllowV5_0Rooms = includev5_0Rooms ?? GetIndeterminateFlagValue(r);
             } while (!(properties.AllowVanillaRooms || properties.AllowV4Rooms || properties.AllowV5_0Rooms));
         }
         properties.RoomPoolOption = roomPoolOption;
@@ -1517,10 +1517,17 @@ public sealed partial class RandomizerConfiguration() : INotifyPropertyChanged
         properties.FastCast = fastSpellCasting;
         properties.BeamSprite = beamSprite;
         properties.DisableMusic = disableMusic;
+#if CUSTOM_MUSIC
         properties.RandomizeMusic = randomizeMusic;
         properties.MixCustomAndOriginalMusic = mixCustomAndOriginalMusic;
         properties.IncludeDiverseMusic = includeDiverseMusic;
         properties.DisableUnsafeMusic = disableUnsafeMusic;
+#else
+        properties.RandomizeMusic = false;
+        properties.MixCustomAndOriginalMusic = false;
+        properties.IncludeDiverseMusic = false;
+        properties.DisableUnsafeMusic = false;
+#endif
         properties.CharSprite = sprite;
         properties.ChangeItemSprites = changeItemSprites;
         properties.TunicColor = tunic;

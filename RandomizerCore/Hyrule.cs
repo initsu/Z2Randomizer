@@ -13,7 +13,9 @@ using DynamicData;
 using NLog;
 using js65;
 using static js65.AsmModule;
+#if CUSTOM_MUSIC
 using FtRandoLib.Importer;
+#endif
 using Z2Randomizer.RandomizerCore.Diagnostics;
 using Z2Randomizer.RandomizerCore.Enemy;
 using Z2Randomizer.RandomizerCore.Overworld;
@@ -64,7 +66,9 @@ public class Hyrule
 
     private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-    private MusicRandomizer? musicRandomizer = null;
+#if CUSTOM_MUSIC
+    private MusicRandomizer? musicRandomizer;
+#endif
 
     private readonly int[] palPalettes = [0, 0x00, 0x10, 0x20, 0x30, 0x40, 0x50, 0x60];
     private readonly int[] palGraphics = [0, 0x04, 0x05, 0x09, 0x0A, 0x0B, 0x0C, 0x06];
@@ -427,14 +431,9 @@ public class Hyrule
                 ROMData.WriteFastCastMagic();
             }
 
-            bool randomizeMusic = false;
             if (props.DisableMusic)
             {
                 ROMData.DisableMusic();
-            }
-            else
-            {
-                randomizeMusic = props.RandomizeMusic;
             }
 
             UpdateProgress(progress, ProgressEnum.APPLYING_PATCHES);
@@ -456,10 +455,11 @@ public class Hyrule
             UpdateProgress(progress, ProgressEnum.FINISHING_UP);
             ROMData = new ROM(rom.romdata);
 
+#if CUSTOM_MUSIC
 #if Z2R_DIAGNOSTICS
             diagnostics.Stage("music");
 #endif
-            if (randomizeMusic)
+            if (ShouldRandomizeMusic(props))
             {
                 string musicDir = "Music";
                 List<string> jsonLibPaths = new(),
@@ -515,6 +515,7 @@ public class Hyrule
                 Diag.Trace("rng", $"stage=music stream=music draws={musicRng.DrawCount} state={musicRng.GetState()}");
 #endif
             }
+#endif
 
 #if Z2R_DIAGNOSTICS
             diagnostics.Stage("finalize");
@@ -2796,12 +2797,14 @@ public class Hyrule
         sb.AppendLine(eastHyrule.GenerateSpoiler());
         sb.AppendLine(mazeIsland.GenerateSpoiler());
 
+#if CUSTOM_MUSIC
         if (musicRandomizer is not null)
         {
             //sb.AppendLine();
             sb.AppendLine(musicRandomizer.SpoilerLog);
             //sb.AppendLine();
         }
+#endif
 
         for (int i = 0; i < 6; i++)
         {
@@ -3864,9 +3867,18 @@ FlagHudUpdate:
         m.Byt(Util.ToGameText("TANOOKI"));
     }
 
+    private static bool ShouldRandomizeMusic(RandomizerProperties props)
+    {
+#if CUSTOM_MUSIC
+        return !props.DisableMusic && props.RandomizeMusic;
+#else
+        return false;
+#endif
+    }
+
     private void ApplyAsmPatches(RandomizerProperties props, Assembler engine, Random RNG, List<Text> texts, ROM rom, StatRandomizer randomizedStats, Location startLocation)
     {
-        bool randomizeMusic = !props.DisableMusic && props.RandomizeMusic;
+        bool randomizeMusic = ShouldRandomizeMusic(props);
 
         rom.ChangeMapperToMMC5(engine, GetPalaceOrder(), props.DisableHUDLag, randomizeMusic, props.MarioMode); // will make output vary with customize tab options
         rom.ApplyHiddenLocationPatches(engine, eastHyrule.HiddenLocations, eastHyrule.biome, !props.LegacyVanillaShuffledLocations);
@@ -4015,7 +4027,8 @@ FlagHudUpdate:
             rom.UpAController1(engine);
         }
 
-        if (!props.DisableMusic && randomizeMusic)
+#if CUSTOM_MUSIC
+        if (randomizeMusic)
         {
             rom.ApplyIps(
                 Util.ReadBinaryResource("Z2Randomizer.RandomizerCore.Asm.z2rndft.ips"));
@@ -4060,6 +4073,7 @@ FlagHudUpdate:
                 rom.Put(0x1ffec, 0xb4, 0xf2);
             }
         }
+#endif
 
         UpdateMovingNpcDialog(engine, CustomTexts.BuildMovingNpcDialogPool(props));
         UpdateTexts(engine, texts);

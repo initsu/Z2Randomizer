@@ -1,0 +1,7 @@
+<Project TreatAsLocalProperty="EnableCustomMusic">
+  <PropertyGroup>
+    <!-- Keep FtRandoLib out of the Browser restore graph. -->
+    <EnableCustomMusic>false</EnableCustomMusic>
+  </PropertyGroup>
+  <Import Project="RandomizerCore.csproj" />
+</Project>

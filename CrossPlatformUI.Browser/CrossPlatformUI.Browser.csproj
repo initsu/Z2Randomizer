@@ -110,6 +110,6 @@
     <Page Include="wwwroot\index.html" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CrossPlatformUI\CrossPlatformUI.csproj" />
+    <ProjectReference Include="..\CrossPlatformUI\CrossPlatformUI.BrowserShared.csproj" />
   </ItemGroup>
 </Project>
