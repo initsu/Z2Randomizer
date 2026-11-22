@@ -129,7 +129,7 @@ public class ContinentConnectorTests
         if ((loaded & 1) != 0) world.raft = Connector(true);
         if ((loaded & 2) != 0) world.bridge = Connector(false);
         var profile = Profile(horizontal: true);
-        world.ReserveContinentConnectors(new RandomizerProperties(), profile).Should().BeTrue();
+        world.ReserveContinentConnectors(new RandomizerProperties { ContinentConnections = ContinentConnectionType.NORMAL }, profile).Should().BeTrue();
         if (loaded == 0) world.NextRandom().Should().Be(new Random(42).Next());
         world.map[7, 7] = Terrain.GRASS;
         world.GrowClassicTerrain().Should().BeTrue();
@@ -157,7 +157,7 @@ public class ContinentConnectorTests
             }
             world.bridge = Connector(false);
 
-            world.ReserveContinentConnectors(new RandomizerProperties(), Profile(true)).Should().BeTrue();
+            world.ReserveContinentConnectors(new RandomizerProperties { ContinentConnections = ContinentConnectionType.NORMAL }, Profile(true)).Should().BeTrue();
             world.FinalizeContinentConnectors().Should().BeTrue();
             world.bridge.Xpos.Should().Be(1);
             OverworldSemanticAssertions.ContinentConnector(world, world.bridge, false);
@@ -181,7 +181,7 @@ public class ContinentConnectorTests
             world.raft = Connector(true);
             world.bridge = Connector(false);
 
-            world.ReserveContinentConnectors(new RandomizerProperties(), Profile(true)).Should().BeFalse();
+            world.ReserveContinentConnectors(new RandomizerProperties { ContinentConnections = ContinentConnectionType.NORMAL }, Profile(true)).Should().BeFalse();
 
             for (int y = 0; y < 15; y++)
             for (int x = 0; x < 15; x++) world.map[y, x].Should().Be(before[y, x]);
@@ -204,7 +204,7 @@ public class ContinentConnectorTests
             world.raft = Connector(true);
             world.bridge = Connector(false);
 
-            world.ReserveContinentConnectors(new RandomizerProperties(), Profile(true)).Should().BeTrue();
+            world.ReserveContinentConnectors(new RandomizerProperties { ContinentConnections = ContinentConnectionType.NORMAL }, Profile(true)).Should().BeTrue();
             world.FinalizeContinentConnectors().Should().BeTrue();
 
             world.raft.Xpos.Should().BeOneOf(1, 13);
@@ -230,7 +230,7 @@ public class ContinentConnectorTests
             world.SeedRandom(seed);
             world.raft = Connector(true);
             world.bridge = Connector(false);
-            world.ReserveContinentConnectors(new RandomizerProperties(), Profile(true)).Should().BeTrue();
+            world.ReserveContinentConnectors(new RandomizerProperties { ContinentConnections = ContinentConnectionType.NORMAL }, Profile(true)).Should().BeTrue();
             world.map[7, 7] = Terrain.GRASS;
             world.GrowClassicTerrain().Should().BeTrue();
             world.FinalizeContinentConnectors().Should().BeTrue();
@@ -270,7 +270,7 @@ public class ContinentConnectorTests
         var world = new TestWorld(9, 9, Terrain.MOUNTAIN) { continentId = Continent.WEST, biome = Biome.CANYON };
         var connector = Connector(true);
         world.raft = connector;
-        world.ReserveContinentConnectors(new RandomizerProperties(), Profile(true)).Should().BeFalse();
+        world.ReserveContinentConnectors(new RandomizerProperties { ContinentConnections = ContinentConnectionType.NORMAL }, Profile(true)).Should().BeFalse();
         connector.Pos.Should().Be(Location.NOT_ON_MAP);
         Enumerable.Range(0, 9).SelectMany(y => Enumerable.Range(0, 9).Select(x => world.map[y, x]))
             .Should().OnlyContain(t => t == Terrain.MOUNTAIN);
@@ -330,7 +330,7 @@ public class ContinentConnectorTests
         var world = new TestWorld(9, 9, Terrain.NONE) { continentId = Continent.WEST, biome = Biome.CANYON };
         world.UseClassicClimate();
         world.raft = Connector(true);
-        world.ReserveContinentConnectors(new RandomizerProperties(), Profile(true)).Should().BeTrue();
+        world.ReserveContinentConnectors(new RandomizerProperties { ContinentConnections = ContinentConnectionType.NORMAL }, Profile(true)).Should().BeTrue();
         var reserved = Enumerable.Range(0, 9).SelectMany(y => Enumerable.Range(0, 9).Select(x => new IntVector2(x, y)))
             .First(p => world.Reserved(p) && !world.map[p].IsWater());
         world.map[reserved] = Terrain.ROCK;
@@ -345,7 +345,7 @@ public class ContinentConnectorTests
         var world = new TestWorld(9, 9, Terrain.NONE) { continentId = Continent.WEST, biome = Biome.CANYON };
         world.UseClassicClimate();
         world.raft = Connector(true);
-        world.ReserveContinentConnectors(new RandomizerProperties(), Profile(true)).Should().BeTrue();
+        world.ReserveContinentConnectors(new RandomizerProperties { ContinentConnections = ContinentConnectionType.NORMAL }, Profile(true)).Should().BeTrue();
         var land = Enumerable.Range(0, 9).SelectMany(y => Enumerable.Range(0, 9).Select(x => new IntVector2(x, y)))
             .First(p => world.Reserved(p) && !world.map[p].IsWater());
         var minor = new Location(LocationID.WEST_GRASS, 0, 0, 0, Continent.WEST)
@@ -409,7 +409,7 @@ public class ContinentConnectorTests
         var rom = new ROM(Enumerable.Repeat((byte)0xCC, 2048).ToArray());
         using (world.BeginTerrainCandidate(rom))
         {
-            world.ReserveContinentConnectors(new RandomizerProperties(), Profile(true)).Should().BeTrue();
+            world.ReserveContinentConnectors(new RandomizerProperties { ContinentConnections = ContinentConnectionType.NORMAL }, Profile(true)).Should().BeTrue();
             world.StageTerrainMap().Should().BeFalse("locations must be finalized first");
             world.GrowClassicTerrain();
             world.FinalizeContinentConnectors().Should().BeTrue();
@@ -618,7 +618,7 @@ public class ContinentConnectorTests
         world.AddLocation(world.raft);
         using (world.BeginGeneratedTerrainAttempt(Profile(true)))
         {
-            world.ReserveContinentConnectors(new RandomizerProperties(), Profile(true)).Should().BeTrue();
+            world.ReserveContinentConnectors(new RandomizerProperties { ContinentConnections = ContinentConnectionType.NORMAL }, Profile(true)).Should().BeTrue();
             world.GrowClassicTerrain();
             world.FinalizeContinentConnectors().Should().BeTrue();
         }
@@ -628,7 +628,7 @@ public class ContinentConnectorTests
             world.StartGeneratedMap();
             world.Reserved(oldLanding).Should().BeFalse();
             world.raft.Pos.Should().Be(Location.NOT_ON_MAP);
-            world.ReserveContinentConnectors(new RandomizerProperties(), Profile(true)).Should().BeTrue();
+            world.ReserveContinentConnectors(new RandomizerProperties { ContinentConnections = ContinentConnectionType.NORMAL }, Profile(true)).Should().BeTrue();
             world.GrowClassicTerrain();
             world.FinalizeContinentConnectors().Should().BeTrue();
             OverworldSemanticAssertions.ContinentConnector(world, world.raft, true);

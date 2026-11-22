@@ -9,6 +9,47 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace CoreSourceGenerator;
 
+/// <summary>
+/// Generates reactive configuration properties and the positional flag-string
+/// codec for partial <c>[FlagSerialize]</c> classes implementing
+/// <c>INotifyPropertyChanged</c>. The production consumer is
+/// <c>RandomizerCore/RandomizerConfiguration.cs</c>; this file's generator class
+/// is named <c>ReactiveObjectSerializeGenerator</c>.
+/// </summary>
+/// <remarks>
+/// Two field sets drive generation. Fields marked with RandomizerCore's own
+/// <c>[Reactive]</c> attribute become public PascalCase properties backed by the
+/// original fields. Setters notify the property and, outside flag deserialization,
+/// <c>Flags</c>. Independently, every field without <c>[IgnoreInFlags]</c> enters
+/// the flag codec and the generated configuration diff. An ignored player option
+/// can therefore still have a reactive property.
+/// <para>
+/// <c>Serialize()</c> and <c>Deserialize()</c> call the configuration's typed
+/// helpers, which use <c>RandomizerCore/Flags/FlagBuilder.cs</c> and
+/// <c>FlagReader.cs</c>. Supported values are booleans, nullable booleans, bounded
+/// integers, enums, and values with a custom flag serializer. Integer fields need
+/// both <c>[Minimum]</c> and <c>[Maximum]</c>. Enum values are encoded by index in
+/// generated declaration-ordered member arrays, not by their underlying number.
+/// </para>
+/// <para>
+/// A <c>[ConditionallyIncludeInFlags]</c> field calls <c>fieldIncluded()</c> in
+/// both directions. When excluded, it contributes no bits and deserialization
+/// restores its declaration initializer, so conditional fields need an explicit
+/// default. Dependencies must precede the conditional field in the serialized
+/// field order; <c>FlagInclusionOrderAnalyzer</c> checks this with <c>Z2R002</c>.
+/// Field order, enum member order, numeric bounds, and inclusion predicates are
+/// all part of the flag-string format and require compatibility consideration
+/// when changed.
+/// </para>
+/// <para>
+/// Use the full codec for flag round trips. <c>SerializeSharedSeed()</c> omits
+/// <c>[DifficultyOnly]</c> fields for shared seed derivation. Other generated
+/// members include <c>With()</c>, declaration-ordered <c>Diff()</c> results keyed
+/// by <c>ConfigFlag</c>, enum index/count helpers, and custom serializer factories.
+/// The class being extended supplies <c>OnPropertyChanged</c>,
+/// <c>_inDeserializeFlags</c>, and the typed serialization helper methods.
+/// </para>
+/// </remarks>
 [Generator]
 public class ReactiveObjectSerializeGenerator : IIncrementalGenerator
 {

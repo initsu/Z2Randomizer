@@ -8,6 +8,39 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace CoreSourceGenerator;
 
+/// <summary>
+/// Generates <c>Z2Randomizer.RandomizerCore.EnumMetadata</c>, the runtime lookup
+/// table for attributes on source enum declarations in the consuming compilation.
+/// Its main consumers are the enum helpers in <c>RandomizerCore/EnumTypes.cs</c>,
+/// used by configuration defaults, UI descriptions, and generation logic.
+/// </summary>
+/// <remarks>
+/// Attribute information is read through Roslyn at build time and emitted as
+/// ordinary type comparisons and member-name switches. Runtime callers can look
+/// up that metadata without reflecting over attributes, which also avoids relying
+/// on those attributes being retained in trimmed builds.
+/// <para>
+/// The generated lookups cover enum-level <c>DefaultValue</c> and member-level
+/// descriptions, string values, metastyle markers, weights, fixed bytes, random
+/// ranges, overworld sizes, and beam-sprite metadata. Attribute-valued lookups
+/// recreate their constructor and named arguments, including array arguments.
+/// Missing metadata returns the lookup's default value, usually <c>null</c> or
+/// <c>false</c>; callers such as <c>Enums.ToDescription</c> supply their own fallback.
+/// </para>
+/// <para>
+/// Types are emitted in ordinal fully qualified name order for stable generated
+/// source. Member lookups accept the caller's runtime enum member name so aliases
+/// retain the selection made by <c>Enum.GetName</c> or <c>ToString</c>, rather than
+/// introducing a different choice by switching on the underlying numeric value.
+/// These metadata lookups are separate from the enum indices used by the flag
+/// codec in <c>FlagsSerializeGenerator.cs</c>.
+/// </para>
+/// <para>
+/// To support another metadata attribute, add a lookup here and expose it through
+/// the relevant RandomizerCore helper. Only source enums in this compilation are
+/// collected; enum declarations from referenced assemblies are not scanned.
+/// </para>
+/// </remarks>
 [Generator]
 public sealed class EnumMetadataGenerator : IIncrementalGenerator
 {

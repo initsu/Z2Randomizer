@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text.Json.Serialization;
+using Z2Randomizer.RandomizerCore.Diagnostics;
 using Z2Randomizer.RandomizerCore.Overworld;
 
 namespace Z2Randomizer.RandomizerCore;
@@ -20,109 +21,105 @@ namespace Z2Randomizer.RandomizerCore;
 internal partial class SourceGenerationContext : JsonSerializerContext
 {
 }
-public class RandomizerProperties
+[CheckedInitialization]
+public partial class RandomizerProperties
 {
 
     //ROM Info
-    public string? Seed { get; set; }
-    public string? Flags { get; set; }
+    public partial string? Seed { get; set; }
+    public partial string? Flags { get; set; }
 
     //Items
-    //public bool shuffleItems;
-    public bool StartCandle { get; set; }
-    public bool StartGlove { get; set; }
-    public bool StartRaft { get; set; }
-    public bool StartBoots { get; set; }
-    public bool StartFlute { get; set; }
-    public bool StartCross { get; set; }
-    public bool StartHammer { get; set; }
-    public bool StartKey { get; set; }
-    public StartingResourceLimit StartItemsLimit { get; set; }
+    public partial bool StartCandle { get; set; }
+    public partial bool StartGlove { get; set; }
+    public partial bool StartRaft { get; set; }
+    public partial bool StartBoots { get; set; }
+    public partial bool StartFlute { get; set; }
+    public partial bool StartCross { get; set; }
+    public partial bool StartHammer { get; set; }
+    public partial bool StartKey { get; set; }
 
     //Spells
-    //public bool shuffleSpells;
-    public bool StartShield { get; set; }
-    public bool StartJump { get; set; }
-    public bool StartLife { get; set; }
-    public bool StartFairy { get; set; }
-    public bool StartFire { get; set; }
-    public bool StartReflect { get; set; }
-    public bool StartSpell { get; set; }
-    public bool StartThunder { get; set; }
-    public Collectable? LinkedFireSpell { get; set; }
-    public bool ReplaceFireWithDash { get; set; }
-    public StartingResourceLimit StartSpellsLimit { get; set; }
+    public partial bool StartShield { get; set; }
+    public partial bool StartJump { get; set; }
+    public partial bool StartLife { get; set; }
+    public partial bool StartFairy { get; set; }
+    public partial bool StartFire { get; set; }
+    public partial bool StartReflect { get; set; }
+    public partial bool StartSpell { get; set; }
+    public partial bool StartThunder { get; set; }
+    public partial Collectable? LinkedFireSpell { get; set; }
+    public partial bool ReplaceFireWithDash { get; set; }
 
     //Other starting attributes
-    public int StartHearts { get; set; }
-    public int MaxHearts { get; set; }
-    public int StartMagicContainers { get; set; }
-    public int MaxMagicContainers { get; set; }
-    public bool StartWithUpstab { get; set; }
-    public bool StartWithDownstab { get; set; }
-    public int StartLives { get; set; }
-    public bool PermanentBeam { get; set; }
-    public bool UseCommunityText { get; set; }
-    public int StartAtk { get; set; }
-    public int StartingMagicLevel { get; set; }
-    public int StartLifeLvl { get; set; }
-    public bool SwapUpAndDownStab { get; set; }
-    public StartingLocation StartingLocation { get; set; }
+    public partial int StartHearts { get; set; }
+    public partial int MaxHearts { get; set; }
+    public partial int StartMagicContainers { get; set; }
+    public partial int MaxMagicContainers { get; set; }
+    public partial bool StartWithUpstab { get; set; }
+    public partial bool StartWithDownstab { get; set; }
+    public partial int StartLives { get; set; }
+    public partial bool PermanentBeam { get; set; }
+    public partial bool UseCommunityText { get; set; }
+    public partial int StartAtk { get; set; }
+    public partial int StartingMagicLevel { get; set; }
+    public partial int StartLifeLvl { get; set; }
+    public partial bool SwapUpAndDownStab { get; set; }
+    public partial StartingLocation StartingLocation { get; set; }
 
     //Overworld
-    public bool ShuffleEncounters { get; set; }
-    public bool AllowPathEnemies { get; set; }
-    public bool IncludeLavaInEncounterShuffle { get; set; }
-    public bool PalacesCanSwapContinent { get; set; }
-    public bool P7shuffle { get; set; }
-    public bool HiddenPalace { get; set; }
-    public bool HiddenKasuto { get; set; }
-    public bool TownSwap { get; set; }
-    public EncounterRate EncounterRates { get; set; }
-    public ContinentConnectionType ContinentConnections { get; set; }
-    public OverworldSizeOption WestSize { get; set; }
-    public OverworldSizeOption EastSize { get; set; }
-    public DmSizeOption DmSize { get; set; }
-    public MazeSizeOption MazeSize { get; set; }
-    public bool BoulderBlockConnections { get; set; }
-    public Biome WestBiome { get; set; }
-    public Biome EastBiome { get; set; }
-    public Biome DmBiome { get; set; }
-    public Biome MazeBiome { get; set; }
-    public bool DmIsHorizontal { get; set; }
-    public bool WestIsHorizontal { get; set; }
-    public bool EastIsHorizontal { get; set; }
-    public bool EastRockIsPath { get; set; }
+    public partial bool ShuffleEncounters { get; set; }
+    public partial bool AllowPathEnemies { get; set; }
+    public partial bool IncludeLavaInEncounterShuffle { get; set; }
+    public partial bool PalacesCanSwapContinent { get; set; }
+    public partial bool P7shuffle { get; set; }
+    public partial bool HiddenPalace { get; set; }
+    public partial bool HiddenKasuto { get; set; }
+    public partial EncounterRate EncounterRates { get; set; }
+    public partial ContinentConnectionType ContinentConnections { get; set; }
+    public partial OverworldSizeOption WestSize { get; set; }
+    public partial OverworldSizeOption EastSize { get; set; }
+    public partial DmSizeOption DmSize { get; set; }
+    public partial MazeSizeOption MazeSize { get; set; }
+    public partial bool BoulderBlockConnections { get; set; }
+    public partial Biome WestBiome { get; set; }
+    public partial Biome EastBiome { get; set; }
+    public partial Biome DmBiome { get; set; }
+    public partial Biome MazeBiome { get; set; }
+    public partial bool DmIsHorizontal { get; set; }
+    public partial bool WestIsHorizontal { get; set; }
+    public partial bool EastIsHorizontal { get; set; }
+    public partial bool EastRockIsPath { get; set; }
 #pragma warning disable CS8618
-    public ClimateEnum WestClimate { get; set; }
-    public ClimateEnum EastClimate { get; set; }
-    public ClimateEnum DmClimate { get; set; }
+    public partial ClimateEnum WestClimate { get; set; }
+    public partial ClimateEnum EastClimate { get; set; }
+    public partial ClimateEnum DmClimate { get; set; }
 #pragma warning restore CS8618 
-    public bool LegacyVanillaShuffledLocations { get; set; }
-    public bool ShuffleHidden { get; set; }
-    public bool CanWalkOnWaterWithBoots { get; set; }
-    public bool BagusWoods { get; set; }
-    public LessImportantLocationsOption LessImportantLocationsOption { get; set; }
-    public bool SaneCaves { get; set; }
-    public RiverDevilBlockerOption RiverDevilBlockerOption { get; set; }
-    public bool EastRocks { get; set; }
+    public partial bool LegacyVanillaShuffledLocations { get; set; }
+    public partial bool ShuffleHidden { get; set; }
+    public partial bool CanWalkOnWaterWithBoots { get; set; }
+    public partial bool BagusWoods { get; set; }
+    public partial LessImportantLocationsOption LessImportantLocationsOption { get; set; }
+    public partial bool SaneCaves { get; set; }
+    public partial RiverDevilBlockerOption RiverDevilBlockerOption { get; set; }
+    public partial bool EastRocks { get; set; }
 
     //Palaces
     [NotMapped]
-    public PalaceStyle[] PalaceStyles { get; set; } = new PalaceStyle[7];
+    public partial PalaceStyle[] PalaceStyles { get; set; }
     [NotMapped]
-    public int[] PalaceLengths { get; set; } = new int[7];
-    public int StartGems { get; set; }
-    public bool RequireTbird { get; set; }
-    public int DarkLinkMinDistance { get; set; }
-    public bool ShufflePalacePalettes { get; set; }
-    public bool UpARestartsAtPalaces { get; set; }
-    public bool Global5050JarDrop { get; set; }
-    public bool ReduceDripperVariance { get; set; }
-    public bool RemoveTbird { get; set; }
-    public bool BossItem { get; set; }
-    public KeyLogicOption KeyLogic { get; set; }
-    public bool BlockersAnywhere { get; set; }
+    public partial int[] PalaceLengths { get; set; }
+    public partial int StartGems { get; set; }
+    public partial bool RequireTbird { get; set; }
+    public partial int DarkLinkMinDistance { get; set; }
+    public partial bool ShufflePalacePalettes { get; set; }
+    public partial bool UpARestartsAtPalaces { get; set; }
+    public partial bool Global5050JarDrop { get; set; }
+    public partial bool ReduceDripperVariance { get; set; }
+    public partial bool RemoveTbird { get; set; }
+    public partial bool BossItem { get; set; }
+    public partial KeyLogicOption KeyLogic { get; set; }
+    public partial bool BlockersAnywhere { get; set; }
 
     /// <summary>
     /// P1-P5 need self-contained small keys. P6 does too with BlockersAnywhere on
@@ -133,146 +130,146 @@ public class RandomizerProperties
         && palaceNumber < 7
         && (palaceNumber < 6 || BlockersAnywhere || RemoveItems.Contains(Collectable.MAGIC_KEY));
     public bool LockedDoorsBlockFairy { get; set; } = false;
-    public bool RemoveLongDeadEnds { get; set; }
-    public bool IncludeExpertRooms { get; set; }
+    public partial bool RemoveLongDeadEnds { get; set; }
+    public partial bool IncludeExpertRooms { get; set; }
     [NotMapped]
-    public bool[] BossRoomsExitToPalace { get; set; } = new bool[7];
-    public bool NoDuplicateRooms { get; set; }
-    public PalaceDropStyle PalaceDropStyle { get; set; }
-    public bool DropsMayBypassBosses { get; set; }
-    public bool NoDuplicateRoomsBySideview { get; set; }
-    public bool GeneratorsAlwaysMatch { get; set; }
-    public RoomPoolOption RoomPoolOption { get; set; }
-    public bool AllowVanillaRooms { get; set; }
-    public bool AllowV4Rooms { get; set; }
-    public bool AllowV5_0Rooms { get; set; }
-    public bool HardBosses { get; set; }
-    public bool AggressiveTbird { get; set; }
+    public partial bool[] BossRoomsExitToPalace { get; set; }
+    public partial bool NoDuplicateRooms { get; set; }
+    public partial PalaceDropStyle PalaceDropStyle { get; set; }
+    public partial bool DropsMayBypassBosses { get; set; }
+    public partial bool NoDuplicateRoomsBySideview { get; set; }
+    public partial bool GeneratorsAlwaysMatch { get; set; }
+    public partial RoomPoolOption RoomPoolOption { get; set; }
+    public partial bool AllowVanillaRooms { get; set; }
+    public partial bool AllowV4Rooms { get; set; }
+    public partial bool AllowV5_0Rooms { get; set; }
+    public partial bool HardBosses { get; set; }
+    public partial bool AggressiveTbird { get; set; }
     [NotMapped]
-    public int[] PalaceItemRoomCounts { get; set; } = new int[7];
-    public bool UsePalaceItemRoomCountIndicator { get; set; }
-    public bool RevealWalkthroughWalls { get; set; }
-    public bool RevealHiddenJars { get; set; }
+    public partial int[] PalaceItemRoomCounts { get; set; }
+    public partial bool UsePalaceItemRoomCountIndicator { get; set; }
+    public partial bool RevealWalkthroughWalls { get; set; }
+    public partial bool RevealHiddenJars { get; set; }
 
     //Enemies
-    public EnemyLifeOption ShuffleEnemyHP { get; set; }
-    public EnemyLifeOption ShuffleBossHP { get; set; }
-    public bool ShuffleEnemyStealExp { get; set; }
-    public bool ShuffleStealExpAmt { get; set; }
+    public partial EnemyLifeOption ShuffleEnemyHP { get; set; }
+    public partial EnemyLifeOption ShuffleBossHP { get; set; }
+    public partial bool ShuffleEnemyStealExp { get; set; }
+    public partial bool ShuffleStealExpAmt { get; set; }
     public SwordImmunityOption SwordImmunityOption;
-    public bool ShuffleOverworldEnemies { get; set; }
-    public bool ShufflePalaceEnemies { get; set; }
-    public bool MixLargeAndSmallEnemies { get; set; }
-    public DripperEnemyOption DripperEnemyOption { get; set; }
-    public bool ShuffleEnemyPalettes { get; set; }
-    public XPEffectiveness EnemyXPDrops { get; set; }
+    public partial bool ShuffleOverworldEnemies { get; set; }
+    public partial bool ShufflePalaceEnemies { get; set; }
+    public partial bool MixLargeAndSmallEnemies { get; set; }
+    public partial DripperEnemyOption DripperEnemyOption { get; set; }
+    public partial bool ShuffleEnemyPalettes { get; set; }
+    public partial XPEffectiveness EnemyXPDrops { get; set; }
 
     //Levels
-    public bool ShuffleAtkExp { get; set; }
-    public bool ShuffleMagicExp { get; set; }
-    public bool ShuffleLifeExp { get; set; }
-    public bool ShuffleLifeRefill { get; set; }
-    public bool ShuffleSpellLocations { get; set; }
-    public bool DisableMagicRecs { get; set; }
-    public AttackEffectiveness AttackEffectiveness { get; set; }
-    public MagicEffectiveness MagicEffectiveness { get; set; }
-    public LifeEffectiveness LifeEffectiveness { get; set; }
-    public int AttackCap { get; set; }
-    public int MagicCap { get; set; }
-    public int LifeCap { get; set; }
-    public bool ScaleLevels { get; set; }
-    public bool SpellEnemy { get; set; }
+    public partial bool ShuffleAtkExp { get; set; }
+    public partial bool ShuffleMagicExp { get; set; }
+    public partial bool ShuffleLifeExp { get; set; }
+    public partial bool ShuffleLifeRefill { get; set; }
+    public partial bool ShuffleSpellLocations { get; set; }
+    public partial bool DisableMagicRecs { get; set; }
+    public partial AttackEffectiveness AttackEffectiveness { get; set; }
+    public partial MagicEffectiveness MagicEffectiveness { get; set; }
+    public partial LifeEffectiveness LifeEffectiveness { get; set; }
+    public partial int AttackCap { get; set; }
+    public partial int MagicCap { get; set; }
+    public partial int LifeCap { get; set; }
+    public partial bool ScaleLevels { get; set; }
+    public partial bool SpellEnemy { get; set; }
 
     //Items
-    public bool ShuffleOverworldItems { get; set; }
-    public bool ShufflePalaceItems { get; set; }
-    public bool MixOverworldPalaceItems { get; set; }
-    public bool IncludeSpellsInShuffle { get; set; }
-    public bool IncludeSwordTechsInShuffle { get; set; }
+    public partial bool ShuffleOverworldItems { get; set; }
+    public partial bool ShufflePalaceItems { get; set; }
+    public partial bool MixOverworldPalaceItems { get; set; }
+    public partial bool IncludeSpellsInShuffle { get; set; }
+    public partial bool IncludeSwordTechsInShuffle { get; set; }
     //Fountain water / Saria mirror
-    public bool IncludeQuestItemsInShuffle { get; set; }
-    public bool IncludeBagusNoteInShuffle { get; set; }
+    public partial bool IncludeQuestItemsInShuffle { get; set; }
+    public partial bool IncludeBagusNoteInShuffle { get; set; }
     //Saria mirror table / Nabooru fountain / Downstab guy / Upstab guy hold minor items if they are shuffled
-    public bool TownQuestLocationsAreMinorItems { get; set; }
+    public partial bool TownQuestLocationsAreMinorItems { get; set; }
     //Spell items may not be required to obtain another spell item
-    public bool PreventSpellItemChains { get; set; }
-    public bool RandomizeSmallItems { get; set; }
-    public bool ExtraKeys { get; set; }
-    public bool FastItemPickup { get; set; }
-    public bool AllowImportantItemDuplicates { get; set; }
-    public int NewKasutoBasementRequirement { get; set; }
+    public partial bool PreventSpellItemChains { get; set; }
+    public partial bool RandomizeSmallItems { get; set; }
+    public partial bool ExtraKeys { get; set; }
+    public partial bool FastItemPickup { get; set; }
+    public partial bool AllowImportantItemDuplicates { get; set; }
+    public partial int NewKasutoBasementRequirement { get; set; }
     //Include PBag caves in item shuffle
-    public bool PbagItemShuffle { get; set; }
-    public bool StartWithSpellItems { get; set; }
-    public bool ShufflePbagXp { get; set; }
+    public partial bool PbagItemShuffle { get; set; }
+    public partial bool StartWithSpellItems { get; set; }
+    public partial bool ShufflePbagXp { get; set; }
 
     public HashSet<Collectable> RemoveItems { get; set; } = [];
 
     //Drops
-    public bool ShuffleItemDropFrequency { get; set; }
+    public partial bool ShuffleItemDropFrequency { get; set; }
     //public bool shuffleEnemyDrops { get; set; }
-    public bool Smallbluejar { get; set; }
-    public bool Smallredjar { get; set; }
-    public bool Small50 { get; set; }
-    public bool Small100 { get; set; }
-    public bool Small200 { get; set; }
-    public bool Small500 { get; set; }
-    public bool Small1up { get; set; }
-    public bool Smallkey { get; set; }
+    public partial bool Smallbluejar { get; set; }
+    public partial bool Smallredjar { get; set; }
+    public partial bool Small50 { get; set; }
+    public partial bool Small100 { get; set; }
+    public partial bool Small200 { get; set; }
+    public partial bool Small500 { get; set; }
+    public partial bool Small1up { get; set; }
+    public partial bool Smallkey { get; set; }
 
-    public bool Largebluejar { get; set; }
-    public bool Largeredjar { get; set; }
-    public bool Large50 { get; set; }
-    public bool Large100 { get; set; }
-    public bool Large200 { get; set; }
-    public bool Large500 { get; set; }
-    public bool Large1up { get; set; }
-    public bool Largekey { get; set; }
-    public bool StandardizeDrops { get; set; }
-    public bool RandomizeDrops { get; set; }
+    public partial bool Largebluejar { get; set; }
+    public partial bool Largeredjar { get; set; }
+    public partial bool Large50 { get; set; }
+    public partial bool Large100 { get; set; }
+    public partial bool Large200 { get; set; }
+    public partial bool Large500 { get; set; }
+    public partial bool Large1up { get; set; }
+    public partial bool Largekey { get; set; }
+    public partial bool StandardizeDrops { get; set; }
+    public partial bool RandomizeDrops { get; set; }
 
     //Hints
-    public bool SpellItemHints { get; set; }
-    public HelpfulHintOption HelpfulHints { get; set; }
-    public bool TownNameHints { get; set; }
+    public partial bool SpellItemHints { get; set; }
+    public partial HelpfulHintOption HelpfulHints { get; set; }
+    public partial bool TownNameHints { get; set; }
 
     //Misc.
-    public bool MarioMode { get; set; }
-    public byte BeepFrequency { get; set; }
-    public byte BeepThreshold { get; set; }
-    public bool JumpAlwaysOn { get; set; }
-    public bool DashAlwaysOn { get; set; }
-    public bool FasterDashFairy { get; set; }
-    public FluteWarpMode FluteWarpMode { get; set; }
-    public bool FastCast { get; set; }
+    public partial bool MarioMode { get; set; }
+    public partial byte BeepFrequency { get; set; }
+    public partial byte BeepThreshold { get; set; }
+    public partial bool JumpAlwaysOn { get; set; }
+    public partial bool DashAlwaysOn { get; set; }
+    public partial bool FasterDashFairy { get; set; }
+    public partial FluteWarpMode FluteWarpMode { get; set; }
+    public partial bool FastCast { get; set; }
 
-    public BeamSprites BeamSprite { get; set; }
-    public bool DisableMusic { get; set; }
-    public bool RandomizeMusic { get; set; }
-    public bool MixCustomAndOriginalMusic { get; set; }
-    public bool IncludeDiverseMusic { get; set; }
-    public bool DisableUnsafeMusic { get; set; }
+    public partial BeamSprites BeamSprite { get; set; }
+    public partial bool DisableMusic { get; set; }
+    public partial bool RandomizeMusic { get; set; }
+    public partial bool MixCustomAndOriginalMusic { get; set; }
+    public partial bool IncludeDiverseMusic { get; set; }
+    public partial bool DisableUnsafeMusic { get; set; }
     [NotMapped]
 #pragma warning disable CS8618 
-    public CharacterSprite CharSprite { get; set; }
+    public partial CharacterSprite CharSprite { get; set; }
 #pragma warning restore CS8618
-    public bool ChangeItemSprites { get; set; }
-    public NesColor TunicColor { get; set; }
-    public NesColor SkinTone { get; set; }
-    public NesColor OutlineColor { get; set; }
-    public NesColor ShieldColor { get; set; }
-    public bool UpAC1 { get; set; }
-    public bool RemoveFlashing { get; set; }
-    public bool DarkenThunderbird { get; set; }
-    public bool HorizontalBossBarsGP { get; set; }
-    public bool UseCustomRooms { get; set; }
-    public bool UpdatedHud { get; set; }
-    public bool DisableHUDLag { get; set; }
-    public bool RandomizeKnockback { get; set; }
+    public partial bool ChangeItemSprites { get; set; }
+    public partial NesColor TunicColor { get; set; }
+    public partial NesColor SkinTone { get; set; }
+    public partial NesColor OutlineColor { get; set; }
+    public partial NesColor ShieldColor { get; set; }
+    public partial bool UpAC1 { get; set; }
+    public partial bool RemoveFlashing { get; set; }
+    public partial bool DarkenThunderbird { get; set; }
+    public partial bool HorizontalBossBarsGP { get; set; }
+    public partial bool UseCustomRooms { get; set; }
+    public partial bool UpdatedHud { get; set; }
+    public partial bool DisableHUDLag { get; set; }
+    public partial bool RandomizeKnockback { get; set; }
 
     //For Statistics
     [Key]
-    public int Id { get; set; }
+    public int Id { get; set; } = 0;
 
     public bool StartsWithCollectable(Collectable? collectable)
     {

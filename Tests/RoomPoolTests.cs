@@ -64,6 +64,11 @@ public class RoomPoolTests
             ReplaceFireWithDash = replaceFireWithDash,
             NoDuplicateRooms = false,
             NoDuplicateRoomsBySideview = false,
+            KeyLogic = KeyLogicOption.FAIRY_OR_MAGICKEY,
+            MarioMode = false,
+            RoomPoolOption = RoomPoolOption.VANILLA,
+            PalaceStyles = Enumerable.Repeat(PalaceStyle.VANILLA, 7).ToArray(),
+            PalaceLengths = new int[7],
             RemoveItems = removeItems ?? []
         };
     }

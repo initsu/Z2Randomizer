@@ -400,7 +400,7 @@ public class KeyLogicTests
         entrance.Right = inaccessibleKey;
         inaccessibleKey.Right = door;
         var palace = MakePalace(entrance, inaccessibleKey, door);
-        var props = new RandomizerProperties { KeyLogic = KeyLogicOption.KEYS_PER_PALACE_SOLVABLE };
+        var props = new RandomizerProperties { KeyLogic = KeyLogicOption.KEYS_PER_PALACE_SOLVABLE, BossItem = false };
         var generator = new ReconstructedPalaceGenerator(System.Threading.CancellationToken.None);
 
         Assert.IsTrue(generator.AddKeysForKeyLogic(props, palace, createKeys: true, r: new Random(0)));
@@ -415,7 +415,7 @@ public class KeyLogicTests
         var door = MakeRoom("Door", lockedDoors: 1);
         entrance.Right = door;
         var palace = MakePalace(entrance, door);
-        var props = new RandomizerProperties { KeyLogic = KeyLogicOption.KEYS_PER_PALACE_SOLVABLE };
+        var props = new RandomizerProperties { KeyLogic = KeyLogicOption.KEYS_PER_PALACE_SOLVABLE, BossItem = false };
         var generator = new ReconstructedPalaceGenerator(System.Threading.CancellationToken.None);
         var originalSideView = entrance.SideView;
         var originalBits = entrance.ItemPresenceBits;
