@@ -250,6 +250,14 @@ public class SideviewEditable<T> where T : struct, Enum
         return bytes;
     }
 
+    internal SideviewEditable<T> Copy()
+    {
+        var copy = (SideviewEditable<T>)MemberwiseClone();
+        copy.Header = (byte[])Header.Clone();
+        copy.Commands = Commands.Select(command => new SideviewMapCommand<T>(command.Bytes, command.AbsX)).ToList();
+        return copy;
+    }
+
     public void Mirror()
     {
         int width = PageCount * 16;
