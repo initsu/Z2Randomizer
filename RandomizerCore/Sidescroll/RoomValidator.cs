@@ -88,7 +88,7 @@ public static class RoomValidator
             if (string.IsNullOrWhiteSpace(room.Name)) { Error("MissingRoomName", "Room is missing a name."); }
             else if (roomsByName[room.Name].Skip(1).Any()) { Error("DuplicateRoomName", "Room name is used more than once."); }
             if (room.Connections is not { Length: 4 }) { Error("InvalidConnections", "Room must have four connection bytes."); }
-            if (room.ItemPresenceBits is not { Length: 1 }) { Error("InvalidBitmask", "Room must have one item bitmask byte."); }
+            if (room.ItemPresenceBits is not { Length: 1 } || room.ItemPresenceBits[0] > 0xF) { Error("InvalidBitmask", "Room item bits must fit in four bits."); }
             if (!Enum.IsDefined(room.Group)) { Error("InvalidRoomGroup", "Room group is not recognized."); }
             if (room.PalaceNumber is < 1 or > 7) { Error("InvalidPalaceNumber", "Palace number must be between 1 and 7 when specified."); }
             if (room.LinkRequirements == null) { Error("InvalidRequirements", "Room requirements must be an array."); }
