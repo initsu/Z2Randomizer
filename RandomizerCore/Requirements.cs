@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -362,35 +363,51 @@ public class Requirements : IDeterministicHash
 
     public string Serialize()
     {
-        StringBuilder sb = new();
-        sb.Append('[');
-        foreach (RequirementType requirement in IndividualRequirements)
+        using var output = new MemoryStream();
+        using (var writer = new Utf8JsonWriter(output))
         {
-            sb.Append('"');
-            sb.Append(requirement.ToString());
-            sb.Append('"');
-            sb.Append(',');
-        }
-        foreach (RequirementType[] compositeRequirement in CompositeRequirements)
-        {
-            sb.Append('[');
-            foreach (RequirementType component in compositeRequirement)
+            writer.WriteStartArray();
+            SerializeWriteInner(writer, IndividualRequirements, CompositeRequirements);
+            foreach (var requirement in ComplexRequirements)
             {
-                sb.Append('"');
-                sb.Append(component.ToString());
-                sb.Append('"');
-                sb.Append(',');
+                writer.WriteStartObject();
+                writer.WriteString("target", requirement.Target.ToString());
+                writer.WriteStartArray("requires");
+                SerializeWriteInner(writer, requirement.IndividualRequirements, requirement.CompositeRequirements);
+                writer.WriteEndArray();
+                if (requirement.Routes != null)
+                {
+                    writer.WriteStartArray("routes");
+                    foreach (var route in requirement.Routes)
+                    {
+                        JsonSerializer.Serialize(writer, route, RoomSerializationContext.Default.RequirementRoute);
+                    }
+                    writer.WriteEndArray();
+                }
+                writer.WriteEndObject();
             }
-            sb.Remove(sb.Length - 1, 1);
-            sb.Append(']');
+            writer.WriteEndArray();
         }
-        if (sb.Length > 1 && sb[^1] != ']')
-        {
-            sb.Remove(sb.Length - 1, 1);
-        }
-        sb.Append(']');
+        return Encoding.UTF8.GetString(output.ToArray());
+    }
 
-        return sb.ToString();
+    private static void SerializeWriteInner(Utf8JsonWriter writer,
+        IEnumerable<RequirementType> individualRequirements,
+        IEnumerable<RequirementType[]> compositeRequirements)
+    {
+        foreach (var requirement in individualRequirements)
+        {
+            writer.WriteStringValue(requirement.ToString());
+        }
+        foreach (var composite in compositeRequirements)
+        {
+            writer.WriteStartArray();
+            foreach (var requirement in composite)
+            {
+                writer.WriteStringValue(requirement.ToString());
+            }
+            writer.WriteEndArray();
+        }
     }
 
     public override string ToString()
