@@ -60,17 +60,38 @@ public class Room : IJsonOnDeserialized, IDeterministicHash
     public const int Group1ItemPresenceBitsStartAddress = 0x17ba5;
     public const int Group2ItemPresenceBitsStartAddress = 0x17bc5;
     public const int Group3ItemPresenceBitsStartAddress = 0x17be5;
-    private const int connectors1 = 0x1072b;
-    private const int connectors2 = 0x12208;
-    private const int connectors3 = 0x1472b;
 
     [JsonPropertyName("bitmask")]
     [JsonConverter(typeof(HexStringConverter))]
     public byte[] ItemPresenceBits { get; set; }
 
+    // Keep the source ROM index even when the generator assigns the room a new map.
+    private byte? vanillaMap;
+    [JsonPropertyName("map")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public byte? VanillaMap
+    {
+        get => Group == RoomGroup.VANILLA ? vanillaMap : null;
+        set => vanillaMap = value;
+    }
+
+    [JsonIgnore]
     public byte Map { get; set; }
 
-    [JsonConverter(typeof(JsonNumberEnumConverter<PalaceGrouping>))]
+    [JsonPropertyName("palaceGroup")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public int? VanillaPalaceGroupNumber { get; set; }
+
+    [JsonIgnore]
+    internal PalaceGrouping? VanillaPalaceGroup => VanillaPalaceGroupNumber switch
+    {
+        1 => PalaceGrouping.Palace125,
+        2 => PalaceGrouping.Palace346,
+        3 => PalaceGrouping.PalaceGp,
+        _ => null,
+    };
+
+    [JsonIgnore]
     public PalaceGrouping? PalaceGroup => Util.AsPalaceGrouping(PalaceNumber);
     [JsonIgnore]
     public bool IsRoot { get; set; }
@@ -87,8 +108,9 @@ public class Room : IJsonOnDeserialized, IDeterministicHash
     public Room? Down { get; set; }
     [JsonIgnore]
     public bool IsReachable { get; set; }
-    [JsonPropertyName("memoryAddress")]
-    public int ConnectionStartAddress { get; set; }
+    // Output ROM address assigned after the room has its final palace and map.
+    [JsonIgnore]
+    public int ConnectionStartAddress { get; private set; }
     [JsonIgnore]
     public Collectable? Collectable { get; set; }
 
@@ -170,6 +192,8 @@ public class Room : IJsonOnDeserialized, IDeterministicHash
     /// </summary>
     public Room(Room room)
     {
+        vanillaMap = room.vanillaMap;
+        VanillaPalaceGroupNumber = room.VanillaPalaceGroupNumber;
         Map = room.Map;
         Enemies = room.Enemies.ToArray();
         NewEnemies = new byte[Enemies.Length];
@@ -228,6 +252,20 @@ public class Room : IJsonOnDeserialized, IDeterministicHash
 
     public void OnDeserialized()
     {
+        if (Group == RoomGroup.VANILLA)
+        {
+            Map = vanillaMap.GetValueOrDefault();
+            if (VanillaPalaceGroupNumber == null && PalaceGroup is { } group)
+            {
+                VanillaPalaceGroupNumber = (int)group + 1;
+            }
+            if (VanillaPalaceGroup == PalaceGrouping.PalaceGp) { PalaceNumber ??= 7; }
+        }
+        else
+        {
+            vanillaMap = null;
+            VanillaPalaceGroupNumber = null;
+        }
         SetConnections(Connections);
         if (MarioRequirements == null || MarioRequirements.IsEmpty())
         {
@@ -342,14 +380,17 @@ public class Room : IJsonOnDeserialized, IDeterministicHash
 
     public void UpdateConnectionStartAddress()
     {
-        ConnectionStartAddress = PalaceGroup switch
-        {
-            PalaceGrouping.Palace125 => connectors1 + Map * 4,
-            PalaceGrouping.Palace346 => connectors2 + Map * 4,
-            PalaceGrouping.PalaceGp => connectors3 + Map * 4,
-            _ => throw new ImpossibleException("INVALID PALACE GROUP: " + PalaceGroup)
-        };
+        var group = PalaceGroup ?? throw new ImpossibleException("Cannot update connection address without a palace group.");
+        ConnectionStartAddress = GetConnectionStartAddress(group, Map);
     }
+
+    internal static int GetConnectionStartAddress(PalaceGrouping group, byte map) => (group switch
+    {
+        PalaceGrouping.Palace125 => RomMap.PALACE_CONNECTIONS_P125,
+        PalaceGrouping.Palace346 => RomMap.PALACE_CONNECTIONS_P346,
+        PalaceGrouping.PalaceGp => RomMap.PALACE_CONNECTIONS_GP,
+        _ => throw new ArgumentOutOfRangeException(nameof(group), group, null),
+    }) + map * 4;
 
     public int CountExits()
     {

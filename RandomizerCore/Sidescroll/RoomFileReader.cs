@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using YamlDotNet.Core;
 using Z2Randomizer.RandomizerCore.Sidescroll.Palace;
 
@@ -21,15 +22,15 @@ public static class RoomFileReader
     public static bool IsSupported(string filename) => GetFormat(filename) != RoomFileFormat.Unsupported;
 
     public static void Read(string filename, string content, ICollection<RoomValidationInput> rooms,
-        ICollection<RoomDiagnostic> diagnostics)
+        ICollection<RoomDiagnostic> diagnostics, VanillaRoomData? vanillaRoomData = null)
     {
         switch (GetFormat(filename))
         {
             case RoomFileFormat.Json:
-                ReadJson(filename, content, rooms, diagnostics);
+                ReadJson(filename, content, rooms, diagnostics, vanillaRoomData);
                 break;
             case RoomFileFormat.Yaml:
-                ReadYaml(filename, content, rooms, diagnostics);
+                ReadYaml(filename, content, rooms, diagnostics, vanillaRoomData);
                 break;
             default:
                 diagnostics.Add(new("UnsupportedRoomFile", RoomDiagnosticSeverity.Error, filename, null,
@@ -39,7 +40,7 @@ public static class RoomFileReader
     }
 
     private static void ReadYaml(string filename, string yaml, ICollection<RoomValidationInput> rooms,
-        ICollection<RoomDiagnostic> diagnostics)
+        ICollection<RoomDiagnostic> diagnostics, VanillaRoomData? vanillaRoomData)
     {
         string json;
         try
@@ -58,11 +59,11 @@ public static class RoomFileReader
             diagnostics.Add(new("InvalidRoomFile", RoomDiagnosticSeverity.Error, filename, null, null, false, exception.Message));
             return;
         }
-        ReadJson(filename, json, rooms, diagnostics);
+        ReadJson(filename, json, rooms, diagnostics, vanillaRoomData);
     }
 
     private static void ReadJson(string filename, string json, ICollection<RoomValidationInput> rooms,
-        ICollection<RoomDiagnostic> diagnostics)
+        ICollection<RoomDiagnostic> diagnostics, VanillaRoomData? vanillaRoomData)
     {
         try
         {
@@ -86,11 +87,11 @@ public static class RoomFileReader
             try
             {
                 if (definition.ValueKind != JsonValueKind.Object) { throw new FormatException("Expected a room object."); }
-                var keys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                var fields = new Dictionary<string, JsonElement>(StringComparer.OrdinalIgnoreCase);
                 JsonElement connections = default;
                 foreach (var property in definition.EnumerateObject())
                 {
-                    if (!keys.Add(property.Name)) { throw new FormatException($"Duplicate room field '{property.Name}'."); }
+                    if (!fields.TryAdd(property.Name, property.Value)) { throw new FormatException($"Duplicate room field '{property.Name}'."); }
                     switch (property.Name.ToLowerInvariant())
                     {
                         case "name" when property.Value.ValueKind == JsonValueKind.String:
@@ -104,13 +105,21 @@ public static class RoomFileReader
                             break;
                     }
                 }
+                JsonObject? resolved = ResolveVanillaFields(definition, fields, vanillaRoomData);
+                string? connectionBytes = connections.ValueKind == JsonValueKind.String ? connections.GetString() : null;
+                if (resolved != null && !fields.ContainsKey("connections"))
+                {
+                    connectionBytes = resolved["connections"]!.GetValue<string>();
+                }
                 // Exit flags are derived during deserialization, so check this field before invoking it.
-                if (connections.ValueKind != JsonValueKind.String || connections.GetString()!.Length != 8)
+                if (connectionBytes is not { Length: 8 })
                 {
                     Error("InvalidConnections", "Room must have four connection bytes encoded as a hexadecimal string.", index, name);
                     return;
                 }
-                var room = definition.Deserialize(RoomSerializationContext.Default.Room)!;
+                var room = resolved == null
+                    ? definition.Deserialize(RoomSerializationContext.Default.Room)!
+                    : resolved.Deserialize(RoomSerializationContext.Default.Room)!;
                 rooms.Add(new(room, filename, index));
             }
             catch (Exception exception) when (exception is JsonException or ArgumentException or FormatException
@@ -122,6 +131,38 @@ public static class RoomFileReader
 
         void Error(string id, string message, int? index = null, string? name = null) =>
             diagnostics.Add(new(id, RoomDiagnosticSeverity.Error, filename, index, name, false, message));
+    }
+
+    private static JsonObject? ResolveVanillaFields(JsonElement definition, Dictionary<string, JsonElement> fields,
+        VanillaRoomData? vanillaRoomData)
+    {
+        var group = fields.GetValueOrDefault("group");
+        bool isVanilla = group.ValueKind switch
+        {
+            JsonValueKind.String => string.Equals(group.GetString(), nameof(RoomGroup.VANILLA), StringComparison.OrdinalIgnoreCase),
+            JsonValueKind.Number => group.TryGetInt32(out int value) && value == (int)RoomGroup.VANILLA,
+            JsonValueKind.Undefined => fields.ContainsKey("palaceGroup") && fields.ContainsKey("map"),
+            _ => false,
+        };
+        if (!isVanilla || (fields.ContainsKey("connections") && fields.ContainsKey("sideviewData") &&
+            fields.ContainsKey("enemies") && fields.ContainsKey("bitmask"))) { return null; }
+
+        var groupNumber = fields.GetValueOrDefault("palaceGroup");
+        var mapNumber = fields.GetValueOrDefault("map");
+        if (groupNumber.ValueKind != JsonValueKind.Number || !groupNumber.TryGetInt32(out int number) || number is < 1 or > 3 ||
+            mapNumber.ValueKind != JsonValueKind.Number || !mapNumber.TryGetByte(out byte map) || map > VanillaRoomData.LastMap)
+        {
+            throw new FormatException($"A vanilla ROM reference needs palaceGroup 1–3 and map 0–{VanillaRoomData.LastMap}.");
+        }
+        if (vanillaRoomData == null) { throw new FormatException("A base ROM is required to load this vanilla room."); }
+
+        var sourceGroup = (PalaceGrouping)(number - 1);
+        var resolved = JsonNode.Parse(definition.GetRawText())!.AsObject();
+        if (!fields.ContainsKey("connections")) { resolved["connections"] = Convert.ToHexString(vanillaRoomData.ReadConnections(sourceGroup, map)); }
+        if (!fields.ContainsKey("sideviewData")) { resolved["sideviewData"] = Convert.ToHexString(vanillaRoomData.ReadSideview(sourceGroup, map)); }
+        if (!fields.ContainsKey("enemies")) { resolved["enemies"] = Convert.ToHexString(vanillaRoomData.ReadEnemies(sourceGroup, map)); }
+        if (!fields.ContainsKey("bitmask")) { resolved["bitmask"] = vanillaRoomData.ReadItemBits(sourceGroup, map).ToString("X2"); }
+        return resolved;
     }
 
     private static void CheckRequirements(JsonElement requirements, bool allowComplex)

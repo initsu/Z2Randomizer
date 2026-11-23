@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace Z2Randomizer.RandomizerCore.Sidescroll.Palace;
@@ -45,14 +44,30 @@ public partial class PalaceRooms
 
     public static readonly string roomsMD5 = "JCa3OsnJhIe/fZ5yrx/+mA==";
 
-    public PalaceRooms(string palaceJson, bool doValidation)
-        : this(JsonSerializer.Deserialize(palaceJson, RoomSerializationContext.Default.ListRoom)!)
+    public PalaceRooms(string palaceJson, bool doValidation, VanillaRoomData? vanillaRoomData = null)
+        : this(ReadDefinitions(doValidation ? "CustomRooms.json" : "PalaceRooms.json", palaceJson, doValidation, vanillaRoomData))
     {
-        var hash = MD5Hash.ComputeHash(Encoding.UTF8.GetBytes(RemoveNewLines().Replace(palaceJson, "")));
-        if (doValidation && roomsMD5 != Convert.ToBase64String(hash))
+    }
+
+    private static IEnumerable<Room> ReadDefinitions(string filename, string json, bool validateChecksum, VanillaRoomData? vanillaRoomData)
+    {
+        if (validateChecksum)
         {
-            throw new Exception("Invalid PalaceRooms.json");
+            var hash = MD5Hash.ComputeHash(Encoding.UTF8.GetBytes(RemoveNewLines().Replace(json, "")));
+            if (roomsMD5 != Convert.ToBase64String(hash))
+            {
+                throw new UserFacingException("Invalid room file", $"Invalid {filename} checksum.");
+            }
         }
+
+        var inputs = new List<RoomValidationInput>();
+        var diagnostics = new List<RoomDiagnostic>();
+        RoomFileReader.Read(filename, json, inputs, diagnostics, vanillaRoomData);
+        if (diagnostics.Count != 0)
+        {
+            throw new UserFacingException("Invalid room file", string.Join(Environment.NewLine, diagnostics));
+        }
+        return inputs.Select(input => input.Room);
     }
 
     public PalaceRooms(IEnumerable<Room> rooms) : this(null, rooms) { }
@@ -173,7 +188,7 @@ public partial class PalaceRooms
 
         return roomgroup.Where(
             i => //i.Group == RoomGroup.VANILLA &&
-                 Util.GetPalaceGroupingByMemoryAddress(i.ConnectionStartAddress) == palaceGroup
+                 i.VanillaPalaceGroup == palaceGroup
                  && i.Map >= mapMin
                  && i.Map <= mapMax
                  && i is { IsEntrance: false, IsBossRoom: false, HasItem: false, IsThunderBirdRoom: false }

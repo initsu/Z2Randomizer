@@ -12,6 +12,7 @@ using ReactiveUI.Primitives;
 using ReactiveUI.Primitives.Disposables;
 using RxVoid = ReactiveUI.Primitives.RxVoid;
 using Z2Randomizer.RandomizerCore;
+using Z2Randomizer.RandomizerCore.Sidescroll;
 using CrossPlatformUI.Presets;
 using CrossPlatformUI.Services;
 using CrossPlatformUI.ViewModels.Tabs;
@@ -44,7 +45,7 @@ public partial class RandomizerViewModel : ReactiveObject, IRoutableViewModel, I
         }
     }
 
-    private string palaceRoomsText = "";
+    private string palaceRoomsText = "Select a base ROM to load palace rooms.";
     [JsonIgnore]
     public string PalaceRoomsText
     {
@@ -210,11 +211,35 @@ public partial class RandomizerViewModel : ReactiveObject, IRoutableViewModel, I
     {
         var roomLoaderService = App.Current?.Services?.GetService<RoomLoaderService>();
 
-        var palaceRooms = await roomLoaderService!.GetPalaceRooms();
-        PalaceRoomsText = $"Palace rooms hash: {palaceRooms.Hash}";
-
         var spec = await roomLoaderService!.GetRoomPoolSpec();
         CustomRoomPoolText = spec != null ? $"{spec.Name} (Hash: {spec.Hash})" : "No Custom Room Pool Found";
+    }
+
+    private async Task UpdatePalaceRoomsHash(byte[] rom)
+    {
+        if (rom.Length == 0)
+        {
+            PalaceRoomsText = "Select a base ROM to load palace rooms.";
+            return;
+        }
+
+        try
+        {
+            var roomLoader = App.Current!.Services!.GetRequiredService<RoomLoaderService>();
+            var palaceRooms = await roomLoader.GetPalaceRooms(new VanillaRoomData(rom));
+            if (ReferenceEquals(Main.RomFileViewModel.RomData, rom))
+            {
+                PalaceRoomsText = $"Palace rooms hash: {palaceRooms.Hash}";
+            }
+        }
+        catch (Exception exception)
+        {
+            NLog.LogManager.GetCurrentClassLogger().Error(exception, "Unable to load palace rooms.");
+            if (ReferenceEquals(Main.RomFileViewModel.RomData, rom))
+            {
+                PalaceRoomsText = "Unable to load palace rooms.";
+            }
+        }
     }
 
     public static async Task<string?> SelectSaveFolder()
@@ -231,6 +256,10 @@ public partial class RandomizerViewModel : ReactiveObject, IRoutableViewModel, I
 
     private void OnActivate(MultipleDisposable disposables)
     {
+        SubscribeExtensions.Subscribe(Main.RomFileViewModel.RomDataObservable,
+                rom => _ = UpdatePalaceRoomsHash(rom))
+            .DisposeWith(disposables);
+
         var loadedFlags = Main.Config.SerializeFlags(); // this serializes the configuration
         var defaultFlags = new RandomizerConfiguration().SerializeFlags();
         // If the flags are entirely default, use the vanilla preset

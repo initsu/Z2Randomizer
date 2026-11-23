@@ -86,11 +86,13 @@ Seed: {config.Seed}
                 try
                 {
                     var roomLoader = App.Current!.Services!.GetRequiredService<RoomLoaderService>();
+                    var romdata = host.RomFileViewModel.RomData.ToArray();
+                    var vanillaRoomData = new VanillaRoomData(romdata);
                     PalaceRooms palaceRooms;
                     RoomPoolSpec? roomPoolSpec = null;
                     if (config.RoomPoolOption == RoomPoolOption.CUSTOM)
                     {
-                        var custom = await roomLoader.LoadCustomRooms(tokenSource.Token);
+                        var custom = await roomLoader.LoadCustomRooms(vanillaRoomData, tokenSource.Token);
                         palaceRooms = custom.Catalogue.RequireRooms();
                         roomPoolSpec = custom.Spec;
                         foreach (var warning in custom.Catalogue.Diagnostics)
@@ -98,10 +100,9 @@ Seed: {config.Seed}
                             NLog.LogManager.GetCurrentClassLogger().Warn(warning.ToString());
                         }
                     }
-                    else { palaceRooms = await roomLoader.GetPalaceRooms(); }
+                    else { palaceRooms = await roomLoader.GetPalaceRooms(vanillaRoomData); }
 
                     var randomizer = new Hyrule(createAsm!, palaceRooms, roomPoolSpec);
-                    var romdata = host.RomFileViewModel.RomData!.ToArray();
                     var output = await Task.Run(async () => await randomizer.Randomize(romdata, config, UpdateProgress, tokenSource.Token));
                     if (!tokenSource.IsCancellationRequested && output.success)
                     {

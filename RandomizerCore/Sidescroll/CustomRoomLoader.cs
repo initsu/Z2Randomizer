@@ -20,7 +20,7 @@ public static class CustomRoomLoader
 
     public static async Task<CustomRoomLoadResult> LoadAsync(PalaceRooms bundledRooms, RoomPoolSpec spec,
         string folder, Func<Task<IEnumerable<string>>> listFiles, Func<string, Task<string>> readFile,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default, VanillaRoomData? vanillaRoomData = null)
     {
         var inputs = new List<RoomValidationInput>();
         var diagnostics = new List<RoomDiagnostic>();
@@ -38,7 +38,7 @@ public static class CustomRoomLoader
         foreach (var filename in filenames)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            try { RoomFileReader.Read(filename, await readFile(filename), inputs, diagnostics); }
+            try { RoomFileReader.Read(filename, await readFile(filename), inputs, diagnostics, vanillaRoomData); }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
             {
                 diagnostics.Add(new("UnreadableRoomFile", RoomDiagnosticSeverity.Error, filename, null, null, false, exception.Message));

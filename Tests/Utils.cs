@@ -97,7 +97,7 @@ public class Utils
         //Categorize the rooms by their shape
         //Report the number of rooms of each shape / dropness ordered by number and a separate report of 0s
 
-        PalaceRooms palaceRooms = new(Util.ReadAllTextFromFile("PalaceRooms.json"), false);
+        PalaceRooms palaceRooms = TestRoomFiles.LoadNonVanillaRooms();
 
         List<Room> normalRooms =
         [

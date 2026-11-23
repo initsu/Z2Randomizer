@@ -1326,14 +1326,14 @@ public partial class Palace(int number, bool palaceItemsAreShufflable)
                         && i != room);
                     if (duplicateRoom != null)
                     {
-                        Diag.Trace("palace.enemies", "Room# " + room.ConnectionStartAddress + " (" + Util.ByteArrayToHexString(room.SideView) + "/" + Util.ByteArrayToHexString(room.NewEnemies) + ") " +
-                            " is a duplicate of Room# " + duplicateRoom.ConnectionStartAddress + " (" + Util.ByteArrayToHexString(duplicateRoom.SideView) + "/" + Util.ByteArrayToHexString(duplicateRoom.Enemies) + ")");
+                        Diag.Trace("palace.enemies", $"Palace {Number} map {room.Map} ({room.Name}) (" + Util.ByteArrayToHexString(room.SideView) + "/" + Util.ByteArrayToHexString(room.NewEnemies) + ") " +
+                            $" is a duplicate of map {duplicateRoom.Map} ({duplicateRoom.Name}) (" + Util.ByteArrayToHexString(duplicateRoom.SideView) + "/" + Util.ByteArrayToHexString(duplicateRoom.Enemies) + ")");
                         room.NewEnemies = PalaceEnemyShuffler.Shuffle(room, props.MixLargeAndSmallEnemies, props.GeneratorsAlwaysMatch, r);
                     }
                 }
                 if (count == ENEMY_SHUFFLE_LIMIT)
                 {
-                    logger.Warn("Room# " + room.ConnectionStartAddress + " (" + Util.ByteArrayToHexString(room.SideView) + "/" + Util.ByteArrayToHexString(room.Enemies) +
+                    logger.Warn($"Palace {Number} map {room.Map} ({room.Name}) (" + Util.ByteArrayToHexString(room.SideView) + "/" + Util.ByteArrayToHexString(room.Enemies) +
                         ") Exceeded the enemy shuffle limit");
                 }
             }

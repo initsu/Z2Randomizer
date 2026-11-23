@@ -136,9 +136,10 @@ public class Program
         // worker.RunWorkerAsync();
         var cts = new CancellationTokenSource();
         Hyrule.NewAssemblerFn createAsm = (opts, debug) => new DesktopJsEngine(opts, debug);
-        var roomsJson = RandomizerCore.Util.ReadAllTextFromFile("PalaceRooms.json");
-        var customJson = configuration!.UseCustomRooms ? RandomizerCore.Util.ReadAllTextFromFile("CustomRooms.json") : null;
-        var palaceRooms = new PalaceRooms(configuration!.UseCustomRooms ? customJson! : roomsJson, configuration!.UseCustomRooms);
+        var vanillaRoomData = new VanillaRoomData(vanillaRomData!);
+        bool useLegacyCustomRooms = configuration!.UseCustomRooms;
+        var roomFilename = useLegacyCustomRooms ? "CustomRooms.json" : "PalaceRooms.json";
+        var palaceRooms = new PalaceRooms(RandomizerCore.Util.ReadAllTextFromFile(roomFilename), useLegacyCustomRooms, vanillaRoomData);
         RoomPoolSpec? roomPoolSpec = null;
         if (configuration.RoomPoolOption == RoomPoolOption.CUSTOM)
         {
@@ -150,7 +151,7 @@ public class Program
             if (!Path.Exists(folder)) { folder = Path.Combine(AppContext.BaseDirectory, "Rooms"); }
             logger.Info($"Custom rooms folder: {folder}");
             var custom = await CustomRoomLoader.LoadAsync(palaceRooms, roomPoolSpec, folder,
-                () => Task.FromResult(Directory.EnumerateFiles(folder)), filename => File.ReadAllTextAsync(filename, cts.Token), cts.Token);
+                () => Task.FromResult(Directory.EnumerateFiles(folder)), filename => File.ReadAllTextAsync(filename, cts.Token), cts.Token, vanillaRoomData);
             foreach (var warning in custom.Diagnostics.Where(diagnostic => diagnostic.Severity == RoomDiagnosticSeverity.Warning))
             {
                 logger.Warn(warning.ToString());

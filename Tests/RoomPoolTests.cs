@@ -204,8 +204,7 @@ public class RoomPoolTests
     [TestMethod]
     public void Test_Presets()
     {
-        var roomsJson = Util.ReadAllTextFromFile("PalaceRooms.json");
-        var palaceRooms = new PalaceRooms(roomsJson, false);
+        var palaceRooms = TestRoomFiles.LoadBundledWithSyntheticRom();
         var roomPoolYaml = Util.ReadAllTextFromFile("CustomRoomPool.yaml");
         var roomPoolSpec = RoomPoolSpecDeserializer.FromString(roomPoolYaml);
 
@@ -511,7 +510,7 @@ public class RoomPoolTests
     [TestMethod]
     public void GeneratedPalacesUseStubsForTheirOwnSideviewFormat()
     {
-        var rooms = new PalaceRooms(Util.ReadAllTextFromFile("PalaceRooms.json"), false);
+        var rooms = TestRoomFiles.LoadBundledWithSyntheticRom();
         var props = CreateMockProps();
         var spec = RoomPoolConfigs.V5_0;
 

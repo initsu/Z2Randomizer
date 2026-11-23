@@ -11,15 +11,17 @@ namespace CrossPlatformUI.Services;
 public class RoomLoaderService
 {
     private readonly IFileSystemService fileService;
-    private readonly Lazy<Task<PalaceRooms>> loadPalaceRoomsTask;
+    private readonly Lazy<Task<string>> loadPalaceRoomsJsonTask;
 
     public RoomLoaderService(IFileSystemService fileService)
     {
         this.fileService = fileService;
-        loadPalaceRoomsTask = new(LoadPalaceRoomsAsync);
+        loadPalaceRoomsJsonTask = new(() =>
+            fileService.OpenFile(IFileSystemService.RandomizerPath.Palaces, "PalaceRooms.json"));
     }
 
-    public Task<PalaceRooms> GetPalaceRooms() => loadPalaceRoomsTask.Value;
+    public async Task<PalaceRooms> GetPalaceRooms(VanillaRoomData vanillaRoomData) =>
+        new(await loadPalaceRoomsJsonTask.Value, doValidation: false, vanillaRoomData);
 
     public async Task<RoomPoolSpec?> GetRoomPoolSpec()
     {
@@ -35,18 +37,12 @@ public class RoomLoaderService
         }
     }
 
-    public async Task<(RoomPoolSpec Spec, CustomRoomLoadResult Catalogue)> LoadCustomRooms(CancellationToken cancellationToken)
+    public async Task<(RoomPoolSpec Spec, CustomRoomLoadResult Catalogue)> LoadCustomRooms(VanillaRoomData vanillaRoomData, CancellationToken cancellationToken)
     {
         var spec = await GetRoomPoolSpec() ?? throw new UserFacingException("Custom Room Pool Issue", $"{CustomRoomLoader.SpecFilename} is missing or empty.");
         var path = IFileSystemService.RandomizerPath.Rooms;
-        var catalogue = await CustomRoomLoader.LoadAsync(await GetPalaceRooms(), spec, "Rooms",
-            () => fileService.ListLocalFiles(path), filename => fileService.OpenFile(path, filename), cancellationToken);
+        var catalogue = await CustomRoomLoader.LoadAsync(await GetPalaceRooms(vanillaRoomData), spec, "Rooms",
+            () => fileService.ListLocalFiles(path), filename => fileService.OpenFile(path, filename), cancellationToken, vanillaRoomData);
         return (spec, catalogue);
-    }
-
-    private async Task<PalaceRooms> LoadPalaceRoomsAsync()
-    {
-        var roomsJson = await fileService.OpenFile(IFileSystemService.RandomizerPath.Palaces, "PalaceRooms.json");
-        return new PalaceRooms(roomsJson, false);
     }
 }

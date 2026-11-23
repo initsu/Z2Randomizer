@@ -39,8 +39,8 @@ class Statistics
         System.Random random = new();
         Hyrule.NewAssemblerFn createAsm = (opts, debug) => new DesktopJsEngine(opts, debug);
         var roomsJson = Util.ReadAllTextFromFile("PalaceRooms.json");
-        var customJson = config.UseCustomRooms ? Util.ReadAllTextFromFile("CustomRooms.json") : null;
-        var palaceRooms = new PalaceRooms(roomsJson, false);
+        var vanillaRomData = File.ReadAllBytes(VANILLA_ROM_PATH);
+        var palaceRooms = new PalaceRooms(roomsJson, false, new VanillaRoomData(vanillaRomData));
         logger.Info("Started statistics generation with limit: " + LIMIT);
         try
         {
@@ -50,7 +50,6 @@ class Statistics
                 int seed = random.Next(1000000000);
                 //int seed = 704113586;
                 config.Seed = seed.ToString();
-                var vanillaRomData = File.ReadAllBytes(VANILLA_ROM_PATH);
                 DateTime startTime = DateTime.Now;
                 logger.Info("Starting seed# " + i + " at: " + startTime);
                 CancellationTokenSource tokenSource = new CancellationTokenSource();

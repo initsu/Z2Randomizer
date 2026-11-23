@@ -12,7 +12,7 @@ public class CustomRoomLoaderTests
         File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "Rooms", name));
 
     private static PalaceRooms Bundled() =>
-        new(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "PalaceRooms.json")), false);
+        TestRoomFiles.LoadBundledWithSyntheticRom();
 
     private static Task<CustomRoomLoadResult> Load(PalaceRooms bundled, RoomPoolSpec spec,
         Dictionary<string, string> files)

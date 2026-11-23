@@ -490,7 +490,7 @@ public class KeyLogicTests
     [TestMethod]
     public void FloorKeyInDmInPalacesM15IsPlacedOnTheBridge()
     {
-        var rooms = new PalaceRooms(Util.ReadAllTextFromFile("PalaceRooms.json"), doValidation: false);
+        var rooms = TestRoomFiles.LoadNonVanillaRooms();
         var room = rooms.GetRoomByName("dmInPalaces M15");
         Assert.IsNotNull(room);
 
@@ -508,7 +508,7 @@ public class KeyLogicTests
     [DataRow("winterSolstice M10")]
     public void FloorKeysUsePlatformsOnBothSidesOfRoom(string roomName)
     {
-        var rooms = new PalaceRooms(Util.ReadAllTextFromFile("PalaceRooms.json"), doValidation: false);
+        var rooms = TestRoomFiles.LoadNonVanillaRooms();
         var room = rooms.GetRoomByName(roomName);
         Assert.IsNotNull(room);
 
@@ -528,7 +528,7 @@ public class KeyLogicTests
     [TestMethod]
     public void FloorKeyInVanillaP2M32IsPlacedOnTheRight()
     {
-        var rooms = new PalaceRooms(Util.ReadAllTextFromFile("PalaceRooms.json"), doValidation: false);
+        var rooms = TestRoomFiles.LoadBundledWithBaseRom();
         var room = rooms.GetRoomByName("Vanilla P2 M32");
         Assert.IsNotNull(room);
 
@@ -545,7 +545,7 @@ public class KeyLogicTests
     [TestMethod]
     public void FloorKeyCannotBeAddedInWinterSolstice2M2()
     {
-        var rooms = new PalaceRooms(Util.ReadAllTextFromFile("PalaceRooms.json"), doValidation: false);
+        var rooms = TestRoomFiles.LoadNonVanillaRooms();
         var room = rooms.GetRoomByName("winterSolstice 2 M2");
         Assert.IsNotNull(room);
         Assert.IsFalse(room.HasLeftExit);

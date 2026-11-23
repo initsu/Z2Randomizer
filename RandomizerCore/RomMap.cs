@@ -12,9 +12,18 @@ namespace Z2Randomizer.RandomizerCore;
 /// </summary>
 class RomMap
 {
+    public const int VANILLA_PALACE_SIDEVIEW_POINTER_BASE = 0x8010;
+    public const int VANILLA_GP_SIDEVIEW_POINTER_BASE = 0xC010;
+    public const int VANILLA_PALACE_ENEMY_POINTER_BASE = 0x98b0;
+    public const int VANILLA_GP_ENEMY_POINTER_BASE = 0xD8b0;
+
     public const int SIDEVIEW_PTR_TABLE_P125 = 0x10533;
     public const int SIDEVIEW_PTR_TABLE_P346 = 0x12010;
     public const int SIDEVIEW_PTR_TABLE_GP = 0x14533;
+
+    public const int PALACE_CONNECTIONS_P125 = 0x1072b;
+    public const int PALACE_CONNECTIONS_P346 = 0x12208;
+    public const int PALACE_CONNECTIONS_GP = 0x1472b;
 
     //Start with item bytes
     public const int START_CANDLE = 0x17B01;
