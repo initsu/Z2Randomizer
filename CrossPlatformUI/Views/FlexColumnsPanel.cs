@@ -158,7 +158,7 @@ public class FlexColumnsPanel : Panel
             heightLimit = Math.Min(heightLimit, viewportHeight - Margin.Top - Margin.Bottom);
         }
 
-        var columnEnds = FindColumnEnds(maxColumns, itemSpacing, heightLimit);
+        var columnEnds = FindColumnEnds(maxColumns, itemSpacing, heightLimit, new Size(colW, double.PositiveInfinity));
         int columnCount = columnEnds.Count;
         double tallest = 0;
         int start = 0;
@@ -184,7 +184,7 @@ public class FlexColumnsPanel : Panel
         return new Size(columnCount * colW + (columnCount - 1) * columnSpacing, tallest);
     }
 
-    private List<int> FindColumnEnds(int maxColumns, double spacing, double heightLimit)
+    private List<int> FindColumnEnds(int maxColumns, double spacing, double heightLimit, Size childConstraint)
     {
         int itemCount = _items.Count;
         if (maxColumns == 1)
@@ -197,7 +197,7 @@ public class FlexColumnsPanel : Panel
         bool hasSections = false;
         for (int i = 0; i < itemCount; i++)
         {
-            offsets[i + 1] = offsets[i] + _items[i].DesiredSize.Height + spacing;
+            offsets[i + 1] = offsets[i] + GetBalanceHeight(_items[i], childConstraint) + spacing;
             startsSection[i] = ContainsSectionHeader(_items[i]);
             hasSections |= startsSection[i];
             // Keep a standalone header with at least the first group below it.
@@ -260,6 +260,33 @@ public class FlexColumnsPanel : Panel
         return columnEnds;
     }
 
+    private static double GetBalanceHeight(Control item, Size constraint)
+    {
+        double height = item.DesiredSize.Height;
+        if (item is not StackPanel section) { return height; }
+
+        var optionConstraint = constraint.Deflate(section.Margin);
+        double tallestOption = 0;
+        double visibleOptionsHeight = 0;
+        bool hasVisibleOption = false;
+        foreach (var option in section.Children.OfType<FlexColumnOption>())
+        {
+            double optionHeight = option.MeasureForBalance(optionConstraint);
+            tallestOption = Math.Max(tallestOption, optionHeight);
+            if (option.IsVisible)
+            {
+                hasVisibleOption = true;
+                visibleOptionsHeight += optionHeight;
+            }
+        }
+
+        if (tallestOption > 0 && !hasVisibleOption && section.Children.Any(child => child.IsVisible))
+        {
+            tallestOption += section.Spacing;
+        }
+        return height + Math.Max(0, tallestOption - visibleOptionsHeight);
+    }
+
     private static double MinimumLayoutHeight(int maxColumns, double[] offsets, bool[] canBreakBefore, double spacing)
     {
         int itemCount = offsets.Length - 1;
@@ -304,4 +331,15 @@ public class FlexColumnsPanel : Panel
         }
         return finalSize;
     }
+}
+
+/// <summary>
+/// An alternative inside a column section. Its height participates in column
+/// balancing even when the option is hidden.
+/// </summary>
+public class FlexColumnOption : StackPanel
+{
+    internal double MeasureForBalance(Size constraint) => IsVisible
+        ? DesiredSize.Height
+        : base.MeasureOverride(constraint.Deflate(Margin)).Height + Margin.Top + Margin.Bottom;
 }

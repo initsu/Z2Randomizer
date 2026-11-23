@@ -29,19 +29,19 @@
                 <TextBlock Text="Room Pool" Classes="SectionHeader" Margin="0,12,0,-7" />
                 <z:Z2ComboBox Flag="RoomPoolOption" />
 
-                <StackPanel Margin="0"
-                            IsVisible="{Binding Config.RoomPoolOption, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static core:RoomPoolOption.CUSTOM}}">
+                <v:FlexColumnOption
+                    IsVisible="{Binding Config.RoomPoolOption, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static core:RoomPoolOption.CUSTOM}}">
                     <TextBlock Margin="48 8 0 0" Text="{Binding RandomizerViewModel.CustomRoomPoolText}" TextWrapping="Wrap" />
-                    <TextBlock Margin="48 0 0 8" Text="{Binding RandomizerViewModel.PalaceRoomsText}" TextWrapping="Wrap" />
-                </StackPanel>
-            </StackPanel>
-            <StackPanel Margin="0"
-                        IsVisible="{Binding Config.RoomPoolOption, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static core:RoomPoolOption.USE_CHECKBOXES}}">
-                <z:Z2CheckBox Flag="IncludeVanillaRooms" Classes="DisabledMeansChecked" />
-                <z:Z2CheckBox Flag="Includev4_0Rooms" />
-                <z:Z2CheckBox Flag="Includev5_0Rooms" />
-                <z:Z2CheckBox Flag="RemoveLongDeadEnds" />
-                <z:Z2CheckBox Flag="IncludeExpertRooms" />
+                    <Button Margin="48 4 0 8" Content="Reload Rooms" Command="{Binding RandomizerViewModel.ReloadRooms}" />
+                </v:FlexColumnOption>
+                <v:FlexColumnOption
+                    IsVisible="{Binding Config.RoomPoolOption, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static core:RoomPoolOption.USE_CHECKBOXES}}">
+                    <z:Z2CheckBox Flag="IncludeVanillaRooms" Classes="DisabledMeansChecked" />
+                    <z:Z2CheckBox Flag="Includev4_0Rooms" />
+                    <z:Z2CheckBox Flag="Includev5_0Rooms" />
+                    <z:Z2CheckBox Flag="RemoveLongDeadEnds" />
+                    <z:Z2CheckBox Flag="IncludeExpertRooms" />
+                </v:FlexColumnOption>
             </StackPanel>
             <StackPanel Margin="0">
                 <z:Z2CheckBox Flag="NoDuplicateRoomsByLayout" />
