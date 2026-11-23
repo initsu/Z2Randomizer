@@ -131,6 +131,7 @@ public partial class BrowserFileService : IFileSystemService
 
     public async Task<IEnumerable<string>> ListLocalFiles(IFileSystemService.RandomizerPath path)
     {
+        if (path == IFileSystemService.RandomizerPath.Rooms) { return []; }
         if (path == IFileSystemService.RandomizerPath.Sprites)
         {
             var sprites = await preloadedSprites;

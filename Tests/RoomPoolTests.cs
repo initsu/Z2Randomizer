@@ -488,6 +488,60 @@ public class RoomPoolTests
     }
 
     [TestMethod]
+    public void CopyForRoomPool_KeepsGreatPalaceRoomsAndLinkedSegments()
+    {
+        var regular = CreateMockRoom("Regular", RoomGroup.V4_0);
+        var stub = CreateMockRoom("Stub", RoomGroup.STUBS, hasUpExit: true);
+        var primary = CreateMockRoom("GP primary", RoomGroup.V4_0, palaceNumber: 7,
+            linkedRoomName: "Secondary");
+        var bundled = new PalaceRooms([regular, stub, primary]);
+        var secondary = CreateMockRoom("Secondary", RoomGroup.NONE, enabled: false, linkedRoomName: primary.Name);
+        var gpRoom = CreateMockRoom("GP room", RoomGroup.NONE, palaceNumber: 7);
+        var combined = new PalaceRooms(bundled, [.. bundled.RoomsInInputOrder, secondary, gpRoom]);
+
+        var copy = combined.CopyForRoomPool(7);
+
+        copy.RoomsInInputOrder.Select(room => room.Name).Should().Equal("GP primary", "Secondary", "GP room");
+        copy.BundledRooms.RoomsInInputOrder.Select(room => room.Name).Should().Equal("GP primary");
+        copy.GetRoomByName(primary.Name).Should().BeSameAs(copy.BundledRooms.GetRoomByName(primary.Name));
+        copy.GetRoomByName(primary.Name).Should().NotBeSameAs(primary);
+        copy.GetRoomByName(secondary.Name)!.Enabled.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public void GeneratedPalacesUseStubsForTheirOwnSideviewFormat()
+    {
+        var rooms = new PalaceRooms(Util.ReadAllTextFromFile("PalaceRooms.json"), false);
+        var props = CreateMockProps();
+        var spec = RoomPoolConfigs.V5_0;
+
+        var regularStubs = new RoomPool(rooms, 1, props, spec).DefaultStubsByDirection;
+        var greatPalaceStubs = new RoomPool(rooms, 7, props, spec).DefaultStubsByDirection;
+        regularStubs.Values.Select(stub => stub.Name).Should().BeEquivalentTo("Stub up elevator", "Stub down elevator");
+        greatPalaceStubs.Values.Select(stub => stub.Name).Should().BeEquivalentTo("Stub up elevator GP", "Stub down elevator GP");
+        greatPalaceStubs.Values.Should().OnlyContain(stub => stub.PalaceNumber == 7 && stub.IsStub);
+        new VanillaRoomPool(rooms, 1, props).DefaultStubsByDirection.Should().HaveCount(2);
+        new VanillaRoomPool(rooms, 7, props).DefaultStubsByDirection.Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public void Constructor_Spec_AcceptsNamedOverridesForOtherPalaces()
+    {
+        var palaceTwoRoom = CreateMockRoom("Palace 2 room", RoomGroup.VANILLA, palaceNumber: 2);
+        var rooms = CreateMockPalaceRooms([palaceTwoRoom]);
+        var spec = new RoomPoolSpec
+        {
+            GroupsInclude = ["VANILLA"],
+            Rooms = [new RoomOverride { Name = palaceTwoRoom.Name, Priority = 5 }],
+        };
+
+        var pool = new RoomPool(rooms, 1, CreateMockProps(), spec);
+
+        pool.NormalRooms.Should().NotContain(room => room.Name == palaceTwoRoom.Name);
+        palaceTwoRoom.Priority.Should().Be(0);
+    }
+
+    [TestMethod]
     public void Constructor_Spec_ThrowsOnMissingRoomName()
     {
         var bossRoom = CreateMockRoom("Boss1", RoomGroup.VANILLA, isBossRoom: true, palaceNumber: 1);

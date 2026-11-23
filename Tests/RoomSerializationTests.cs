@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Z2Randomizer.RandomizerCore;
 using Z2Randomizer.RandomizerCore.Sidescroll;
 using Z2Randomizer.RandomizerCore.Sidescroll.Palace;
 
@@ -7,6 +8,44 @@ namespace Z2Randomizer.Tests;
 [TestClass]
 public class RoomSerializationTests
 {
+    [TestMethod]
+    public void CopyPreservesRoomDataAndKeepsMutableFieldsSeparate()
+    {
+        var source = new Room
+        {
+            Name = "Room to copy",
+            SideView = [4, 0x60, 0x0F, 0x08],
+            Enemies = [1],
+            NewEnemies = [1],
+            ItemPresenceBits = [0x0F],
+            IsUpDownReversed = true,
+            Priority = 7,
+            Tags = ["Custom"],
+            SuppressWarning = ["ElevatorMissing"],
+            Left = new Room(),
+            LinkRequirements = new Requirements([RequirementType.JUMP]),
+        };
+        source.SetConnections([0, 0, 0xFC, 0xFC]);
+        source.SetEffectiveRequirements(new Requirements([RequirementType.TANOOKI]), isMario: true);
+
+        var copy = new Room(source);
+
+        Assert.AreEqual(source.GetDeterministicHash(), copy.GetDeterministicHash());
+        Assert.AreEqual(7, copy.Priority);
+        Assert.IsTrue(copy.GetEffectiveRequirements(isMario: true).Contains(RequirementType.TANOOKI));
+        Assert.IsTrue(copy.HasUpExit);
+        Assert.IsFalse(copy.HasDownExit);
+        Assert.IsNull(copy.Left);
+        CollectionAssert.AreEqual(new byte[1], copy.NewEnemies);
+
+        copy.Connections[1] = 0xFC;
+        copy.Tags.Clear();
+        copy.SuppressWarning.Clear();
+        Assert.AreEqual((byte)0, source.Connections[1]);
+        CollectionAssert.AreEqual(new[] { "Custom" }, source.Tags);
+        CollectionAssert.AreEqual(new[] { "ElevatorMissing" }, source.SuppressWarning);
+    }
+
     [TestMethod]
     public void TestSerialization()
     {

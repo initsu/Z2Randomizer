@@ -1,5 +1,8 @@
-﻿using System;
+using System;
+using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
+using Z2Randomizer.RandomizerCore;
 using Z2Randomizer.RandomizerCore.Sidescroll;
 using Z2Randomizer.RandomizerCore.Sidescroll.Palace;
 
@@ -7,41 +10,43 @@ namespace CrossPlatformUI.Services;
 
 public class RoomLoaderService
 {
-    private Lazy<Task<PalaceRooms>> _loadPalaceRoomsTask;
-    private Lazy<Task<RoomPoolSpec?>> _loadRoomPoolSpecTask;
+    private readonly IFileSystemService fileService;
+    private readonly Lazy<Task<PalaceRooms>> loadPalaceRoomsTask;
 
-    public RoomLoaderService(IFileSystemService fileSystemService)
+    public RoomLoaderService(IFileSystemService fileService)
     {
-        _loadPalaceRoomsTask = new Lazy<Task<PalaceRooms>>(
-            () => LoadPalaceRoomsAsync(fileSystemService));
-        _loadRoomPoolSpecTask = new Lazy<Task<RoomPoolSpec?>>(
-            () => LoadRoomPoolSpecAsync(fileSystemService));
+        this.fileService = fileService;
+        loadPalaceRoomsTask = new(LoadPalaceRoomsAsync);
     }
 
-    public async Task<PalaceRooms> GetPalaceRooms()
-    {
-        return await _loadPalaceRoomsTask.Value;
-    }
+    public Task<PalaceRooms> GetPalaceRooms() => loadPalaceRoomsTask.Value;
 
     public async Task<RoomPoolSpec?> GetRoomPoolSpec()
     {
-        return await _loadRoomPoolSpecTask.Value;
+        try
+        {
+            var yaml = await fileService.OpenFile(IFileSystemService.RandomizerPath.RoomPool, CustomRoomLoader.SpecFilename);
+            return string.IsNullOrWhiteSpace(yaml) ? null : RoomPoolSpecDeserializer.FromString(yaml);
+        }
+        catch (Exception exception) when (exception is FileNotFoundException or DirectoryNotFoundException) { return null; }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            throw new UserFacingException("Custom Room Pool Issue", $"Unable to read {CustomRoomLoader.SpecFilename}. {exception.Message}");
+        }
     }
 
-    private static async Task<PalaceRooms> LoadPalaceRoomsAsync(IFileSystemService fileService)
+    public async Task<(RoomPoolSpec Spec, CustomRoomLoadResult Catalogue)> LoadCustomRooms(CancellationToken cancellationToken)
     {
-        var roomsJson = await fileService.OpenFile(
-            IFileSystemService.RandomizerPath.Palaces,
-            "PalaceRooms.json");
-        return new PalaceRooms(roomsJson!, false);
+        var spec = await GetRoomPoolSpec() ?? throw new UserFacingException("Custom Room Pool Issue", $"{CustomRoomLoader.SpecFilename} is missing or empty.");
+        var path = IFileSystemService.RandomizerPath.Rooms;
+        var catalogue = await CustomRoomLoader.LoadAsync(await GetPalaceRooms(), spec, "Rooms",
+            () => fileService.ListLocalFiles(path), filename => fileService.OpenFile(path, filename), cancellationToken);
+        return (spec, catalogue);
     }
 
-    private static async Task<RoomPoolSpec?> LoadRoomPoolSpecAsync(IFileSystemService fileService)
+    private async Task<PalaceRooms> LoadPalaceRoomsAsync()
     {
-        var roomPoolYaml = await fileService.OpenFile(
-            IFileSystemService.RandomizerPath.RoomPool,
-            "CustomRoomPool.yaml");
-        if (roomPoolYaml == null) { return null; }
-        return RoomPoolSpecDeserializer.FromString(roomPoolYaml);
+        var roomsJson = await fileService.OpenFile(IFileSystemService.RandomizerPath.Palaces, "PalaceRooms.json");
+        return new PalaceRooms(roomsJson, false);
     }
 }

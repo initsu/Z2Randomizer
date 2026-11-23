@@ -111,7 +111,12 @@ public class Program
         logger.Info($"Rom: {Rom}");
         logger.Info($"Seed: {Seed}");
 
-        Randomize().Wait();
+        try { Randomize().GetAwaiter().GetResult(); }
+        catch (UserFacingException exception)
+        {
+            logger.Error(exception.Message);
+            return 1;
+        }
 
         return 0;
     }
@@ -134,16 +139,23 @@ public class Program
         var roomsJson = RandomizerCore.Util.ReadAllTextFromFile("PalaceRooms.json");
         var customJson = configuration!.UseCustomRooms ? RandomizerCore.Util.ReadAllTextFromFile("CustomRooms.json") : null;
         var palaceRooms = new PalaceRooms(configuration!.UseCustomRooms ? customJson! : roomsJson, configuration!.UseCustomRooms);
-        const string customRoomPoolFile = "CustomRoomPool.yaml";
-        RoomPoolSpec? roomPoolSpec;
+        RoomPoolSpec? roomPoolSpec = null;
         if (configuration.RoomPoolOption == RoomPoolOption.CUSTOM)
         {
-            if (!RandomizerCore.Util.FileExists(customRoomPoolFile)) { throw new Exception("CustomRoomPool.yaml missing."); }
-            roomPoolSpec = (RoomPoolSpec?)RoomPoolSpecDeserializer.FromString(RandomizerCore.Util.ReadAllTextFromFile(customRoomPoolFile));
-        }
-        else
-        {
-            roomPoolSpec = null;
+            const string specFile = CustomRoomLoader.SpecFilename;
+            if (!RandomizerCore.Util.FileExists(specFile)) { throw new UserFacingException("Custom Room Pool Issue", $"{specFile} is missing."); }
+            roomPoolSpec = RoomPoolSpecDeserializer.FromString(RandomizerCore.Util.ReadAllTextFromFile(specFile))
+                ?? throw new UserFacingException("Custom Room Pool Issue", $"{specFile} is empty.");
+            var folder = Path.GetFullPath("Rooms");
+            if (!Path.Exists(folder)) { folder = Path.Combine(AppContext.BaseDirectory, "Rooms"); }
+            logger.Info($"Custom rooms folder: {folder}");
+            var custom = await CustomRoomLoader.LoadAsync(palaceRooms, roomPoolSpec, folder,
+                () => Task.FromResult(Directory.EnumerateFiles(folder)), filename => File.ReadAllTextAsync(filename, cts.Token), cts.Token);
+            foreach (var warning in custom.Diagnostics.Where(diagnostic => diagnostic.Severity == RoomDiagnosticSeverity.Warning))
+            {
+                logger.Warn(warning.ToString());
+            }
+            palaceRooms = custom.RequireRooms();
         }
 
         var randomizer = new Hyrule(createAsm, palaceRooms, roomPoolSpec);

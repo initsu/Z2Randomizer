@@ -6,6 +6,7 @@ namespace Desktop.Common;
 public class DesktopFileService : IFileSystemService
 {
     private string SpriteBasePath { get; init; }
+    private string RoomsBasePath { get; init; }
     private string SettingsBasePath { get; init; }
     private string PalacesBasePath { get; init; }
     private string OSBasePath { get; init; }
@@ -39,6 +40,8 @@ public class DesktopFileService : IFileSystemService
             SettingsBasePath = Path.Combine(OSBasePath, "Z2Randomizer");
         }
         SpriteBasePath = Path.Combine(AppContext.BaseDirectory, "Sprites");
+        var applicationRooms = Path.Combine(AppContext.BaseDirectory, "Rooms");
+        RoomsBasePath = Path.Exists(applicationRooms) ? applicationRooms : Path.Combine(SettingsBasePath, "Rooms");
         PalacesBasePath = Path.GetDirectoryName(AppContext.BaseDirectory)! + Path.DirectorySeparatorChar;
         Directory.CreateDirectory(SpriteBasePath);
         Directory.CreateDirectory(SettingsBasePath);
@@ -51,9 +54,16 @@ public class DesktopFileService : IFileSystemService
             IFileSystemService.RandomizerPath.Sprites => Path.Combine(SpriteBasePath, filename),
             IFileSystemService.RandomizerPath.Settings => Path.Combine(SettingsBasePath, filename),
             IFileSystemService.RandomizerPath.Palaces => Path.Combine(PalacesBasePath, filename),
-            IFileSystemService.RandomizerPath.RoomPool => Path.Combine(PalacesBasePath, filename),
+            IFileSystemService.RandomizerPath.RoomPool => RoomPoolPath(filename),
+            IFileSystemService.RandomizerPath.Rooms => Path.Combine(RoomsBasePath, filename),
             _ => throw new ArgumentOutOfRangeException(nameof(path), path, null)
         };
+    private string RoomPoolPath(string filename)
+    {
+        var userPath = Path.Combine(SettingsBasePath, filename);
+        return Path.Exists(userPath) ? userPath : Path.Combine(PalacesBasePath, filename);
+    }
+
     public Task<string> OpenFile(IFileSystemService.RandomizerPath path, string filename)
     {
         return File.ReadAllTextAsync(FullPath(path, filename));

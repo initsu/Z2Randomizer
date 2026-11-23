@@ -27,12 +27,13 @@ public class RoomPool
 
     public RoomPool(PalaceRooms palaceRooms, int palaceNumber, RandomizerProperties props, RoomPoolSpec roomPoolSpec)
     {
+        var roomsForPalace = palaceRooms.CopyForRoomPool(palaceNumber);
         PalaceStyle palaceStyle = props.PalaceStyles[palaceNumber - 1];
-        var allRooms = GatherRoomsFromSpec(palaceRooms, roomPoolSpec, palaceNumber, palaceStyle);
-        ApplyRoomPoolExclusions(allRooms, roomPoolSpec);
-        GatherLinkedRooms(allRooms, palaceRooms);
+        var allRooms = GatherRoomsFromSpec(palaceRooms, roomsForPalace, roomPoolSpec, palaceNumber, palaceStyle);
+        ApplyRoomPoolExclusions(allRooms, roomPoolSpec, palaceNumber, palaceStyle);
+        GatherLinkedRooms(allRooms, roomsForPalace);
         SplitRooms(allRooms, palaceNumber);
-        FinalizePool(palaceRooms, palaceNumber, props);
+        FinalizePool(roomsForPalace.BundledRooms, palaceNumber, props);
     }
 
     public RoomPool(PalaceRooms palaceRooms, int palaceNumber, RandomizerProperties props)
@@ -44,7 +45,7 @@ public class RoomPool
         FinalizePool(palaceRooms, palaceNumber, props);
     }
 
-    static List<Room> GatherRoomsFromSpec(PalaceRooms palaceRooms, RoomPoolSpec roomPoolSpec, int palaceNumber, PalaceStyle palaceStyle)
+    static List<Room> GatherRoomsFromSpec(PalaceRooms sourceRooms, PalaceRooms roomsForPalace, RoomPoolSpec roomPoolSpec, int palaceNumber, PalaceStyle palaceStyle)
     {
         var roomList = new List<Room>();
 
@@ -59,7 +60,7 @@ public class RoomPool
         foreach (var groupString in groupsInclude)
         {
             if (!Enum.TryParse(groupString, out RoomGroup group)) { throw new UserFacingException("Custom Room Pool Issue", $"RoomPool spec has unrecognized group: {groupString}"); }
-            AddGroup(roomList, palaceRooms, group);
+            AddGroup(roomList, roomsForPalace, group);
         }
 
         var tagsOverrides = (roomPoolSpec.Tags ?? [])
@@ -72,7 +73,7 @@ public class RoomPool
 
         foreach (var tag in tagsInclude)
         {
-            AddTag(roomList, palaceRooms, tag);
+            AddTag(roomList, roomsForPalace, tag);
         }
 
         foreach (var groupOverride in groupsOverrides)
@@ -80,7 +81,7 @@ public class RoomPool
             var groupString = groupOverride.Name;
             if (!Enum.TryParse(groupString, out RoomGroup group)) { throw new UserFacingException("Custom Room Pool Issue", $"RoomPool spec has unrecognized group: {groupString}"); }
 
-            foreach (var roomToOverride in palaceRooms.RoomsByGroup(group))
+            foreach (var roomToOverride in roomsForPalace.RoomsByGroup(group))
             {
                 if (groupOverride.Priority is int priority)
                 {
@@ -91,7 +92,7 @@ public class RoomPool
 
         foreach (var tagOverride in tagsOverrides)
         {
-            foreach (var roomToOverride in palaceRooms.RoomsByTag(tagOverride.Name))
+            foreach (var roomToOverride in roomsForPalace.RoomsByTag(tagOverride.Name))
             {
                 if (tagOverride.Priority is int priority)
                 {
@@ -103,36 +104,27 @@ public class RoomPool
         foreach (var roomOverride in roomPoolSpec.Rooms ?? [])
         {
             var name = roomOverride.Name;
-            Room? room = palaceRooms.GetRoomByName(name);
-            if (room == null) { throw new UserFacingException("Custom Room Pool Issue", $"Room with name {name} not found."); }
-
-            if (!string.IsNullOrEmpty(roomOverride.Sideview))
+            Room? room = roomsForPalace.GetRoomByName(name);
+            if (room == null)
             {
-                room.SideView = Convert.FromHexString(roomOverride.Sideview);
+                // Throw if the room does not actually exist. Ignore if it does not apply to this palace.
+                if (sourceRooms.GetRoomByName(name) == null)
+                {
+                    throw new UserFacingException("Custom Room Pool Issue", $"Room with name {name} not found.");
+                }
+                continue;
             }
 
-            if (!string.IsNullOrEmpty(roomOverride.Enemies))
-            {
-                room.Enemies = Convert.FromHexString(roomOverride.Enemies);
-            }
+            roomOverride.ApplyTo(room);
 
-            if (roomOverride.ItemPresenceBits.HasValue)
-            {
-                room.ItemPresenceBits = [(byte)roomOverride.ItemPresenceBits.Value];
-            }
-
-            if (roomOverride.Priority.HasValue)
-            {
-                room.Priority = roomOverride.Priority.Value;
-            }
-
-            room.Enabled = roomOverride.Enabled;
-
-            if (!roomList.Contains(room, ReferenceEqualityComparer.Instance)) // only add if it isn't already added
+            if (room.Enabled && !roomList.Contains(room, ReferenceEqualityComparer.Instance))
             {
                 roomList.Add(room);
             }
         }
+
+        // Explicit room overrides come after group and tag inclusion.
+        roomList.RemoveAll(room => !room.Enabled);
 
         return roomList.ToList();
     }
@@ -184,11 +176,11 @@ public class RoomPool
         }
     }
 
-    private void ApplyRoomPoolExclusions(List<Room> allRooms, RoomPoolSpec roomPoolSpec)
+    private void ApplyRoomPoolExclusions(List<Room> allRooms, RoomPoolSpec roomPoolSpec, int palaceNumber, PalaceStyle palaceStyle)
     {
         var tagsExclude = (roomPoolSpec.TagsExclude ?? [])
-            .Except((roomPoolSpec.Tags ?? []).Where(t => t.Enabled).Select(t => t.Name))
-            .Concat((roomPoolSpec.Tags ?? []).Where(t => !t.Enabled).Select(t => t.Name))
+            .Except((roomPoolSpec.Tags ?? []).Where(t => t.Enabled && t.ConditionMatches(palaceNumber, palaceStyle)).Select(t => t.Name))
+            .Concat((roomPoolSpec.Tags ?? []).Where(t => !t.Enabled && t.ConditionMatches(palaceNumber, palaceStyle)).Select(t => t.Name))
             .Distinct().ToList();
 
         foreach (var tag in tagsExclude)
@@ -315,14 +307,20 @@ public class RoomPool
         RemoveRooms(room => !room.GetEffectiveRequirements(props.MarioMode).AreSatisfiedBy(allowedBlockers));
     }
 
-    void FinalizePool(PalaceRooms palaceRooms, int palaceNumber, RandomizerProperties props)
+    void FinalizePool(PalaceRooms roomsForDefaults, int palaceNumber, RandomizerProperties props)
     {
-        foreach (Room stub in palaceRooms.NormalPalaceRoomsByGroup(RoomGroup.STUBS))
+        var stubs = roomsForDefaults.RoomsByGroup(RoomGroup.STUBS)
+            .Where(stub => stub.IsNormalRoom() && stub.InPoolForPalace(palaceNumber));
+        foreach (Room stub in stubs)
         {
             stub.IsStub = true;
+            // The room data determines the exit shape and whether it is available for this palace.
+            var exitType = stub.CategorizeExits();
+            if (exitType is RoomExitType.DEADEND_EXIT_DOWN or RoomExitType.DEADEND_EXIT_UP)
+            {
+                DefaultStubsByDirection.TryAdd(exitType, stub);
+            }
         }
-        DefaultStubsByDirection.Add(RoomExitType.DEADEND_EXIT_DOWN, palaceRooms.NormalPalaceRoomsByGroup(RoomGroup.STUBS).First(i => i.HasDownExit));
-        DefaultStubsByDirection.Add(RoomExitType.DEADEND_EXIT_UP, palaceRooms.NormalPalaceRoomsByGroup(RoomGroup.STUBS).First(i => i.HasUpExit));
 
         foreach (var direction in DirectionExtensions.ITEM_ROOM_ORIENTATIONS)
         {
@@ -368,21 +366,21 @@ public class RoomPool
 
         if (Entrances.Count == 0)
         {
-            Entrances.AddRange(palaceRooms.Entrances(RoomGroup.VANILLA).Where(i => i.PalaceNumber == palaceNumber));
+            Entrances.AddRange(roomsForDefaults.Entrances(RoomGroup.VANILLA).Where(i => i.PalaceNumber == palaceNumber));
         }
 
-        VanillaBossRoom = palaceRooms.VanillaBossRoom(palaceNumber);
+        VanillaBossRoom = roomsForDefaults.VanillaBossRoom(palaceNumber);
         if (BossRooms.Count == 0)
         {
             if (VanillaBossRoom == null) { throw new Exception("No boss room in pool!"); }
             BossRooms.Add(VanillaBossRoom);
         }
 
-        DefaultUpEntrance = palaceRooms.Entrances(RoomGroup.V5_0)
+        DefaultUpEntrance = roomsForDefaults.Entrances(RoomGroup.V5_0)
             .FirstOrDefault(i => i.IsEntrance && i.CategorizeExits() == RoomExitType.DEADEND_EXIT_UP && i.PalaceNumber == palaceNumber)!;
         Debug.Assert(DefaultUpEntrance != null);
 
-        DefaultDownBossRoom = palaceRooms.BossRooms(RoomGroup.V4_0)
+        DefaultDownBossRoom = roomsForDefaults.BossRooms(RoomGroup.V4_0)
             .First(i => i.IsBossRoom && i.CategorizeExits() == RoomExitType.DEADEND_EXIT_DOWN
                       && (palaceNumber >= 6 ? i.PalaceNumber == palaceNumber : i.PalaceNumber == null));
 

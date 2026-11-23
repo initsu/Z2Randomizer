@@ -7,6 +7,15 @@ using System.Text.RegularExpressions;
 
 namespace Z2Randomizer.RandomizerCore.Sidescroll.Palace;
 
+/// <summary>
+/// The set of palace rooms used to build room pools.
+/// </summary>
+/// <remarks>
+/// Group and tag lookups index rooms enabled when this instance is created.
+/// Name lookup also includes disabled rooms, such as linked secondary segments.
+/// Custom pool rules can select from the full set of rooms. Vanilla layouts
+/// and built-in fallbacks use <see cref="BundledRooms"/>.
+/// </remarks>
 public partial class PalaceRooms
 {
     private readonly Dictionary<RoomGroup, List<Room>> roomsByGroup = new();
@@ -14,6 +23,23 @@ public partial class PalaceRooms
     private readonly Dictionary<string, List<Room>> roomsByTag = new();
     public IReadOnlyList<Room> RoomsByTag(string tag) => roomsByTag.GetValueOrDefault(tag, []);
     private readonly Dictionary<string, Room> roomsByName = new();
+
+    /// <summary>
+    /// All definitions in input order, including disabled rooms. This sequence
+    /// supports validation, merging, copying rooms for a pool, and hashing them in order.
+    /// </summary>
+    internal IReadOnlyList<Room> RoomsInInputOrder { get; }
+
+    /// <summary>
+    /// All rooms from the starting set of rooms (normally <c>PalaceRooms.json</c>),
+    /// including enabled and disabled rooms in every group.
+    /// </summary>
+    /// <remarks>
+    /// When files from <c>Rooms/</c> are loaded, they extend the set of rooms used.
+    /// Vanilla layouts and built-in fallback lookups keep using <see cref="BundledRooms"/>.
+    /// </remarks>
+    internal PalaceRooms BundledRooms => bundledRooms ?? this;
+    private readonly PalaceRooms? bundledRooms;
 
     public string Hash { get; init; }
 
@@ -29,9 +55,15 @@ public partial class PalaceRooms
         }
     }
 
-    public PalaceRooms(IEnumerable<Room> rooms)
+    public PalaceRooms(IEnumerable<Room> rooms) : this(null, rooms) { }
+
+    // The combined set of rooms must start with the bundled definitions in
+    // their original order, followed by the custom definitions.
+    internal PalaceRooms(PalaceRooms? bundledRooms, IEnumerable<Room> rooms)
     {
-        foreach (var room in rooms)
+        this.bundledRooms = bundledRooms;
+        RoomsInInputOrder = rooms.ToArray();
+        foreach (var room in RoomsInInputOrder)
         {
             if (room.Enabled)
             {
@@ -54,7 +86,38 @@ public partial class PalaceRooms
             roomsByName[room.Name] = room;
         }
 
-        Hash = DeterministicHash.Combine(DeterministicHash.Seed, rooms).ToString("X8").ToLower();
+        Hash = DeterministicHash.Combine(DeterministicHash.Seed, RoomsInInputOrder).ToString("X8").ToLower();
+    }
+
+    internal PalaceRooms CopyForRoomPool(int palaceNumber)
+    {
+        var roomsToCopy = new HashSet<Room>(ReferenceEqualityComparer.Instance);
+        foreach (var room in RoomsInInputOrder)
+        {
+            bool matchesPalace = room.PalaceNumber == palaceNumber || (room.PalaceNumber == null && palaceNumber < 7);
+            if (!matchesPalace) { continue; }
+            roomsToCopy.Add(room);
+            if (room.LinkedRoomName is { } name && GetRoomByName(name) is { } linkedRoom)
+            {
+                roomsToCopy.Add(linkedRoom);
+            }
+        }
+
+        var copies = new List<Room>(roomsToCopy.Count);
+        int bundledCount = bundledRooms?.RoomsInInputOrder.Count ?? 0;
+        int bundledCopyCount = 0;
+        for (int index = 0; index < RoomsInInputOrder.Count; index++)
+        {
+            var room = RoomsInInputOrder[index];
+            if (!roomsToCopy.Contains(room)) { continue; }
+            copies.Add(new Room(room));
+            if (index < bundledCount) { bundledCopyCount++; }
+        }
+
+        // Reuse the same per-pool copies in both views so an explicit override to a
+        // bundled room applies when that room is selected as a fallback too.
+        PalaceRooms? bundledCopies = bundledRooms == null ? null : new PalaceRooms(copies.Take(bundledCopyCount));
+        return new PalaceRooms(bundledCopies, copies);
     }
 
     private void AddRoomToTagList(Room room, string tag)

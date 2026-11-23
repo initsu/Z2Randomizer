@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using YamlDotNet.Core;
 using YamlDotNet.Serialization;
+using Z2Randomizer.RandomizerCore.Sidescroll.Palace;
 
 namespace Z2Randomizer.RandomizerCore.Sidescroll;
 
@@ -204,6 +205,18 @@ public class RoomOverride : IDeterministicHash
 
     [YamlMember(Alias = "priority")]
     public int? Priority { get; set; }
+
+    internal void ApplyTo(Room room)
+    {
+        byte[]? sideview = string.IsNullOrEmpty(Sideview) ? null : Convert.FromHexString(Sideview);
+        byte[]? enemies = string.IsNullOrEmpty(Enemies) ? null : Convert.FromHexString(Enemies);
+        byte? itemBits = ItemPresenceBits is int bits ? checked((byte)bits) : null;
+        if (sideview != null) { room.SideView = sideview; }
+        if (enemies != null) { room.Enemies = enemies; }
+        if (itemBits.HasValue) { room.ItemPresenceBits = [itemBits.Value]; }
+        if (Priority.HasValue) { room.Priority = Priority.Value; }
+        room.Enabled = Enabled;
+    }
 
     public int GetDeterministicHash()
     {

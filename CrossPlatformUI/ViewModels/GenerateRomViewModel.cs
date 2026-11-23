@@ -78,26 +78,6 @@ Seed: {config.Seed}
             var host = (HostScreen as MainViewModel)!;
             var config = host.Config;
 
-            //var customJson = config.UseCustomRooms ? await files.OpenFile(IFileSystemService.RandomizerPath.Palaces, "CustomRooms.json") : null;
-            //var rooms = config.UseCustomRooms ? customJson : roomsJson;
-            var roomLoaderService = App.Current?.Services?.GetService<RoomLoaderService>();
-            PalaceRooms palaceRooms;
-            RoomPoolSpec? roomPoolSpec;
-            try
-            {
-                palaceRooms = await roomLoaderService!.GetPalaceRooms();
-                roomPoolSpec = config.RoomPoolOption == RoomPoolOption.CUSTOM ? await roomLoaderService.GetRoomPoolSpec() : null;
-            }
-            catch(UserFacingException userError)
-            {
-                string errorHeading, errorBody;
-                errorHeading = userError.Heading;
-                errorBody = userError.Message;
-                await UpdateProgress(errorHeading, errorBody);
-                return;
-            }
-
-            var randomizer = new Hyrule(createAsm!, palaceRooms, roomPoolSpec);
             Dispatcher.UIThread.Post(GenerateSeed, DispatcherPriority.Background);
             return;
 
@@ -105,6 +85,22 @@ Seed: {config.Seed}
             {
                 try
                 {
+                    var roomLoader = App.Current!.Services!.GetRequiredService<RoomLoaderService>();
+                    PalaceRooms palaceRooms;
+                    RoomPoolSpec? roomPoolSpec = null;
+                    if (config.RoomPoolOption == RoomPoolOption.CUSTOM)
+                    {
+                        var custom = await roomLoader.LoadCustomRooms(tokenSource.Token);
+                        palaceRooms = custom.Catalogue.RequireRooms();
+                        roomPoolSpec = custom.Spec;
+                        foreach (var warning in custom.Catalogue.Diagnostics)
+                        {
+                            NLog.LogManager.GetCurrentClassLogger().Warn(warning.ToString());
+                        }
+                    }
+                    else { palaceRooms = await roomLoader.GetPalaceRooms(); }
+
+                    var randomizer = new Hyrule(createAsm!, palaceRooms, roomPoolSpec);
                     var romdata = host.RomFileViewModel.RomData!.ToArray();
                     var output = await Task.Run(async () => await randomizer.Randomize(romdata, config, UpdateProgress, tokenSource.Token));
                     if (!tokenSource.IsCancellationRequested && output.success)
@@ -172,6 +168,7 @@ Seed: {config.Seed}
                     }
                     IsComplete = true;
                 }
+                catch (OperationCanceledException) when (tokenSource.IsCancellationRequested) { }
                 catch (Exception e)
                 {
                     tokenSource.Cancel();

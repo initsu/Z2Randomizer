@@ -22,6 +22,10 @@ internal class VanillaRoomPool : RoomPool
         if (palaceNumber < 7)
         {
             ItemRoom = palaceRooms.VanillaItemRoom(palaceNumber);
+
+            //We also need horizontal stubs for item room replacements in vanilla palaces with 0 item rooms
+            DefaultStubsByDirection.Add(RoomExitType.DEADEND_EXIT_RIGHT, palaceRooms.NormalPalaceRoomsByGroup(RoomGroup.STUBS).Where(i => i.HasRightExit).First());
+            DefaultStubsByDirection.Add(RoomExitType.DEADEND_EXIT_LEFT, palaceRooms.NormalPalaceRoomsByGroup(RoomGroup.STUBS).Where(i => i.HasLeftExit).First());
         }
         NormalRooms.AddRange(palaceRooms.VanillaPalaceRoomsByPalaceNumber(palaceNumber));
 
@@ -31,11 +35,6 @@ internal class VanillaRoomPool : RoomPool
         ItemRoomsByExitType[RoomExitType.DEADEND_EXIT_LEFT]
             = [palaceRooms.VanillaItemRoom(3), palaceRooms.VanillaItemRoom(4), palaceRooms.VanillaItemRoom(6)];
 
-        //We also need horizontal stubs for item room replacements in vanilla palaces with 0 item rooms
-        DefaultStubsByDirection.Add(RoomExitType.DEADEND_EXIT_RIGHT, palaceRooms.NormalPalaceRoomsByGroup(RoomGroup.STUBS).Where(i => i.HasRightExit).First());
-        DefaultStubsByDirection.Add(RoomExitType.DEADEND_EXIT_LEFT, palaceRooms.NormalPalaceRoomsByGroup(RoomGroup.STUBS).Where(i => i.HasLeftExit).First());
-
         VanillaBossRoom = palaceRooms.VanillaBossRoom(palaceNumber);
     }
 }
-

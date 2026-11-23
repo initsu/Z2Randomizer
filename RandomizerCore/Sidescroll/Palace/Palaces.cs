@@ -89,7 +89,7 @@ public class Palaces
             RoomPool roomPool;
             if (props.PalaceStyles[currentPalace - 1].UsesVanillaRoomPool())
             {
-                roomPool = new VanillaRoomPool(palaceRooms, currentPalace, props);
+                roomPool = new VanillaRoomPool(palaceRooms.BundledRooms, currentPalace, props);
             }
             else
             {

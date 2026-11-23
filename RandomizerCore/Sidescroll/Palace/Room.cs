@@ -160,31 +160,15 @@ public class Room : IJsonOnDeserialized, IDeterministicHash
     public List<string> SuppressWarning { get; set; } = [];
     public List<string> Tags { get; set; } = [];
 
-    //The json loads the fields the analyzer says aren't loaded. Source: trust me bro
-    //But seriously eventually put some validation here.
+    // The generated JSON reader populates fields after construction.
 #pragma warning disable CS8618
     public Room() { }
 
+    /// <summary>
+    /// Copy the room data and coordinates for use in another pool or layout.
+    /// Links between placed rooms are assigned by the palace generator.
+    /// </summary>
     public Room(Room room)
-    {
-        CopyFrom(room);
-    }
-
-
-    public Room(string json)
-#pragma warning restore CS8618 
-    {
-        var room = JsonSerializer.Deserialize(json, RoomSerializationContext.Default.Room);
-        CopyFrom(room!);
-
-        var length = SideView?[0] ?? 0;
-        if (SideView?.Length != length)
-        {
-            throw new Exception($"Room length header {length} does not match actual length for sideview: {SideView!.Length}");
-        }
-    }
-
-    private void CopyFrom(Room room)
     {
         Map = room.Map;
         Enemies = room.Enemies.ToArray();
@@ -205,20 +189,33 @@ public class Room : IJsonOnDeserialized, IDeterministicHash
         IsThunderBirdRoom = room.IsThunderBirdRoom;
         IsStub = room.IsStub;
         LinkRequirements = room.LinkRequirements;
+        MarioRequirements = room.MarioRequirements;
         Name = room.Name;
         LinkedRoomName = room.LinkedRoomName;
         Author = room.Author;
         Enabled = room.Enabled;
         Group = room.Group;
-        // PalaceGroup = room.PalaceGroup;
         PalaceNumber = room.PalaceNumber;
         DuplicateGroup = room.DuplicateGroup;
         coords = room.coords;
-        Tags = room.Tags;
-        SuppressWarning = room.SuppressWarning;
+        Priority = room.Priority;
+        Tags = room.Tags?.ToList() ?? [];
+        SuppressWarning = room.SuppressWarning?.ToList() ?? [];
 
-        SetConnections(room.Connections);
+        SetConnections((byte[])room.Connections.Clone());
     }
+
+    public Room(string json)
+        : this(JsonSerializer.Deserialize(json, RoomSerializationContext.Default.Room)
+            ?? throw new JsonException("Expected a room definition."))
+    {
+        int length = SideView.Length == 0 ? 0 : SideView[0];
+        if (length == 0 || SideView.Length != length)
+        {
+            throw new JsonException($"Room length header {length} does not match actual length for sideview: {SideView.Length}");
+        }
+    }
+#pragma warning restore CS8618
 
     public void SetConnections(byte[] connections)
     {
@@ -231,10 +228,7 @@ public class Room : IJsonOnDeserialized, IDeterministicHash
 
     public void OnDeserialized()
     {
-        HasLeftExit = Connections[0] < 0xFC;
-        HasDownExit = IsUpDownReversed ? Connections[2] < 0xFC : Connections[1] < 0xFC;
-        HasUpExit = IsUpDownReversed ? Connections[1] < 0xFC : Connections[2] < 0xFC;
-        HasRightExit = Connections[3] < 0xFC;
+        SetConnections(Connections);
         if (MarioRequirements == null || MarioRequirements.IsEmpty())
         {
             MarioRequirements = LinkRequirements;
@@ -875,7 +869,7 @@ public class Room : IJsonOnDeserialized, IDeterministicHash
 
         if (MirrorSideView != null)
         {
-            mirror.SideView = MirrorSideView;
+            mirror.SideView = MirrorSideView.ToArray();
         }
         else
         {
@@ -1149,7 +1143,12 @@ public class Room : IJsonOnDeserialized, IDeterministicHash
         hash = DeterministicHash.Combine(hash, IsUpDownReversed);
         hash = DeterministicHash.Combine(hash, Priority);
         hash = DeterministicHash.Combine(hash, Tags);
-        return hash;
+        hash = DeterministicHash.Combine(hash, MirrorSideView);
+        hash = DeterministicHash.Combine(hash, DuplicateGroup);
+        hash = DeterministicHash.Combine(hash, HasDroppableElevator);
+        hash = DeterministicHash.Combine(hash, IsStub);
+        hash = DeterministicHash.Combine(hash, (int?)VanillaMap);
+        return DeterministicHash.Combine(hash, VanillaPalaceGroupNumber);
     }
 }
 
