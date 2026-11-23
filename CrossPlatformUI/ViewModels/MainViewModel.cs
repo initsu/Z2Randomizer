@@ -131,6 +131,9 @@ public partial class MainViewModel : ReactiveObject, IScreen, IActivatableViewMo
     public GenerateRomViewModel GenerateRomViewModel { get; }
 
     [JsonIgnore]
+    public RoomDiagnosticsViewModel RoomDiagnostics { get; } = new();
+
+    [JsonIgnore]
     [RUISG.Reactive]
     public partial bool GenerateRomDialogOpen { get; set; }
 

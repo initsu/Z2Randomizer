@@ -90,7 +90,11 @@ public class RoomValidatorTests
         room.DuplicateGroup = "";
         bundled.DuplicateGroup = "Shared layout";
         var first = RoomValidator.Validate(inputs, [bundled]);
-        Assert.IsTrue(first.Any(d => d.Id == "DuplicateGroupMismatch"));
+        Assert.AreEqual("\"duplicateGroup\": \"Shared layout\"",
+            first.Single(d => d.Id == "DuplicateGroupMismatch").SuggestedChange);
+        Assert.AreEqual("duplicateGroup: \"Shared layout\"",
+            RoomValidator.Validate([new(room, "custom.yaml")], [bundled])
+                .Single(d => d.Id == "DuplicateGroupMismatch").SuggestedChange);
         CollectionAssert.AreEqual(first.ToArray(), RoomValidator.Validate(inputs, [bundled]).ToArray());
     }
 

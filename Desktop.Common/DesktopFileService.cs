@@ -40,8 +40,7 @@ public class DesktopFileService : IFileSystemService
             SettingsBasePath = Path.Combine(OSBasePath, "Z2Randomizer");
         }
         SpriteBasePath = Path.Combine(AppContext.BaseDirectory, "Sprites");
-        var applicationRooms = Path.Combine(AppContext.BaseDirectory, "Rooms");
-        RoomsBasePath = Path.Exists(applicationRooms) ? applicationRooms : Path.Combine(SettingsBasePath, "Rooms");
+        RoomsBasePath = Path.Combine(AppContext.BaseDirectory, "Rooms");
         PalacesBasePath = Path.GetDirectoryName(AppContext.BaseDirectory)! + Path.DirectorySeparatorChar;
         Directory.CreateDirectory(SpriteBasePath);
         Directory.CreateDirectory(SettingsBasePath);

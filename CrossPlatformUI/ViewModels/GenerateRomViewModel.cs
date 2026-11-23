@@ -14,7 +14,6 @@ using ReactiveUI.Primitives.Disposables;
 using RxVoid = ReactiveUI.Primitives.RxVoid;
 using Z2Randomizer.RandomizerCore;
 using Z2Randomizer.RandomizerCore.Sidescroll;
-using Z2Randomizer.RandomizerCore.Sidescroll.Palace;
 using CrossPlatformUI.Services;
 
 namespace CrossPlatformUI.ViewModels;
@@ -77,6 +76,8 @@ Seed: {config.Seed}
             var files = App.Current?.Services?.GetService<IFileSystemService>();
             var host = (HostScreen as MainViewModel)!;
             var config = host.Config;
+            var custom = pendingCustomRooms;
+            pendingCustomRooms = null;
 
             Dispatcher.UIThread.Post(GenerateSeed, DispatcherPriority.Background);
             return;
@@ -87,22 +88,8 @@ Seed: {config.Seed}
                 {
                     var roomLoader = App.Current!.Services!.GetRequiredService<RoomLoaderService>();
                     var romdata = host.RomFileViewModel.RomData.ToArray();
-                    var vanillaRoomData = new VanillaRoomData(romdata);
-                    PalaceRooms palaceRooms;
-                    RoomPoolSpec? roomPoolSpec = null;
-                    if (config.RoomPoolOption == RoomPoolOption.CUSTOM)
-                    {
-                        var custom = await roomLoader.LoadCustomRooms(vanillaRoomData, tokenSource.Token);
-                        palaceRooms = custom.Catalogue.RequireRooms();
-                        roomPoolSpec = custom.Spec;
-                        foreach (var warning in custom.Catalogue.Diagnostics)
-                        {
-                            NLog.LogManager.GetCurrentClassLogger().Warn(warning.ToString());
-                        }
-                    }
-                    else { palaceRooms = await roomLoader.GetPalaceRooms(vanillaRoomData); }
-
-                    var randomizer = new Hyrule(createAsm!, palaceRooms, roomPoolSpec);
+                    var palaceRooms = custom?.Result.RequireRooms() ?? await roomLoader.GetPalaceRooms(new VanillaRoomData(romdata));
+                    var randomizer = new Hyrule(createAsm!, palaceRooms, custom?.Spec);
                     var output = await Task.Run(async () => await randomizer.Randomize(romdata, config, UpdateProgress, tokenSource.Token));
                     if (!tokenSource.IsCancellationRequested && output.success)
                     {
@@ -200,6 +187,14 @@ Seed: {config.Seed}
                 }
             }
         }
+    }
+
+    private CustomRoomSnapshot? pendingCustomRooms;
+
+    internal void Open(CustomRoomSnapshot? custom)
+    {
+        pendingCustomRooms = custom;
+        Main.GenerateRomDialogOpen = true;
     }
 
     private Task UpdateProgress(string body)

@@ -21,16 +21,15 @@ public static class RoomFileReader
 
     public static bool IsSupported(string filename) => GetFormat(filename) != RoomFileFormat.Unsupported;
 
-    public static void Read(string filename, string content, ICollection<RoomValidationInput> rooms,
-        ICollection<RoomDiagnostic> diagnostics, VanillaRoomData? vanillaRoomData = null)
+    public static void Read(string filename, string content, ICollection<RoomValidationInput> rooms, ICollection<RoomDiagnostic> diagnostics, VanillaRoomData? vanillaRoomData = null, RoomGroup? defaultGroup = null)
     {
         switch (GetFormat(filename))
         {
             case RoomFileFormat.Json:
-                ReadJson(filename, content, rooms, diagnostics, vanillaRoomData);
+                ReadJson(filename, content, rooms, diagnostics, vanillaRoomData, defaultGroup);
                 break;
             case RoomFileFormat.Yaml:
-                ReadYaml(filename, content, rooms, diagnostics, vanillaRoomData);
+                ReadYaml(filename, content, rooms, diagnostics, vanillaRoomData, defaultGroup);
                 break;
             default:
                 diagnostics.Add(new("UnsupportedRoomFile", RoomDiagnosticSeverity.Error, filename, null,
@@ -39,8 +38,7 @@ public static class RoomFileReader
         }
     }
 
-    private static void ReadYaml(string filename, string yaml, ICollection<RoomValidationInput> rooms,
-        ICollection<RoomDiagnostic> diagnostics, VanillaRoomData? vanillaRoomData)
+    private static void ReadYaml(string filename, string yaml, ICollection<RoomValidationInput> rooms, ICollection<RoomDiagnostic> diagnostics, VanillaRoomData? vanillaRoomData, RoomGroup? defaultGroup)
     {
         string json;
         try
@@ -59,11 +57,10 @@ public static class RoomFileReader
             diagnostics.Add(new("InvalidRoomFile", RoomDiagnosticSeverity.Error, filename, null, null, false, exception.Message));
             return;
         }
-        ReadJson(filename, json, rooms, diagnostics, vanillaRoomData, fromYaml: true);
+        ReadJson(filename, json, rooms, diagnostics, vanillaRoomData, defaultGroup, fromYaml: true);
     }
 
-    private static void ReadJson(string filename, string json, ICollection<RoomValidationInput> rooms,
-        ICollection<RoomDiagnostic> diagnostics, VanillaRoomData? vanillaRoomData, bool fromYaml = false)
+    private static void ReadJson(string filename, string json, ICollection<RoomValidationInput> rooms, ICollection<RoomDiagnostic> diagnostics, VanillaRoomData? vanillaRoomData, RoomGroup? defaultGroup, bool fromYaml = false)
     {
         try
         {
@@ -133,7 +130,11 @@ public static class RoomFileReader
                     if (fields.ContainsKey("bitmask")) { throw new FormatException("Specify itembits or bitmask once per room."); }
                     Normalize()["bitmask"] = itemMask.ToString("X2");
                 }
-                JsonObject? resolved = ResolveVanillaFields(definition, fields, vanillaRoomData, normalized, usesConnectionMask);
+                if (defaultGroup is { } fallback && !fields.ContainsKey("group"))
+                {
+                    Normalize()["group"] = fallback.ToString();
+                }
+                JsonObject? resolved = ResolveVanillaFields(definition, fields, vanillaRoomData, normalized, usesConnectionMask, defaultGroup);
                 if (resolved != null && !fields.ContainsKey("connections"))
                 {
                     connections = resolved["connections"]!.GetValue<string>();
@@ -162,15 +163,16 @@ public static class RoomFileReader
             diagnostics.Add(new(id, RoomDiagnosticSeverity.Error, filename, index, name, false, message));
     }
 
-    private static JsonObject? ResolveVanillaFields(JsonElement definition, Dictionary<string, JsonElement> fields,
-        VanillaRoomData? vanillaRoomData, JsonObject? normalized, bool usesConnectionMask)
+    private static JsonObject? ResolveVanillaFields(JsonElement definition, Dictionary<string, JsonElement> fields, VanillaRoomData? vanillaRoomData, JsonObject? normalized, bool usesConnectionMask, RoomGroup? defaultGroup)
     {
         var group = fields.GetValueOrDefault("group");
         bool isVanilla = group.ValueKind switch
         {
             JsonValueKind.String => string.Equals(group.GetString(), nameof(RoomGroup.VANILLA), StringComparison.OrdinalIgnoreCase),
             JsonValueKind.Number => group.TryGetInt32(out int value) && value == (int)RoomGroup.VANILLA,
-            JsonValueKind.Undefined => fields.ContainsKey("palaceGroup") && fields.ContainsKey("map"),
+            JsonValueKind.Undefined => defaultGroup is { } fallback
+                ? fallback == RoomGroup.VANILLA
+                : fields.ContainsKey("palaceGroup") && fields.ContainsKey("map"),
             _ => false,
         };
         if (!isVanilla) { return normalized; }

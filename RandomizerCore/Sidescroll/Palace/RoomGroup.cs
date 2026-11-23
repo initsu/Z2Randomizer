@@ -6,6 +6,8 @@ public enum RoomGroup
     V4_0,
     V5_0,
     STUBS,
-    /// <summary>When you include rooms via tags instead</summary>
+    /// <summary>When you intend to include rooms via tags instead</summary>
     NONE,
+    /// <summary>The default group for rooms loaded from the custom folder.</summary>
+    CUSTOM,
 }

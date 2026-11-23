@@ -147,14 +147,15 @@ public class Program
             if (!RandomizerCore.Util.FileExists(specFile)) { throw new UserFacingException("Custom Room Pool Issue", $"{specFile} is missing."); }
             roomPoolSpec = RoomPoolSpecDeserializer.FromString(RandomizerCore.Util.ReadAllTextFromFile(specFile))
                 ?? throw new UserFacingException("Custom Room Pool Issue", $"{specFile} is empty.");
-            var folder = Path.GetFullPath("Rooms");
-            if (!Path.Exists(folder)) { folder = Path.Combine(AppContext.BaseDirectory, "Rooms"); }
+            var folder = Path.Combine(AppContext.BaseDirectory, "Rooms");
             logger.Info($"Custom rooms folder: {folder}");
             var custom = await CustomRoomLoader.LoadAsync(palaceRooms, roomPoolSpec, folder,
                 () => Task.FromResult(Directory.EnumerateFiles(folder)), filename => File.ReadAllTextAsync(filename, cts.Token), cts.Token, vanillaRoomData);
             foreach (var warning in custom.Diagnostics.Where(diagnostic => diagnostic.Severity == RoomDiagnosticSeverity.Warning))
             {
                 logger.Warn(warning.ToString());
+                if (warning.SuppressionLine is { } line) { logger.Info($"Suppress this warning with {line}"); }
+                if (warning.AllRoomWarningsSuppressionLine is { } all) { logger.Info($"Suppress all warnings for this room with {all}"); }
             }
             palaceRooms = custom.RequireRooms();
         }

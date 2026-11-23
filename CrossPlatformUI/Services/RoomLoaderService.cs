@@ -8,6 +8,8 @@ using Z2Randomizer.RandomizerCore.Sidescroll.Palace;
 
 namespace CrossPlatformUI.Services;
 
+public sealed record CustomRoomSnapshot(RoomPoolSpec Spec, CustomRoomLoadResult Result);
+
 public class RoomLoaderService
 {
     private readonly IFileSystemService fileService;
@@ -37,12 +39,12 @@ public class RoomLoaderService
         }
     }
 
-    public async Task<(RoomPoolSpec Spec, CustomRoomLoadResult Catalogue)> LoadCustomRooms(VanillaRoomData vanillaRoomData, CancellationToken cancellationToken)
+    public async Task<CustomRoomSnapshot> LoadCustomRooms(VanillaRoomData vanillaRoomData, CancellationToken cancellationToken)
     {
         var spec = await GetRoomPoolSpec() ?? throw new UserFacingException("Custom Room Pool Issue", $"{CustomRoomLoader.SpecFilename} is missing or empty.");
         var path = IFileSystemService.RandomizerPath.Rooms;
-        var catalogue = await CustomRoomLoader.LoadAsync(await GetPalaceRooms(vanillaRoomData), spec, "Rooms",
+        var result = await CustomRoomLoader.LoadAsync(await GetPalaceRooms(vanillaRoomData), spec, "Rooms",
             () => fileService.ListLocalFiles(path), filename => fileService.OpenFile(path, filename), cancellationToken, vanillaRoomData);
-        return (spec, catalogue);
+        return new(spec, result);
     }
 }

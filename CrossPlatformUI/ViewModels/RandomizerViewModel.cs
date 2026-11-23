@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Avalonia.Controls;
@@ -33,29 +34,20 @@ public partial class RandomizerViewModel : ReactiveObject, IRoutableViewModel, I
     [RUISG.Reactive]
     public partial bool FlagsValid { get; set; } = true;
 
-    private string customRoomPoolText = "";
     [JsonIgnore]
-    public string CustomRoomPoolText
-    {
-        get => customRoomPoolText;
-        private set
-        {
-            customRoomPoolText = value;
-            this.RaisePropertyChanged();
-        }
-    }
+    [RUISG.Reactive]
+    public partial string CustomRoomPoolText { get; private set; } = "";
 
-    private string palaceRoomsText = "Select a base ROM to load palace rooms.";
     [JsonIgnore]
-    public string PalaceRoomsText
-    {
-        get => palaceRoomsText;
-        private set
-        {
-            palaceRoomsText = value;
-            this.RaisePropertyChanged();
-        }
-    }
+    [RUISG.Reactive]
+    public partial bool IsLoadingCustomRooms { get; private set; }
+
+    [JsonIgnore]
+    [RUISG.Reactive]
+    public partial bool CustomRoomsReady { get; private set; }
+
+    private CancellationTokenSource? customRoomRefresh;
+    private (string Rooms, string Spec, RoomDiagnostic[] Warnings)? acknowledgedWarnings;
 
     private static bool IsFlagStringValid(string flags) => FlagPasteParser.IsValidFlagString(flags);
 
@@ -154,12 +146,19 @@ public partial class RandomizerViewModel : ReactiveObject, IRoutableViewModel, I
             .Select(seed => !string.IsNullOrWhiteSpace(seed))
             .DistinctUntilChanged();
 
+        var customMode = Main.WhenAnyValue(x => x.Config.RoomPoolOption)
+            .Select(option => option == RoomPoolOption.CUSTOM)
+            .DistinctUntilChanged();
+        var roomsReady = customMode.CombineLatest(this.WhenAnyValue(x => x.CustomRoomsReady),
+            (isCustom, ready) => !isCustom || ready);
+
         CanGenerateObservable = this.WhenAnyValue(vm => vm.FlagsValid).CombineLatest(
             seedValidObservable,
             Main.RomFileViewModel.HasRomDataObservable,
             Main.GenerateRomViewModel.WhenAnyValue(vm => vm.IsRunning),
             (flagsValid, seedValid, hasRom, isRunning) =>
-                flagsValid && seedValid && hasRom && !isRunning);
+                flagsValid && seedValid && hasRom && !isRunning)
+            .CombineLatest(roomsReady, (canGenerate, ready) => canGenerate && ready);
 
         FlagInputBorderObservable = this.WhenAnyValue(x => x.ThemeVariantName)
             .CombineLatest(this.WhenAnyValue(x => x.FlagsValid), (theme, valid) =>
@@ -170,10 +169,24 @@ public partial class RandomizerViewModel : ReactiveObject, IRoutableViewModel, I
                 Main.FlagsChanged.Select(_ => Main.Config.GenerateSpoiler).DistinctUntilChanged(),
                 (theme, alert) => ThemeHelper.GetFlagAlertBackgroundBrush(theme, alert));
 
-        Generate = ReactiveCommand.Create(() =>
+        Generate = ReactiveCommand.CreateFromTask(async () =>
         {
-            Main.GenerateRomDialogOpen = true;
+            if (Main.Config.RoomPoolOption != RoomPoolOption.CUSTOM)
+            {
+                Main.GenerateRomViewModel.Open(null);
+                return;
+            }
+
+            var snapshot = await RefreshCustomRooms();
+            if (snapshot != null && Main.Config.RoomPoolOption == RoomPoolOption.CUSTOM)
+            {
+                Main.GenerateRomViewModel.Open(snapshot);
+            }
         }, CanGenerateObservable);
+
+        var canReload = Main.RomFileViewModel.HasRomDataObservable
+            .CombineLatest(this.WhenAnyValue(x => x.IsLoadingCustomRooms), (hasRom, loading) => hasRom && !loading);
+        ReloadRooms = ReactiveCommand.CreateFromTask(async () => { await RefreshCustomRooms(reviewAgain: true); }, canReload);
 
         VisitDiscord = ReactiveCommand.CreateFromTask<Control>(async control =>
         {
@@ -202,42 +215,71 @@ public partial class RandomizerViewModel : ReactiveObject, IRoutableViewModel, I
             }
         });
 
-        _ = InitializeAsync();
-
         this.WhenActivated(OnActivate);
     }
 
-    public async Task InitializeAsync()
+    private async Task<CustomRoomSnapshot?> RefreshCustomRooms(bool reviewAgain = false)
     {
-        var roomLoaderService = App.Current?.Services?.GetService<RoomLoaderService>();
-
-        var spec = await roomLoaderService!.GetRoomPoolSpec();
-        CustomRoomPoolText = spec != null ? $"{spec.Name} (Hash: {spec.Hash})" : "No Custom Room Pool Found";
-    }
-
-    private async Task UpdatePalaceRoomsHash(byte[] rom)
-    {
-        if (rom.Length == 0)
+        customRoomRefresh?.Cancel();
+        Main.RoomDiagnostics.Dismiss();
+        CustomRoomsReady = false;
+        var rom = Main.RomFileViewModel.RomData;
+        if (Main.Config.RoomPoolOption != RoomPoolOption.CUSTOM || rom.Length == 0)
         {
-            PalaceRoomsText = "Select a base ROM to load palace rooms.";
-            return;
+            customRoomRefresh = null;
+            IsLoadingCustomRooms = false;
+            CustomRoomPoolText = "Select a base ROM to load custom rooms.";
+            return null;
         }
 
+        using var refresh = new CancellationTokenSource();
+        customRoomRefresh = refresh;
+        IsLoadingCustomRooms = true;
+        CustomRoomPoolText = "Loading custom rooms…";
         try
         {
             var roomLoader = App.Current!.Services!.GetRequiredService<RoomLoaderService>();
-            var palaceRooms = await roomLoader.GetPalaceRooms(new VanillaRoomData(rom));
-            if (ReferenceEquals(Main.RomFileViewModel.RomData, rom))
+            var snapshot = await roomLoader.LoadCustomRooms(new VanillaRoomData(rom), refresh.Token);
+            refresh.Token.ThrowIfCancellationRequested();
+
+            var diagnostics = snapshot.Result.Diagnostics;
+            if (snapshot.Result.LoadedRoomsHash is not { } hash)
             {
-                PalaceRoomsText = $"Palace rooms hash: {palaceRooms.Hash}";
+                CustomRoomPoolText = "Custom rooms could not be loaded.";
+                await Main.RoomDiagnostics.ShowAsync(diagnostics, allowContinue: false);
+                return null;
             }
+
+            CustomRoomPoolText = $"{snapshot.Spec.Name}\n(Loaded rooms hash: {hash})";
+            var warnings = diagnostics.ToArray();
+            bool accepted = true;
+            if (warnings.Length != 0 && (reviewAgain || acknowledgedWarnings is not { } previous ||
+                previous.Rooms != hash || previous.Spec != snapshot.Spec.Hash || !previous.Warnings.SequenceEqual(warnings)))
+            {
+                accepted = await Main.RoomDiagnostics.ShowAsync(warnings, allowContinue: true);
+                refresh.Token.ThrowIfCancellationRequested();
+                if (accepted) { acknowledgedWarnings = (hash, snapshot.Spec.Hash, warnings); }
+                else { acknowledgedWarnings = null; }
+            }
+            CustomRoomsReady = true;
+            return accepted ? snapshot : null;
         }
+        catch (OperationCanceledException) when (refresh.IsCancellationRequested) { return null; }
         catch (Exception exception)
         {
-            NLog.LogManager.GetCurrentClassLogger().Error(exception, "Unable to load palace rooms.");
-            if (ReferenceEquals(Main.RomFileViewModel.RomData, rom))
+            if (refresh.IsCancellationRequested) { return null; }
+            NLog.LogManager.GetCurrentClassLogger().Error(exception, "Unable to load custom rooms.");
+            CustomRoomPoolText = "Custom rooms could not be loaded.";
+            string message = exception is UserFacingException ? exception.Message : "Unable to read the room files. See the application log for details.";
+            await Main.RoomDiagnostics.ShowAsync([new("CustomRoomLoadFailed", RoomDiagnosticSeverity.Error, "", null, null, false, message)], allowContinue: false);
+            return null;
+        }
+        finally
+        {
+            if (ReferenceEquals(customRoomRefresh, refresh))
             {
-                PalaceRoomsText = "Unable to load palace rooms.";
+                customRoomRefresh = null;
+                IsLoadingCustomRooms = false;
             }
         }
     }
@@ -256,10 +298,6 @@ public partial class RandomizerViewModel : ReactiveObject, IRoutableViewModel, I
 
     private void OnActivate(MultipleDisposable disposables)
     {
-        SubscribeExtensions.Subscribe(Main.RomFileViewModel.RomDataObservable,
-                rom => _ = UpdatePalaceRoomsHash(rom))
-            .DisposeWith(disposables);
-
         var loadedFlags = Main.Config.SerializeFlags(); // this serializes the configuration
         var defaultFlags = new RandomizerConfiguration().SerializeFlags();
         // If the flags are entirely default, use the vanilla preset
@@ -267,6 +305,11 @@ public partial class RandomizerViewModel : ReactiveObject, IRoutableViewModel, I
         {
             Main.Config.DeserializeFlags(VanillaPreset.Preset.SerializeFlags());
         }
+
+        var roomInputs = Main.RomFileViewModel.RomDataObservable.CombineLatest(
+            Main.WhenAnyValue(x => x.Config.RoomPoolOption), (rom, option) => (rom, option)).DistinctUntilChanged();
+        SubscribeExtensions.Subscribe(roomInputs, inputs => { _ = RefreshCustomRooms(); })
+            .DisposeWith(disposables);
 
         // flag updates from RandomizerConfiguration always overwrites our flag input
         SubscribeExtensions.Subscribe(Main.FlagsObservable, flags =>
@@ -505,6 +548,8 @@ public partial class RandomizerViewModel : ReactiveObject, IRoutableViewModel, I
     public ReactiveCommand<RxVoid, RxVoid> RerollSeed { get; }
     [JsonIgnore]
     public ReactiveCommand<RxVoid, RxVoid> Generate { get; }
+    [JsonIgnore]
+    public ReactiveCommand<RxVoid, RxVoid> ReloadRooms { get; }
     [JsonIgnore]
     public ReactiveCommand<RxVoid, RxVoid> SaveFolder { get; }
     [JsonIgnore]

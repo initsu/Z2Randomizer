@@ -63,13 +63,18 @@
     <EmbeddedResource Include="Asm\z2mario\*.s" />
     <EmbeddedResource Include="Asm\z2mario\*.chr" />
   </ItemGroup>
+  <ItemGroup Label="Rooms" Condition="'$(MSBuildProjectName)' != 'RandomizerCore.Browser'">
+    <None Update="Rooms\README.txt;Rooms\*.json;Rooms\*.yaml;Rooms\*.yml" CopyToOutputDirectory="PreserveNewest"
+          CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+  </ItemGroup>
   <ItemGroup Label="Sprites">
-    <None Update="Sprites\*.ips" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Sprites\*.ips" CopyToOutputDirectory="PreserveNewest"
+          CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
   </ItemGroup>
   <ItemGroup Label="Music" Condition="'$(EnableCustomMusic)' == 'true'">
     <EmbeddedResource Include="Asm\z2rndft.ips" />
-    <None Update="Music\README.txt" CopyToOutputDirectory="PreserveNewest" />
-    <None Update="Music\*.json5" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Music\README.txt;Music\*.json;Music\*.jsonc;Music\*.cjson;Music\*.json5;Music\*.yaml;Music\*.yml"
+          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
   </ItemGroup>
   <ItemGroup Condition="'$(EnableCustomMusic)' != 'true'">
     <Compile Remove="Music.cs" />

@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
 using Z2Randomizer.RandomizerCore.Enemy;
 using Z2Randomizer.RandomizerCore.Sidescroll.Palace;
 
@@ -11,10 +14,22 @@ public enum RoomDiagnosticSeverity { Warning, Error }
 /// <summary>A room to validate and its source location. Room numbers within arrays start at one.</summary>
 public sealed record RoomValidationInput(Room Room, string Source, int? RoomIndex = null);
 
+internal sealed record RoomFieldSuggestion(string Field, string Value)
+{
+    public string FormatLine(string source) =>
+        Path.GetExtension(source).Equals(".json", StringComparison.OrdinalIgnoreCase)
+            ? $"\"{Field}\": {Value}" : $"{Field}: {Value}";
+}
+
 public sealed record RoomDiagnostic(
     string Id, RoomDiagnosticSeverity Severity, string Source, int? RoomIndex,
     string? RoomName, bool IsMirrored, string Message)
 {
+    public string? SuppressionLine { get; init; }
+    public string? AllRoomWarningsSuppressionLine { get; init; }
+    internal RoomFieldSuggestion? SuggestedField { get; init; }
+    public string? SuggestedChange => SuggestedField?.FormatLine(Source);
+
     public override string ToString()
     {
         string location = RoomIndex is int index ? $"{Source}, room {index}" : Source;
@@ -195,9 +210,11 @@ public static class RoomValidator
                 // Nine is the maximum in vanilla. Testing found that twelve can crash the game.
                 Warning("TooManyEnemies", $"Room has {ee.Enemies.Count} enemies. Vanilla rooms have at most 9.");
             }
-            if (!greatPalace && room.Enabled && sv.HasItem() != room.HasItem)
+            bool hasItem = !greatPalace && room.Enabled && sv.HasItem();
+            if (!greatPalace && room.Enabled && hasItem != room.HasItem)
             {
-                Warning("HasItemMismatch", "Room HasItem does not match its sideview data.");
+                Warning("HasItemMismatch", "Room HasItem does not match its sideview data.",
+                    new("hasItem", hasItem ? "true" : "false"));
             }
             CheckPageOverflow(sv, ee);
             CheckHeaders(room, sv);
@@ -241,7 +258,8 @@ public static class RoomValidator
             {
                 if (!string.IsNullOrEmpty(room.DuplicateGroup))
                 {
-                    Warning("DuplicateGroupMismatch", "Room has DuplicateGroup set but has no duplicates.");
+                    Warning("DuplicateGroupMismatch", "Room has DuplicateGroup set but has no duplicates.",
+                        new("duplicateGroup", "\"\""));
                 }
                 return;
             }
@@ -257,7 +275,8 @@ public static class RoomValidator
             string expectedGroup = groups.FirstOrDefault() ?? copies.First(copy => copy.Enabled).Name;
             if (room.DuplicateGroup != expectedGroup)
             {
-                Warning("DuplicateGroupMismatch", $"Room duplicate group is not synchronized. Set duplicateGroup to \"{expectedGroup}\".");
+                Warning("DuplicateGroupMismatch", $"Room duplicate group is not synchronized. Set duplicateGroup to \"{expectedGroup}\".",
+                    new("duplicateGroup", $"\"{JsonEncodedText.Encode(expectedGroup)}\""));
             }
         }
 
@@ -555,7 +574,8 @@ public static class RoomValidator
                 return SolidGridHelper.AreaIsOpen(solidGrid, elev.AbsX, 0, 1, elevatorY) || SolidGridHelper.AreaIsOpen(solidGrid, elev.AbsX + 1, 0, 1, elevatorY);
             }
 
-            if (allElevators.Count > 1) { Warning("MultipleExitElevators", "Room has more than one elevator"); }
+            bool hasMultipleElevators = allElevators.Count > 1;
+            if (hasMultipleElevators) { Warning("MultipleExitElevators", "Room has more than one elevator"); }
             int gridWidth = solidGrid.GetLength(0);
             if (allElevators.Any(elevator => elevator.AbsX + 1 >= gridWidth))
             {
@@ -597,7 +617,12 @@ public static class RoomValidator
             foreach (var elevator in exitElevators)
             {
                 var x = elevator.AbsX;
-                if (x / 16 != room.ElevatorScreen) { Warning("ElevatorWrongScreen", $"ElevatorScreen={room.ElevatorScreen} but elevator.xpos={x}"); }
+                int screen = x / 16;
+                if (screen != room.ElevatorScreen)
+                {
+                    Warning("ElevatorWrongScreen", $"ElevatorScreen={room.ElevatorScreen} but elevator.xpos={x}",
+                        hasMultipleElevators ? null : new("elevatorScreen", screen.ToString(CultureInfo.InvariantCulture)));
+                }
                 var pageX = x % 16;
                 if (pageX < 7) { Warning("ElevatorNotCentered", $"Elevator.xpos={x} is too far left on the page"); }
                 if (pageX > 7) { Warning("ElevatorNotCentered", $"Elevator.xpos={x} is too far right on the page"); }
@@ -753,16 +778,16 @@ public static class RoomValidator
             return $"Fixed bytes:\n{Convert.ToHexString(copy.Finalize())}\n\n";
         }
 
-        private void Warning(string id, string message)
+        private void Warning(string id, string message, RoomFieldSuggestion? suggestion = null)
         {
             if (currentInput.Room.SuppressWarning?.Contains(id) == true) { return; }
-            Add(id, RoomDiagnosticSeverity.Warning, message);
+            Add(id, RoomDiagnosticSeverity.Warning, message, isMirrored ? null : suggestion);
         }
 
         private void Error(string id, string message) => Add(id, RoomDiagnosticSeverity.Error, message);
 
-        private void Add(string id, RoomDiagnosticSeverity severity, string message) => diagnostics.Add(
+        private void Add(string id, RoomDiagnosticSeverity severity, string message, RoomFieldSuggestion? suggestion = null) => diagnostics.Add(
             new RoomDiagnostic(id, severity, currentInput.Source, currentInput.RoomIndex,
-                currentInput.Room.Name, isMirrored, message));
+                currentInput.Room.Name, isMirrored, message) { SuggestedField = suggestion });
     }
 }

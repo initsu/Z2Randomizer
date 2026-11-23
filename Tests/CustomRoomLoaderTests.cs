@@ -20,6 +20,41 @@ public class CustomRoomLoaderTests
             name => Task.FromResult(files[name]));
 
     [TestMethod]
+    public async Task FolderRoomsDefaultToCustomAndKeepExplicitGroups()
+    {
+        var spec = RoomPoolSpecDeserializer.FromString("""
+            groups:
+            - name: CUSTOM
+              priority: 1
+            """);
+        var result = await Load(new PalaceRooms(Array.Empty<Room>()), spec, new()
+        {
+            ["default.json"] = """
+                {"name":"JSON","enabled":true,"bitmask":"0F","connections":"00FCFC00","sideviewData":"04600F08","enemies":"01"}
+                """,
+            ["default.yaml"] = """
+                name: YAML
+                enabled: true
+                palaceGroup: 1
+                map: 12
+                itembits: 0b1111
+                connections: 0b1001
+                sideviewData: "04600F08"
+                enemies: "01"
+                """,
+            ["explicit.json"] = """
+                {"name":"Explicit","Group":"V5_0","enabled":true,"bitmask":"0F","connections":"00FCFC00","sideviewData":"04600F08","enemies":"01"}
+                """,
+        });
+
+        var rooms = result.RequireRooms();
+        CollectionAssert.AreEqual(new[] { "JSON", "YAML" },
+            rooms.RoomsByGroup(RoomGroup.CUSTOM).Select(room => room.Name).ToArray());
+        Assert.AreEqual(RoomGroup.V5_0, rooms.GetRoomByName("Explicit")!.Group);
+        Assert.IsNull(rooms.GetRoomByName("YAML")!.VanillaMap);
+    }
+
+    [TestMethod]
     public async Task MixedFormatsEnterTheSameCatalogueAndFollowConditionalPoolRules()
     {
         var spec = RoomPoolSpecDeserializer.FromString("""
@@ -102,6 +137,94 @@ public class CustomRoomLoaderTests
             () => throw new DirectoryNotFoundException(), _ => throw new InvalidOperationException());
         Assert.AreEqual(bundled.Hash, result.RequireRooms().Hash);
         Assert.AreEqual(0, result.Diagnostics.Count);
+    }
+
+    [TestMethod]
+    public async Task LoadedHashCoversAllDefinitionsAndIgnoresFormatAndSuppressions()
+    {
+        var bundled = new PalaceRooms(Array.Empty<Room>());
+        const string alpha = """
+            {"name":"Alpha","group":"NONE","bitmask":"0F","connections":"00FCFC00","enemies":"01","sideviewData":"04600F08"}
+            """;
+        const string beta = """
+            {"name":"Beta","group":"NONE","bitmask":"0F","connections":"00FCFC00","enemies":"01","sideviewData":"04600F08"}
+            """;
+        const string yamlAlpha = """
+            name: Alpha
+            group: NONE
+            itembits: 0b1111
+            connections: 0b1001
+            enemies: "01"
+            sideviewData: "04600F08"
+            suppressWarning: [Existing]
+            """;
+        var expected = await Load(bundled, new RoomPoolSpec(), new()
+        {
+            ["both.json"] = $"[{beta},{alpha}]",
+        });
+        var same = await Load(bundled, new RoomPoolSpec { TagsInclude = ["Local"] }, new()
+        {
+            ["alpha.yml"] = yamlAlpha,
+            ["beta.json"] = beta,
+        });
+        var changed = await Load(bundled, new RoomPoolSpec(), new()
+        {
+            ["alpha.yml"] = yamlAlpha + "\nmirrorSideviewData: \"04600F08\"",
+            ["beta.json"] = beta,
+        });
+        Assert.IsNotNull(expected.LoadedRoomsHash);
+        Assert.AreEqual(expected.LoadedRoomsHash, same.LoadedRoomsHash);
+        Assert.IsNotNull(changed.LoadedRoomsHash);
+        Assert.AreNotEqual(expected.LoadedRoomsHash, changed.LoadedRoomsHash);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task SuppressionLinesPreserveExistingIdsAndApplyOnReload(bool useOverride)
+    {
+        const string definition = """
+            name: Example
+            group: NONE
+            enabled: true
+            itembits: 0b1111
+            connections: 0b1001
+            enemies: "01"
+            sideviewData: "04400F08"
+            elevatorScreen: -1
+            hasItem: true
+            suppressWarning: [Existing]
+            """;
+        var files = new Dictionary<string, string> { ["room.yaml"] = definition };
+        var bundled = new PalaceRooms(Array.Empty<Room>());
+        var spec = new RoomPoolSpec
+        {
+            Rooms = useOverride ? [new RoomOverride { Name = "Example", Enemies = "01" }] : null,
+        };
+        var first = await Load(bundled, spec, files);
+        var warning = first.Diagnostics.First(d => d.Id == "ThreePageRightExit");
+        Assert.AreEqual("room.yaml", warning.Source);
+        Assert.AreEqual("suppressWarning: [\"Existing\", \"ThreePageRightExit\"]", warning.SuppressionLine);
+        var hasItem = first.Diagnostics.Single(d => d.Id == "HasItemMismatch");
+        Assert.AreEqual("hasItem: false", hasItem.SuggestedChange);
+        var combined = warning.AllRoomWarningsSuppressionLine!;
+        Assert.StartsWith("suppressWarning: [\"Existing\",", combined);
+        StringAssert.Contains(combined, "\"HasItemMismatch\"");
+        StringAssert.Contains(combined, "\"ThreePageRightExit\"");
+
+        files["room.yaml"] = definition.Replace("suppressWarning: [Existing]", combined);
+        var reloaded = await Load(bundled, spec, files);
+        Assert.AreEqual(first.LoadedRoomsHash, reloaded.LoadedRoomsHash);
+        Assert.IsFalse(reloaded.Diagnostics.Any(d => d.Severity == RoomDiagnosticSeverity.Warning));
+
+        if (useOverride)
+        {
+            var bundledOverride = await Load(first.RequireRooms(), spec, []);
+            var bundledWarning = bundledOverride.Diagnostics.First(d => d.Id == warning.Id);
+            Assert.AreEqual(CustomRoomLoader.SpecFilename, bundledWarning.Source);
+            Assert.IsNull(bundledWarning.SuppressionLine);
+            Assert.IsNull(bundledWarning.AllRoomWarningsSuppressionLine);
+        }
     }
 
     [TestMethod]
