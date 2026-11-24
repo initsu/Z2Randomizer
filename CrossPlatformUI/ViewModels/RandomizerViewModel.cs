@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Avalonia.Controls;
 using Avalonia.Media;
 using ReactiveUI;
+using ReactiveUI.Binding;
 using RUISG = ReactiveUI.SourceGenerators;
 using ReactiveUI.Primitives;
 using ReactiveUI.Primitives.Disposables;

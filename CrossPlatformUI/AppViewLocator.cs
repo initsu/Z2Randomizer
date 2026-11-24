@@ -1,4 +1,5 @@
 using System;
+using ReactiveUI.Binding;
 using CrossPlatformUI.ViewModels;
 using CrossPlatformUI.Views;
 

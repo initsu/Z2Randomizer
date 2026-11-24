@@ -2,6 +2,7 @@ using System;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using ReactiveUI;
+using ReactiveUI.Binding;
 using RUISG = ReactiveUI.SourceGenerators;
 using ReactiveUI.Primitives;
 using ReactiveUI.Primitives.Disposables;
