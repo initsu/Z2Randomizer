@@ -33,7 +33,7 @@ public class TowerCoordinatePalaceGenerator : ShapeFirstCoordinatePalaceGenerato
         Dictionary<Coord, RoomExitType> shape = [];
         //Entrance is always up entrance(even if up entrances are not in the pool) 
         List<Room> entranceCandidates = roomPool.Entrances.Where(i => i.CategorizeExits() == RoomExitType.DEADEND_EXIT_UP).ToList();
-        Room entrance = new(entranceCandidates.Sample(r) ?? roomPool.DefaultUpEntrance)
+        Room entrance = new(entranceCandidates.SampleByPriority(r) ?? roomPool.DefaultUpEntrance)
         {
             IsRoot = true,
         };
@@ -96,7 +96,7 @@ public class TowerCoordinatePalaceGenerator : ShapeFirstCoordinatePalaceGenerato
         shape.Add(new Coord(connectionX, lastLayerY + 1), RoomExitType.DEADEND_EXIT_DOWN);
 
         List<Room> bossRoomCandidates = roomPool.BossRooms.Where(i => i.CategorizeExits() == RoomExitType.DEADEND_EXIT_DOWN).ToList();
-        Room bossRoom = new(bossRoomCandidates.Sample(r) ?? roomPool.DefaultDownBossRoom);
+        Room bossRoom = new(bossRoomCandidates.SampleByPriority(r) ?? roomPool.DefaultDownBossRoom);
         bossRoom.coords = new Coord(connectionX, lastLayerY + 1);
         palace.AllRooms.Add(bossRoom);
         palace.BossRoom = bossRoom;

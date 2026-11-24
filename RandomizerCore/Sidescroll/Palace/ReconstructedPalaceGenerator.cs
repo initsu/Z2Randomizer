@@ -45,14 +45,14 @@ public class ReconstructedPalaceGenerator(CancellationToken ct) : PalaceGenerato
             //No longer a loop since the room pool can't (and would need to be) regenerated after each attempt.
             //Now we just fail and restart if we can't place enough rooms
             palace = new(palaceNumber, props.ShufflePalaceItems);
-            palace.Entrance = new(roomPool.Entrances[r.Next(roomPool.Entrances.Count)])
+            palace.Entrance = new(roomPool.Entrances.SampleByPriority(r)!)
             {
                 IsRoot = true,
                 // PalaceGroup = palaceGroup
             };
             palace.AllRooms.Add(palace.Entrance);
 
-            palace.BossRoom = new(roomPool.BossRooms[r.Next(roomPool.BossRooms.Count)]);
+            palace.BossRoom = new(roomPool.BossRooms.SampleByPriority(r)!);
             palace.BossRoom.NewEnemies = palace.BossRoom.Enemies;
             // palace.BossRoom.PalaceGroup = palaceGroup;
             palace.AllRooms.Add(palace.BossRoom);
@@ -97,25 +97,27 @@ public class ReconstructedPalaceGenerator(CancellationToken ct) : PalaceGenerato
                 //thunderbird?
                 if (!props.RemoveTbird)
                 {
-                    palace.TbirdRoom = new(roomPool.TbirdRooms[r.Next(roomPool.TbirdRooms.Count)]);
+                    palace.TbirdRoom = new(roomPool.TbirdRooms.SampleByPriority(r)!);
                     // palace.TbirdRoom.PalaceGroup = PalaceGrouping.PalaceGp;
                     palace.AllRooms.Add(palace.TbirdRoom);
                 }
             }
 
             //add rooms
+            HashSet<Room>? failedRooms = roomPool.NormalRooms.HasMixedPriorities() ? [] : null;
             roomPlacementFailures = 0;
             while (palace.AllRooms.Count < roomCount)
             {
-                if (roomPool.NormalRooms.Count == 0)
+                var candidate = roomPool.NormalRooms.SampleByPriority(r, failedRooms);
+                if (candidate == null)
                 {
                     //Room pool was exhausted. This is likely with this old structure. In theory we could refactor this
                     //to work better, but for now just restart.
                     palace.IsValid = false;
                     return palace;
                 }
-                int roomIndex = r.Next(roomPool.NormalRooms.Count);
-                Room roomToAdd = new(roomPool.NormalRooms[roomIndex]);
+                failedRooms?.Add(candidate);
+                Room roomToAdd = new(candidate);
 
                 // roomToAdd.PalaceGroup = palaceGroup;
                 bool added = !(roomToAdd.HasDrop && !roomPool.NormalRooms.Any(i => i.IsDropZone && i != roomToAdd));
@@ -132,6 +134,7 @@ public class ReconstructedPalaceGenerator(CancellationToken ct) : PalaceGenerato
                 }
                 if (added)
                 {
+                    failedRooms?.Clear();
                     if (duplicateProtection)
                     {
                         roomPool.RemoveDuplicates(props, roomToAdd);
@@ -147,17 +150,19 @@ public class ReconstructedPalaceGenerator(CancellationToken ct) : PalaceGenerato
                         bool continueDropping = true;
                         int j = 0;
                         int dropPlacementFailures = 0;
+                        HashSet<Room>? failedDropZones = failedRooms == null ? null : [];
                         while (j < numDrops && continueDropping)
                         {
                             List<Room> possibleDropZones = roomPool.NormalRooms.Where(i => i.IsDropZone)
                                 .Union(palace.AllRooms.Where(i => i.IsDropZone && !palace.AllRooms.Any(j => j.Down == i))).ToList();
-                            if (possibleDropZones.Count == 0)
+                            Room? originalDropZoneRoom = possibleDropZones.SampleByPriority(r, failedDropZones);
+                            if (originalDropZoneRoom == null)
                             {
+                                if (possibleDropZones.Count > 0) { break; }
                                 logger.Debug("Exhausted all available drop zones");
                                 palace.IsValid = false;
                                 return palace;
                             }
-                            Room originalDropZoneRoom = possibleDropZones[r.Next(0, possibleDropZones.Count)];
 
                             if (palace.AllRooms.Contains(originalDropZoneRoom))
                             {
@@ -165,10 +170,12 @@ public class ReconstructedPalaceGenerator(CancellationToken ct) : PalaceGenerato
                                 break;
                             }
 
+                            failedDropZones?.Add(originalDropZoneRoom);
                             Room dropZoneRoom = new(originalDropZoneRoom);
                             bool added2 = AddRoom(palace, dropZoneRoom, props.BlockersAnywhere);
                             if (added2)
                             {
+                                failedDropZones?.Clear();
                                 if (duplicateProtection)
                                 {
                                     roomPool.RemoveDuplicates(props, dropZoneRoom);
@@ -190,7 +197,7 @@ public class ReconstructedPalaceGenerator(CancellationToken ct) : PalaceGenerato
                                 }
                                 j++;
                             }
-                            else if (++dropPlacementFailures > DROP_PLACEMENT_FAILURE_LIMIT)
+                            else if (failedDropZones == null && ++dropPlacementFailures > DROP_PLACEMENT_FAILURE_LIMIT)
                             {
                                 logger.Trace("Drop placement failure limit exceeded.");
                                 break;
@@ -198,7 +205,7 @@ public class ReconstructedPalaceGenerator(CancellationToken ct) : PalaceGenerato
                         }
                     }
                 }
-                else if (++roomPlacementFailures >= ROOM_PLACEMENT_FAILURE_LIMIT)
+                else if (failedRooms == null && ++roomPlacementFailures >= ROOM_PLACEMENT_FAILURE_LIMIT)
                 {
                     break;
                 }
@@ -207,7 +214,12 @@ public class ReconstructedPalaceGenerator(CancellationToken ct) : PalaceGenerato
 
                 if (openRooms.Count >= roomCount - palace.AllRooms.Count) //consolidate
                 {
+                    int exitsBefore = failedRooms == null ? 0 : openRooms.Sum(room => room.CountOpenExits());
                     Consolidate(openRooms, props, palaceNumber);
+                    if (failedRooms != null && palace.AllRooms.Sum(room => room.CountOpenExits()) != exitsBefore)
+                    {
+                        failedRooms.Clear();
+                    }
                 }
             }
 

@@ -22,14 +22,14 @@ internal class ChaosPalaceGenerator : PalaceGenerator
         Palace palace = new(palaceNumber, props.ShufflePalaceItems);
         var palaceGroup = Util.AsPalaceGrouping(palaceNumber);
 
-        palace.Entrance = new(roomPool.Entrances[r.Next(roomPool.Entrances.Count)])
+        palace.Entrance = new(roomPool.Entrances.SampleByPriority(r)!)
         {
             IsRoot = true,
             // PalaceGroup = palaceGroup,
         };
         palace.AllRooms.Add(palace.Entrance);
 
-        palace.BossRoom = new(roomPool.BossRooms[r.Next(roomPool.BossRooms.Count)]);
+        palace.BossRoom = new(roomPool.BossRooms.SampleByPriority(r)!);
         palace.BossRoom.NewEnemies = palace.BossRoom.Enemies;
         // palace.BossRoom.PalaceGroup = palaceGroup;
         palace.AllRooms.Add(palace.BossRoom);
@@ -71,7 +71,7 @@ internal class ChaosPalaceGenerator : PalaceGenerator
         {
             if (!props.RemoveTbird)
             {
-                palace.TbirdRoom = new(roomPool.TbirdRooms[r.Next(roomPool.TbirdRooms.Count)]);
+                palace.TbirdRoom = new(roomPool.TbirdRooms.SampleByPriority(r)!);
                 // palace.TbirdRoom.PalaceGroup = PalaceGrouping.PalaceGp;
                 palace.AllRooms.Add(palace.TbirdRoom);
             }
@@ -80,8 +80,7 @@ internal class ChaosPalaceGenerator : PalaceGenerator
         while (palace.AllRooms.Count < roomCount && roomPool.NormalRooms.Count > 0)
         {
             await Task.Yield();
-            int roomIndex = r.Next(roomPool.NormalRooms.Count);
-            Room newRoom = new(roomPool.NormalRooms[roomIndex]);
+            Room newRoom = new(roomPool.NormalRooms.SampleByPriority(r)!);
             palace.AllRooms.Add(newRoom);
             if (duplicateProtection) { roomPool.RemoveDuplicates(props, newRoom); }
         }

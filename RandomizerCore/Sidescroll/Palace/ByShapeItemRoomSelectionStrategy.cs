@@ -13,14 +13,19 @@ internal class ByShapeItemRoomSelectionStrategy : ItemRoomSelectionStrategy, IIt
     {
         var shapesInPool = roomPool.GetItemRoomShapes();
         List<RoomExitType> possibleItemRoomExitTypes = ShuffleItemRoomShapes(shapesInPool, PRIORITY_ROOM_SHAPES, r);
+        var failedShapes = new HashSet<(RoomExitType Shape, int Priority)>();
+        bool usePriority = roomPool.ItemRooms.HasMixedPriorities();
         List<Room> itemRooms = [], originalItemRooms = [];
         List<Coord> replacedCoords = [];
         int itemRoomNumber = 0, attemptNumber = 0;
 
         while (itemRoomNumber < itemRoomCount && attemptNumber++ < MAX_ATTEMPTS)
         {
-            RoomExitType itemRoomExitType = possibleItemRoomExitTypes[0];
-            List<Room> itemRoomCandidates = roomPool.GetItemRoomsForShape(itemRoomExitType).ToList();
+            if (!TryGetCandidates(roomPool, possibleItemRoomExitTypes, failedShapes, originalItemRooms, avoidDuplicates,
+                usePriority, out var itemRoomExitType, out var itemRoomCandidates, out int priority))
+            {
+                break;
+            }
             itemRoomCandidates.FisherYatesShuffle(r);
 
             bool itemRoomPlaced = false;
@@ -31,7 +36,7 @@ internal class ByShapeItemRoomSelectionStrategy : ItemRoomSelectionStrategy, IIt
                 List<Room> itemRoomReplacementCandidates =
                     palace.AllRooms.Where(i => i.IsNormalRoom() && i.CategorizeExits() == itemRoomExitType && !replacedCoords.Contains(i.coords)).ToList();
 
-                itemRoomReplacementCandidates.FisherYatesShuffle(r);
+                itemRoomReplacementCandidates = itemRoomReplacementCandidates.ShuffleReplacementTargets(r);
                 foreach (Room itemRoomReplacementRoom in itemRoomReplacementCandidates)
                 {
                     var coord = itemRoomReplacementRoom.coords;
@@ -51,7 +56,8 @@ internal class ByShapeItemRoomSelectionStrategy : ItemRoomSelectionStrategy, IIt
             }
             if (!itemRoomPlaced)
             {
-                possibleItemRoomExitTypes.Remove(itemRoomExitType);
+                if (usePriority) { failedShapes.Add((itemRoomExitType, priority)); }
+                else { possibleItemRoomExitTypes.Remove(itemRoomExitType); }
                 if (possibleItemRoomExitTypes.Count == 0)
                 {
                     break;
@@ -74,17 +80,20 @@ internal class ByShapeItemRoomSelectionStrategy : ItemRoomSelectionStrategy, IIt
         var priorityItemRooms = roomPool.ItemRooms.Where(room => room.Priority > 0).ToList();
         var priorityShapes = priorityItemRooms.Select(room => roomPool.GetMergedExitType(room)).ToList();
         List<RoomExitType> possibleItemRoomExitTypes = ShuffleItemRoomShapes(itemRoomShapes, priorityShapes, r);
+        var failedShapes = new HashSet<(RoomExitType Shape, int Priority)>();
+        bool usePriority = roomPool.ItemRooms.HasMixedPriorities();
         List<Room> itemRooms = [], originalItemRooms = [];
         List<Coord> replacedCoords = [.. preplacedCoords];
         int itemRoomNumber = 0, attemptNumber = 0;
 
         while (itemRoomNumber < itemRoomCount && attemptNumber++ < MAX_ATTEMPTS)
         {
-            RoomExitType itemRoomExitType = possibleItemRoomExitTypes[0];
-            List<Room> itemRoomCandidates = roomPool.GetItemRoomsForShape(itemRoomExitType).ToList();
+            if (!TryGetCandidates(roomPool, possibleItemRoomExitTypes, failedShapes, originalItemRooms, avoidDuplicates,
+                usePriority, out var itemRoomExitType, out var itemRoomCandidates, out int priority))
+            {
+                break;
+            }
             itemRoomCandidates.FisherYatesShuffle(r);
-            // place "priority rooms" first. this is useful to quickly test new rooms
-            itemRoomCandidates = itemRoomCandidates.OrderByDescending(x => x.Priority).ToList();
 
             bool itemRoomPlaced = false;
 
@@ -122,7 +131,8 @@ internal class ByShapeItemRoomSelectionStrategy : ItemRoomSelectionStrategy, IIt
             }
             if (!itemRoomPlaced)
             {
-                possibleItemRoomExitTypes.Remove(itemRoomExitType);
+                if (usePriority) { failedShapes.Add((itemRoomExitType, priority)); }
+                else { possibleItemRoomExitTypes.Remove(itemRoomExitType); }
                 if (possibleItemRoomExitTypes.Count == 0)
                 {
                     break;
@@ -138,6 +148,39 @@ internal class ByShapeItemRoomSelectionStrategy : ItemRoomSelectionStrategy, IIt
             return itemRooms.ToArray();
         }
         return [];
+    }
+
+    private static bool TryGetCandidates(RoomPool pool, List<RoomExitType> shapes,
+        HashSet<(RoomExitType Shape, int Priority)> failedShapes, List<Room> usedRooms,
+        bool avoidDuplicates, bool usePriority, out RoomExitType shape, out List<Room> candidates, out int priority)
+    {
+        shape = shapes.FirstOrDefault();
+        priority = int.MinValue;
+        candidates = [];
+        if (shapes.Count == 0) { return false; }
+        if (!usePriority)
+        {
+            candidates = pool.GetItemRoomsForShape(shape).ToList();
+            return true;
+        }
+
+        foreach (var possibleShape in shapes)
+        {
+            foreach (var room in pool.GetItemRoomsForShape(possibleShape))
+            {
+                if (room.Priority < priority || failedShapes.Contains((possibleShape, room.Priority)) ||
+                    (avoidDuplicates && usedRooms.Contains(room))) { continue; }
+                if (room.Priority > priority)
+                {
+                    priority = room.Priority;
+                    shape = possibleShape;
+                    candidates.Clear();
+                }
+                if (candidates.Count == 0) { shape = possibleShape; }
+                if (shape == possibleShape) { candidates.Add(room); }
+            }
+        }
+        return candidates.Count != 0;
     }
 
     private static Room CreateItemRoom(Room candidate, Coord coord, RoomPool pool)

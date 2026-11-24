@@ -28,7 +28,7 @@ public class RandomWalkCoordinatePalaceGenerator : ShapeFirstCoordinatePalaceGen
     {
         Dictionary<Coord, RoomExitType> walkGraph = [];
         List<Coord> openCoords = [];
-        Room entrance = new(roomPool.Entrances[r.Next(roomPool.Entrances.Count)])
+        Room entrance = new(roomPool.Entrances.SampleByPriority(r)!)
         {
             IsRoot = true,
             // PalaceGroup = palaceGroup

@@ -51,7 +51,7 @@ public abstract class CoordinatePalaceGenerator : PalaceGenerator
                 throw new Exception("No tbird rooms for generated palace");
             }
             List<Room> tbirdRoomCandidates = roomPool.TbirdRooms.ToList();
-            tbirdRoomCandidates.FisherYatesShuffle(r);
+            tbirdRoomCandidates = tbirdRoomCandidates.ShuffleByPriority(r);
 
             foreach (Room tbirdRoomCandidate in tbirdRoomCandidates)
             {
@@ -61,7 +61,7 @@ public abstract class CoordinatePalaceGenerator : PalaceGenerator
                 }
                 List<Room> tbirdRoomReplacementCandidates =
                     palace.AllRooms.Where(i => i.CategorizeExits() == tbirdRoomCandidate.CategorizeExits() && i.IsNormalRoom()).ToList();
-                tbirdRoomReplacementCandidates.FisherYatesShuffle(r);
+                tbirdRoomReplacementCandidates = tbirdRoomReplacementCandidates.ShuffleReplacementTargets(r);
                 foreach (Room tbirdRoomReplacementRoom in tbirdRoomReplacementCandidates)
                 {
                     Room? upRoom = palace.AllRooms.FirstOrDefault(
@@ -85,7 +85,7 @@ public abstract class CoordinatePalaceGenerator : PalaceGenerator
                 throw new Exception("No boss rooms for generated palace");
             }
             List<Room> bossRoomCandidates = roomPool.BossRooms.ToList();
-            bossRoomCandidates.FisherYatesShuffle(r);
+            bossRoomCandidates = bossRoomCandidates.ShuffleByPriority(r);
 
             foreach (Room bossRoomCandidate in bossRoomCandidates)
             {
@@ -101,7 +101,7 @@ public abstract class CoordinatePalaceGenerator : PalaceGenerator
                 List<Room> bossRoomReplacementCandidates =
                     palace.AllRooms.Where(i => i.CategorizeExits() == bossRoomExitType && i.IsNormalRoom()).ToList();
 
-                bossRoomReplacementCandidates.FisherYatesShuffle(r);
+                bossRoomReplacementCandidates = bossRoomReplacementCandidates.ShuffleReplacementTargets(r);
                 foreach (Room bossRoomReplacementRoom in bossRoomReplacementCandidates)
                 {
                     Room? upRoom = palace.AllRooms.FirstOrDefault(

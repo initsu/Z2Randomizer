@@ -170,14 +170,11 @@ public abstract class ShapeFirstCoordinatePalaceGenerator() : CoordinatePalaceGe
                 roomCandidates = GetNormalRoomsForExitType(roomPool, roomCoords, roomExitType);
                 refillAllowed = false;
             }
-            // place "priority rooms" first. this is useful to quickly test new rooms
-            roomCandidates = roomCandidates.OrderByDescending(x => x.Priority).ToList();
-
             roomCandidates.FisherYatesShuffle(r);
-            if (preferMiniBoss is bool preferBoss)
-            {
-                roomCandidates = roomCandidates.OrderByDescending(room => room.HasBoss == preferBoss).ToList(); // true gets sorted first
-            }
+            roomCandidates = preferMiniBoss is bool preferBoss
+                ? roomCandidates.OrderByDescending(room => room.HasBoss == preferBoss)
+                    .ThenByDescending(room => room.Priority).ToList()
+                : roomCandidates.OrderByDescending(room => room.Priority).ToList();
 
             newRoom = SelectRoomForCoord(palace, rooms, roomPool, palaceShape, roomCoords, dropZone, roomCandidates);
             if (newRoom != null)
@@ -377,7 +374,7 @@ public abstract class ShapeFirstCoordinatePalaceGenerator() : CoordinatePalaceGe
         if (roomPool.BossRooms.Count == 0) { throw new Exception("No boss rooms in room pool"); }
 
         List<Room> bossRoomCandidates = roomPool.BossRooms.ToList();
-        bossRoomCandidates.FisherYatesShuffle(r);
+        bossRoomCandidates = bossRoomCandidates.ShuffleByPriority(r);
 
         var shapeOrdered = shape.OrderBy(i => i.Key.X).ThenByDescending(i => i.Key.Y).ToList();
         bool palaceContinues = palace.Number < 7 && props.BossRoomsExitToPalace[palace.Number - 1];

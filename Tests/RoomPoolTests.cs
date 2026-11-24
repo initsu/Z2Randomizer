@@ -100,6 +100,91 @@ public class RoomPoolTests
         return new PalaceRooms(allRooms);
     }
 
+    [TestMethod]
+    public void ShapeFirstPlacementTriesCustomGroupWithHigherPriorityFirst()
+    {
+        var builtIn = CreateMockRoom("Built-in", RoomGroup.V4_0, hasLeftExit: true);
+        var custom = CreateMockRoom("Custom", RoomGroup.CUSTOM, hasLeftExit: true);
+        var bundled = CreateMockPalaceRooms(v4Rooms: [builtIn]);
+        var combined = new PalaceRooms(bundled, [.. bundled.RoomsInInputOrder, custom]);
+        var spec = RoomPoolSpecDeserializer.FromString("""
+            groups_include: [VANILLA, V4_0]
+            groups:
+            - name: CUSTOM
+              priority: 1
+            """);
+        var props = CreateMockProps();
+        var pool = new RoomPool(combined, 1, props, spec);
+
+        var generator = new RoomPriorityTestGenerator();
+        for (int seed = 0; seed < 8; seed++)
+        {
+            Assert.AreEqual("Custom", generator.PickLeftDeadEnd(pool, props, new Random(seed))?.Name);
+        }
+    }
+
+    [TestMethod]
+    public void PrioritySamplingFallsBackAfterHigherPriorityRoomsFail()
+    {
+        Room preferred = new() { Priority = 1 };
+        Room fallback = new();
+        Room[] candidates = [fallback, preferred];
+        var random = new Random(42);
+
+        Assert.AreSame(preferred, candidates.SampleByPriority(random));
+        Assert.AreSame(fallback, candidates.SampleByPriority(random, [preferred]));
+        Assert.IsNull(candidates.SampleByPriority(random, [preferred, fallback]));
+    }
+
+    [TestMethod]
+    public void EntranceDirectionItemSelectionUsesPriorityAcrossDirections()
+    {
+        var preferred = CreateMockRoom("Preferred item", RoomGroup.CUSTOM, hasItem: true, hasLeftExit: true);
+        var bundled = CreateMockPalaceRooms();
+        var combined = new PalaceRooms(bundled, [.. bundled.RoomsInInputOrder, preferred]);
+        var props = CreateMockProps();
+        var pool = new RoomPool(combined, 1, props, new RoomPoolSpec
+        {
+            GroupsInclude = ["VANILLA"],
+            Groups = [new GroupOverride { Name = "CUSTOM", Priority = 1 }],
+        });
+
+        var strategy = new ByEntranceDirectionItemRoomSelectionStrategy();
+        var items = strategy.SelectItemRooms(new Palace(1, false), pool, 2, true, new Random(42));
+        CollectionAssert.AreEqual(new[] { "Preferred item", "VanillaP1Item" }, items.Select(room => room.Name).ToArray());
+    }
+
+    [TestMethod]
+    [DataRow(true, "Preferred miniboss")]
+    [DataRow(false, "Ordinary room")]
+    public void ShapeFirstPlacementAppliesMinibossPreferenceBeforePriority(bool preferMiniBoss, string expectedRoom)
+    {
+        var ordinary = CreateMockRoom("Ordinary room", RoomGroup.V4_0, hasLeftExit: true);
+        ordinary.Priority = 10;
+        var miniboss = CreateMockRoom("Miniboss", RoomGroup.V4_0, hasLeftExit: true);
+        miniboss.HasBoss = true;
+        var preferredMiniboss = CreateMockRoom("Preferred miniboss", RoomGroup.V4_0, hasLeftExit: true);
+        preferredMiniboss.HasBoss = true;
+        preferredMiniboss.Priority = 1;
+        var rooms = CreateMockPalaceRooms(v4Rooms: [ordinary, miniboss, preferredMiniboss]);
+        var props = CreateMockProps();
+        var pool = new RoomPool(rooms, 1, props, new RoomPoolSpec { GroupsInclude = ["VANILLA", "V4_0"] });
+        var generator = new RoomPriorityTestGenerator(preferMiniBoss ? 1f : 0f);
+
+        for (int seed = 0; seed < 8; seed++)
+        {
+            Assert.AreEqual(expectedRoom, generator.PickLeftDeadEnd(pool, props, new Random(seed))?.Name);
+        }
+    }
+
+    private sealed class RoomPriorityTestGenerator(float? miniBossChance = null) : RandomWalkCoordinatePalaceGenerator
+    {
+        protected override float? GetMiniBossChance() => miniBossChance;
+
+        internal Room? PickLeftDeadEnd(RoomPool pool, RandomizerProperties props, Random random) =>
+            PickNonStubRoom(props, new Palace(1, false), pool, pool, random, [], Coord.Origin, RoomExitType.DEADEND_EXIT_LEFT, false);
+    }
+
     #region Test Spec Presets
     [TestMethod]
     [DataRow(RoomPoolOption.VANILLA, 1)]

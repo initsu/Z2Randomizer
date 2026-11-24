@@ -20,15 +20,17 @@ public class RandomItemRoomSelectionStrategy : ItemRoomSelectionStrategy
             throw new Exception($"No item room candidates for palace {palace.Number} in RandomItemRoomSelectionStrategy");
         }
 
+        HashSet<Room>? failedRooms = itemRoomCandidates.HasMixedPriorities() ? [] : null;
         while (itemRooms.Count < itemRoomCount && attemptNumber++ < MAX_ATTEMPTS)
         {
-            Room? itemRoomCandidate = itemRoomCandidates.Sample(r);
+            Room? itemRoomCandidate = itemRoomCandidates.SampleByPriority(r, failedRooms);
 
             if (itemRoomCandidate == null)
             {
                 return [];
             }
 
+            failedRooms?.Add(itemRoomCandidate);
             RoomExitType itemRoomExitType = itemRoomCandidate.CategorizeExits();
             if (itemRoomCandidate.LinkedRoomName != null)
             {
@@ -38,7 +40,7 @@ public class RandomItemRoomSelectionStrategy : ItemRoomSelectionStrategy
             List<Room> itemRoomReplacementCandidates =
                 palace.AllRooms.Where(i => i.IsNormalRoom() && i.CategorizeExits() == itemRoomExitType && !replacedCoords.Contains(i.coords)).ToList();
 
-            itemRoomReplacementCandidates.FisherYatesShuffle(r);
+            itemRoomReplacementCandidates = itemRoomReplacementCandidates.ShuffleReplacementTargets(r);
             foreach (Room itemRoomReplacementRoom in itemRoomReplacementCandidates)
             {
                 Room? upRoom = palace.AllRooms.FirstOrDefault(
@@ -56,6 +58,7 @@ public class RandomItemRoomSelectionStrategy : ItemRoomSelectionStrategy
                         itemRoom = itemRoom.Merge(linkedRoom);
                     }
 
+                    failedRooms?.Clear();
                     itemRooms.Add(itemRoom);
                     replacedCoords.Add(itemRoomReplacementRoom.coords);
                     itemRoomNumber++;

@@ -41,7 +41,7 @@ public class SequentialPlacementCoordinatePalaceGenerator : CoordinatePalaceGene
         HashSet<RoomExitType> refilledTypes = [];
         roomPool = new(rooms);
         // var palaceGroup = Util.AsPalaceGrouping(palaceNumber);
-        Room entrance = new(roomPool.Entrances[r.Next(roomPool.Entrances.Count)])
+        Room entrance = new(roomPool.Entrances.SampleByPriority(r)!)
         {
             IsRoot = true,
             // PalaceGroup = palaceGroup
@@ -52,6 +52,7 @@ public class SequentialPlacementCoordinatePalaceGenerator : CoordinatePalaceGene
         palace.Entrance = entrance;
         palace.AllRooms.Add(entrance);
 
+        HashSet<Room>? failedRooms = roomPool.NormalRooms.HasMixedPriorities() ? [] : null;
         stallCount = 0;
         openJunctionsCount = 0;
         while (roomsByCoordinate.Count + openCoords.Count < this.roomCount || openJunctionsCount > 0)
@@ -68,13 +69,14 @@ public class SequentialPlacementCoordinatePalaceGenerator : CoordinatePalaceGene
                 }
                 return palace;
             }
-            Room? originalRoom = roomPool.NormalRooms.Sample(r);
+            Room? originalRoom = roomPool.NormalRooms.SampleByPriority(r, failedRooms);
             if (originalRoom == null)
             {
                 palace.IsValid = false;
                 return palace;
             }
 
+            failedRooms?.Add(originalRoom);
             Room baseRoom = new(originalRoom);
             Room mergedRoom = baseRoom;
             //Update: Now we're just handling linked rooms like random walk does. Merge the rooms and treat them as a single room
@@ -113,6 +115,7 @@ public class SequentialPlacementCoordinatePalaceGenerator : CoordinatePalaceGene
             if (UpdateRoom(mergedRoom))
             {
                 palace.AllRooms.Add(mergedRoom);
+                failedRooms?.Clear();
                 //Debug.WriteLineIf(debug == 78, palace.GetLayoutDebug(PalaceStyle.SEQUENTIAL, false));
                 if (duplicateProtection)
                 {
@@ -179,7 +182,7 @@ public class SequentialPlacementCoordinatePalaceGenerator : CoordinatePalaceGene
             do //while (placed == false)
             {
                 roomsByExitType.TryGetValue(exitType, out var possibleRooms);
-                Room? newRoom = possibleRooms?.Sample(r);
+                Room? newRoom = possibleRooms?.SampleByPriority(r);
                 if (newRoom == null)
                 {
                     roomPool.DefaultStubsByDirection.TryGetValue(exitType, out newRoom);
