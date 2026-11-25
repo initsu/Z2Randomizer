@@ -7,6 +7,7 @@
   <ItemGroup>
     <PackageReference Include="YamlDotNet" />
     <EmbeddedResource Include="FieldOrder.txt" LogicalName="RoomFieldOrder" />
+    <EmbeddedResource Include="FileOrder.txt" LogicalName="RoomFileOrder" />
     <Compile Include="../../RandomizerCore/Sidescroll/RoomDefinitionFields.cs" Link="RoomDefinitionFields.cs" />
     <Compile Include="../../RandomizerCore/Sidescroll/RoomYamlReader.cs" Link="RoomYamlReader.cs" />
     <Compile Include="../../RandomizerCore/Sidescroll/Palace/RoomGroup.cs" Link="RoomGroup.cs" />

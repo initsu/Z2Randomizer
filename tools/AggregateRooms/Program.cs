@@ -2,18 +2,20 @@ using System.Text.Json;
 using YamlDotNet.Core;
 using Z2Randomizer.RandomizerCore.Sidescroll;
 
-if (args.Length is < 2 or > 3)
+if (args.Length is < 2 or > 4)
 {
-    Console.Error.WriteLine("Usage: AggregateRooms <bundled-room-directory> <output-json> [field-order-file]");
+    Console.Error.WriteLine("Usage: AggregateRooms <bundled-room-directory> <output-json> [field-order-file] [file-order-file]");
     return 1;
 }
 
 try
 {
-    var fieldOrder = ReadFieldOrder(args.Length == 3 ? args[2] : null);
+    var fieldOrder = ReadOrder(args.Length >= 3 ? args[2] : null, "RoomFieldOrder");
+    var fileOrder = ReadOrder(args.Length == 4 ? args[3] : null, "RoomFileOrder");
     string[] sources = Directory.EnumerateFiles(args[0])
         .Where(path => Path.GetExtension(path).ToLowerInvariant() is ".json" or ".yaml" or ".yml")
-        .Order(StringComparer.Ordinal).ToArray();
+        .OrderBy(path => fileOrder.GetValueOrDefault(Path.GetFileName(path), int.MaxValue))
+        .ThenBy(path => path, StringComparer.Ordinal).ToArray();
     if (sources.Length == 0) { throw new FormatException("No bundled room files found."); }
 
     using var output = new MemoryStream();
@@ -45,20 +47,20 @@ catch (Exception exception) when (exception is FormatException or IOException or
     return 1;
 }
 
-static Dictionary<string, int> ReadFieldOrder(string? path)
+static Dictionary<string, int> ReadOrder(string? path, string resourceName)
 {
     using var input = path == null
-        ? typeof(JsonNodeContext).Assembly.GetManifestResourceStream("RoomFieldOrder")!
+        ? typeof(JsonNodeContext).Assembly.GetManifestResourceStream(resourceName)!
         : File.OpenRead(path);
     using var reader = new StreamReader(input);
     var order = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
     while (reader.ReadLine() is { } line)
     {
-        string field = line.Trim();
-        if (field.Length == 0) { continue; }
-        if (!order.TryAdd(field, order.Count))
+        string entry = line.Trim();
+        if (entry.Length == 0) { continue; }
+        if (!order.TryAdd(entry, order.Count))
         {
-            throw new FormatException($"Duplicate field '{field}' in {path ?? "the default field order"}.");
+            throw new FormatException($"Duplicate entry '{entry}' in {path ?? resourceName}.");
         }
     }
     return order;
