@@ -63,7 +63,7 @@ public class Room : IJsonOnDeserialized, IDeterministicHash
 
     [JsonPropertyName("bitmask")]
     [JsonConverter(typeof(HexStringConverter))]
-    public byte[] ItemPresenceBits { get; set; }
+    public byte[] ItemPresenceBits { get; set; } = [RoomDefinitionFields.DefaultItemBits];
 
     // Keep the source ROM index even when the generator assigns the room a new map.
     private byte? vanillaMap;
@@ -78,18 +78,11 @@ public class Room : IJsonOnDeserialized, IDeterministicHash
     [JsonIgnore]
     public byte Map { get; set; }
 
-    [JsonPropertyName("palaceGroup")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public int? VanillaPalaceGroupNumber { get; set; }
+    // The vanilla source palace stays fixed when a shared room is placed elsewhere.
+    private int? vanillaSourcePalaceNumber;
 
     [JsonIgnore]
-    internal PalaceGrouping? VanillaPalaceGroup => VanillaPalaceGroupNumber switch
-    {
-        1 => PalaceGrouping.Palace125,
-        2 => PalaceGrouping.Palace346,
-        3 => PalaceGrouping.PalaceGp,
-        _ => null,
-    };
+    internal PalaceGrouping? VanillaPalaceGroup => Util.AsPalaceGrouping(vanillaSourcePalaceNumber);
 
     [JsonIgnore]
     public PalaceGrouping? PalaceGroup => Util.AsPalaceGrouping(PalaceNumber);
@@ -129,7 +122,7 @@ public class Room : IJsonOnDeserialized, IDeterministicHash
 
     public bool HasDrop { get; set; }
     public bool HasDroppableElevator { get; set; }
-    public int ElevatorScreen { get; set; }
+    public int ElevatorScreen { get; set; } = RoomDefinitionFields.DefaultElevatorScreen;
     [JsonPropertyName("requirements")]
     [JsonConverter(typeof(RequirementsJsonConverter))]
     public Requirements LinkRequirements { get; set; } = Requirements.NONE;
@@ -155,12 +148,21 @@ public class Room : IJsonOnDeserialized, IDeterministicHash
     public bool IsBossRoom { get; set; }
     public string Name { get; set; }
     public string Author { get; set; }
-    public RoomGroup Group { get; set; }
+    public RoomGroup Group { get; set; } = RoomDefinitionFields.DefaultGroup;
     public bool IsThunderBirdRoom { get; set; }
-    public bool Enabled { get; set; }
+    public bool Enabled { get; set; } = RoomDefinitionFields.DefaultEnabled;
     public bool IsEntrance { get; set; }
     public bool IsStub { get; set; } = false;
+    [JsonIgnore]
     public int? PalaceNumber { get; set; }
+
+    /// <summary>The palace number in the room file. For vanilla rooms it identifies the ROM source.</summary>
+    [JsonPropertyName("palaceNumber")]
+    public int? DefinitionPalaceNumber
+    {
+        get => vanillaSourcePalaceNumber ?? PalaceNumber;
+        set => PalaceNumber = value;
+    }
     public string? LinkedRoomName { get; set; }
     //public int PageCount { get; private set; }
     [JsonIgnore]
@@ -177,8 +179,8 @@ public class Room : IJsonOnDeserialized, IDeterministicHash
     public Room MergedPrimary { get; set; }
     [JsonIgnore]
     public Room MergedSecondary { get; set; }
-    public string DuplicateGroup { get; set; } = "";
-    public int Priority { get; set; } = 0; // so we can force rooms to be placed for testing
+    public string DuplicateGroup { get; set; } = RoomDefinitionFields.DefaultDuplicateGroup;
+    public int Priority { get; set; } = RoomDefinitionFields.DefaultPriority;
     public List<string> SuppressWarning { get; set; } = [];
     public List<string> Tags { get; set; } = [];
 
@@ -193,7 +195,7 @@ public class Room : IJsonOnDeserialized, IDeterministicHash
     public Room(Room room)
     {
         vanillaMap = room.vanillaMap;
-        VanillaPalaceGroupNumber = room.VanillaPalaceGroupNumber;
+        vanillaSourcePalaceNumber = room.vanillaSourcePalaceNumber;
         Map = room.Map;
         Enemies = room.Enemies.ToArray();
         NewEnemies = new byte[Enemies.Length];
@@ -255,16 +257,17 @@ public class Room : IJsonOnDeserialized, IDeterministicHash
         if (Group == RoomGroup.VANILLA)
         {
             Map = vanillaMap.GetValueOrDefault();
-            if (VanillaPalaceGroupNumber == null && PalaceGroup is { } group)
+            vanillaSourcePalaceNumber ??= PalaceNumber;
+            // Regular vanilla layouts and item rooms can still be selected in any regular palace.
+            if (vanillaMap.HasValue && PalaceNumber is < 7 && !IsEntrance && !IsBossRoom)
             {
-                VanillaPalaceGroupNumber = (int)group + 1;
+                PalaceNumber = null;
             }
-            if (VanillaPalaceGroup == PalaceGrouping.PalaceGp) { PalaceNumber ??= 7; }
         }
         else
         {
             vanillaMap = null;
-            VanillaPalaceGroupNumber = null;
+            vanillaSourcePalaceNumber = null;
         }
         SetConnections(Connections);
         if (MarioRequirements == null || MarioRequirements.IsEmpty())
@@ -1189,7 +1192,7 @@ public class Room : IJsonOnDeserialized, IDeterministicHash
         hash = DeterministicHash.Combine(hash, HasDroppableElevator);
         hash = DeterministicHash.Combine(hash, IsStub);
         hash = DeterministicHash.Combine(hash, (int?)VanillaMap);
-        return DeterministicHash.Combine(hash, VanillaPalaceGroupNumber);
+        return DeterministicHash.Combine(hash, VanillaPalaceGroup is { } group ? (int?)group + 1 : null);
     }
 }
 

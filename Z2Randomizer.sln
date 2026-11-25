@@ -44,6 +44,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RandomizerCore.Browser", "R
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CrossPlatformUI.BrowserShared", "CrossPlatformUI\CrossPlatformUI.BrowserShared.csproj", "{999656DE-5C1D-401C-A796-F71DDEFCFF1A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AggregateRooms", "tools\AggregateRooms\AggregateRooms.csproj", "{CA796E36-6B10-42F4-93CD-D9AF80FB5372}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -318,6 +320,24 @@ Global
 		{BCD54DE6-3435-6A87-BED1-3B4A31D06223}.Unsafe Debug|x64.Build.0 = Unsafe Debug|Any CPU
 		{BCD54DE6-3435-6A87-BED1-3B4A31D06223}.Unsafe Debug|x86.ActiveCfg = Unsafe Debug|Any CPU
 		{BCD54DE6-3435-6A87-BED1-3B4A31D06223}.Unsafe Debug|x86.Build.0 = Unsafe Debug|Any CPU
+		{CA796E36-6B10-42F4-93CD-D9AF80FB5372}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA796E36-6B10-42F4-93CD-D9AF80FB5372}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA796E36-6B10-42F4-93CD-D9AF80FB5372}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{CA796E36-6B10-42F4-93CD-D9AF80FB5372}.Debug|x64.Build.0 = Debug|Any CPU
+		{CA796E36-6B10-42F4-93CD-D9AF80FB5372}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{CA796E36-6B10-42F4-93CD-D9AF80FB5372}.Debug|x86.Build.0 = Debug|Any CPU
+		{CA796E36-6B10-42F4-93CD-D9AF80FB5372}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA796E36-6B10-42F4-93CD-D9AF80FB5372}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA796E36-6B10-42F4-93CD-D9AF80FB5372}.Release|x64.ActiveCfg = Release|Any CPU
+		{CA796E36-6B10-42F4-93CD-D9AF80FB5372}.Release|x64.Build.0 = Release|Any CPU
+		{CA796E36-6B10-42F4-93CD-D9AF80FB5372}.Release|x86.ActiveCfg = Release|Any CPU
+		{CA796E36-6B10-42F4-93CD-D9AF80FB5372}.Release|x86.Build.0 = Release|Any CPU
+		{CA796E36-6B10-42F4-93CD-D9AF80FB5372}.Unsafe Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA796E36-6B10-42F4-93CD-D9AF80FB5372}.Unsafe Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA796E36-6B10-42F4-93CD-D9AF80FB5372}.Unsafe Debug|x64.ActiveCfg = Debug|Any CPU
+		{CA796E36-6B10-42F4-93CD-D9AF80FB5372}.Unsafe Debug|x64.Build.0 = Debug|Any CPU
+		{CA796E36-6B10-42F4-93CD-D9AF80FB5372}.Unsafe Debug|x86.ActiveCfg = Debug|Any CPU
+		{CA796E36-6B10-42F4-93CD-D9AF80FB5372}.Unsafe Debug|x86.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

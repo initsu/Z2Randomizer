@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="YamlDotNet" />
+    <EmbeddedResource Include="FieldOrder.txt" LogicalName="RoomFieldOrder" />
+    <Compile Include="../../RandomizerCore/Sidescroll/RoomDefinitionFields.cs" Link="RoomDefinitionFields.cs" />
+    <Compile Include="../../RandomizerCore/Sidescroll/RoomYamlReader.cs" Link="RoomYamlReader.cs" />
+    <Compile Include="../../RandomizerCore/Sidescroll/Palace/RoomGroup.cs" Link="RoomGroup.cs" />
+  </ItemGroup>
+</Project>

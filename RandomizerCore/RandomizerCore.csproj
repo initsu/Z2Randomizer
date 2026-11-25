@@ -19,9 +19,10 @@
     <PublishTrimmed>true</PublishTrimmed>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+  <Import Project="BundledRooms.targets" Condition="'$(MSBuildProjectName)' != 'RandomizerCore.Browser'" />
   <ItemGroup>
     <Content Include="nlog.config" CopyToOutputDirectory="Always" />
-    <Content Include="PalaceRooms.json">
+    <Content Include="$(BundledRoomOutput)" Condition="'$(BundledRoomOutput)' != ''" Link="PalaceRooms.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>

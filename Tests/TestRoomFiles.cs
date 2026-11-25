@@ -23,7 +23,7 @@ internal static class TestRoomFiles
         return new PalaceRooms($"[{string.Join(',', definitions)}]", false, vanillaRoomData);
 
         static bool IsVanilla(JsonElement definition) =>
-            string.Equals(definition.GetProperty("group").GetString(), nameof(RoomGroup.VANILLA), StringComparison.OrdinalIgnoreCase);
+            RoomDefinitionFields.IsVanilla(RoomDefinitionFields.Read(definition));
     }
 
     // For tests that use the bundled room names and metadata but do not exercise vanilla geometry.

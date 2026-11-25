@@ -1,0 +1,12 @@
+name
+author
+linkedRoomName
+enabled
+group
+palaceNumber
+map
+sideviewData
+enemies
+connections
+bitmask
+tags

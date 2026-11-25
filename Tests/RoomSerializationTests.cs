@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Text.Json;
 using Z2Randomizer.RandomizerCore;
 using Z2Randomizer.RandomizerCore.Sidescroll;
 using Z2Randomizer.RandomizerCore.Sidescroll.Palace;
@@ -8,6 +9,75 @@ namespace Z2Randomizer.Tests;
 [TestClass]
 public class RoomSerializationTests
 {
+    [TestMethod]
+    public void OmittedOptionalFieldsMatchExplicitDefaultsInBothFormats()
+    {
+        const string explicitDefaults = """
+            {
+                "name": "Example",
+                "author": "Test",
+                "connections": "00FCFC00",
+                "sideviewData": "04600F08",
+                "enemies": "01",
+                "enabled": true,
+                "group": "NONE",
+                "bitmask": "0F",
+                "elevatorScreen": -1,
+                "hasBoss": false,
+                "hasDrop": false,
+                "hasDroppableElevator": false,
+                "hasItem": false,
+                "isBossRoom": false,
+                "isDropZone": false,
+                "isEntrance": false,
+                "isStub": false,
+                "isThunderBirdRoom": false,
+                "isUpDownReversed": false,
+                "priority": 0,
+                "duplicateGroup": "",
+                "requirements": [],
+                "suppressWarning": [],
+                "tags": [],
+                "linkedRoomName": null,
+                "mirrorSideviewData": null,
+                "palaceNumber": null,
+                "map": null
+            }
+            """;
+        const string minimalJson = """
+            {"name":"Example","author":"Test","palaceNumber":null,"connections":"00FCFC00","sideviewData":"04600F08","enemies":"01"}
+            """;
+        const string minimalYaml = """
+            name: Example
+            author: Test
+            palaceNumber: null
+            connections: 0b1001
+            sideviewData: "04600F08"
+            enemies: "01"
+            """;
+
+        using var document = JsonDocument.Parse(explicitDefaults);
+        var fields = RoomDefinitionFields.Read(document.RootElement);
+        CollectionAssert.AreEquivalent(
+            new[] { "name", "author", "palaceNumber", "connections", "sideviewData", "enemies" },
+            fields.Where(field => !RoomDefinitionFields.IsDefaultValue(field.Key, field.Value, vanilla: false))
+                .Select(field => field.Key).ToArray());
+
+        var rooms = new List<RoomValidationInput>();
+        var diagnostics = new List<RoomDiagnostic>();
+        RoomFileReader.Read("explicit.json", explicitDefaults, rooms, diagnostics);
+        RoomFileReader.Read("minimal.json", minimalJson, rooms, diagnostics);
+        RoomFileReader.Read("minimal.yaml", minimalYaml, rooms, diagnostics);
+        Assert.IsEmpty(diagnostics, string.Join(Environment.NewLine, diagnostics));
+
+        var expected = rooms[0].Room;
+        foreach (var input in rooms.Skip(1))
+        {
+            Assert.AreEqual(expected.GetDeterministicHash(), input.Room.GetDeterministicHash(), input.Source);
+            Assert.AreEqual(expected.Serialize(), input.Room.Serialize(), input.Source);
+        }
+    }
+
     [TestMethod]
     public void CopyPreservesRoomDataAndKeepsMutableFieldsSeparate()
     {

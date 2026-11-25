@@ -32,6 +32,10 @@
     <ItemGroup>
         <Workload Include="wasm-tools" />
     </ItemGroup>
+    <PropertyGroup>
+        <BundledRoomOutput>$(MSBuildProjectDirectory)/wwwroot/PalaceRooms.json</BundledRoomOutput>
+    </PropertyGroup>
+    <Import Project="../RandomizerCore/BundledRooms.targets" />
 
     <PropertyGroup Condition="'$(Configuration)' == 'Release'">
         <RunAOTCompilation>true</RunAOTCompilation>
@@ -62,13 +66,15 @@
         </StaticWebAsset>
         <!-- js65 reads embedded core resources. Exclude Asm copies left by older builds. -->
         <Content Remove="wwwroot\Asm\**" />
-        <WasmExtraFilesToDeploy Include="wwwroot\**" Exclude="wwwroot\Asm\**" />
+        <Content Remove="wwwroot\PalaceRooms.json" />
+        <Content Include="wwwroot\PalaceRooms.json" />
+        <WasmExtraFilesToDeploy Include="wwwroot\**" Exclude="wwwroot\Asm\**;wwwroot\PalaceRooms.json" />
+        <WasmExtraFilesToDeploy Include="wwwroot\PalaceRooms.json" />
     </ItemGroup>
     <Target Name="CopyAssetsToLocalWwwRoot" BeforeTargets="BeforeBuild;AssignTargetPaths">
         <ItemGroup>
             <!-- Define the external source items -->
             <ExternalSprites Include="..\RandomizerCore\Sprites\**" />
-            <ExternalJson Include="..\RandomizerCore\PalaceRooms.json" />
             <ExternalJson Include="..\RandomizerCore\CustomRoomPool.yaml" />
             <!-- Tell Visual Studio to watch them for changes -->
             <UpToDateCheckInput Include="@(ExternalSprites);@(ExternalJson)" />

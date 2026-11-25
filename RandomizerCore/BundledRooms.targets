@@ -1,0 +1,25 @@
+<Project>
+  <PropertyGroup>
+    <BundledRoomSourceDirectory>$(MSBuildThisFileDirectory)BundledRooms</BundledRoomSourceDirectory>
+    <BundledRoomFieldOrder Condition="'$(BundledRoomFieldOrder)' == ''">$(MSBuildThisFileDirectory)../tools/AggregateRooms/FieldOrder.txt</BundledRoomFieldOrder>
+    <BundledRoomOutput Condition="'$(BundledRoomOutput)' == ''">$(MSBuildProjectDirectory)/$(BaseIntermediateOutputPath)$(Configuration)/$(TargetFramework)/bundled-rooms/PalaceRooms.json</BundledRoomOutput>
+    <BundledRoomsDotNet Condition="'$(DotNetHostPath)' != ''">$(DotNetHostPath)</BundledRoomsDotNet>
+    <BundledRoomsDotNet Condition="'$(BundledRoomsDotNet)' == ''">dotnet</BundledRoomsDotNet>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)../tools/AggregateRooms/AggregateRooms.csproj"
+                      ReferenceOutputAssembly="false" Private="false" OutputItemType="BundledRoomTool"
+                      SkipGetTargetFrameworkProperties="true" SetTargetFramework="TargetFramework=net10.0"
+                      GlobalPropertiesToRemove="RuntimeIdentifier;SelfContained;PublishSingleFile;PublishTrimmed;PublishAot" />
+    <UpToDateCheckInput Include="$(BundledRoomSourceDirectory)/*.json;$(BundledRoomSourceDirectory)/*.yaml;$(BundledRoomSourceDirectory)/*.yml" />
+    <UpToDateCheckInput Include="$(BundledRoomFieldOrder)" />
+    <UpToDateCheckOutput Include="$(BundledRoomOutput)" />
+  </ItemGroup>
+  <Target Name="AggregateBundledRooms" BeforeTargets="AssignTargetPaths;GetCopyToOutputDirectoryItems"
+          DependsOnTargets="ResolveProjectReferences" Condition="'$(DesignTimeBuild)' != 'true'">
+    <Exec Command="&quot;$(BundledRoomsDotNet)&quot; &quot;@(BundledRoomTool->'%(FullPath)')&quot; &quot;$(BundledRoomSourceDirectory)&quot; &quot;$(BundledRoomOutput)&quot; &quot;$(BundledRoomFieldOrder)&quot;" />
+    <ItemGroup>
+      <FileWrites Include="$(BundledRoomOutput)" />
+    </ItemGroup>
+  </Target>
+</Project>

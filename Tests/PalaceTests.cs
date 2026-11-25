@@ -86,6 +86,7 @@ public class PalaceTests
             IsThunderBirdRoom = isThunderBirdRoom,
             HasDrop = hasDrop,
             IsDropZone = isDropZone,
+            ElevatorScreen = 0, // The test layouts put their vertical connectors on the same screen.
             coords = new(x, y),
             SideView = [0x04, 0x60, 0x00, 0x08],
             Enemies = [0x01],

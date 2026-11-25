@@ -30,20 +30,20 @@ public class CustomRoomLoaderTests
         var result = await Load(new PalaceRooms(Array.Empty<Room>()), spec, new()
         {
             ["default.json"] = """
-                {"name":"JSON","enabled":true,"bitmask":"0F","connections":"00FCFC00","sideviewData":"04600F08","enemies":"01"}
+                {"name":"JSON","author":"Test","palaceNumber":null,"connections":"00FCFC00","sideviewData":"04600F08","enemies":"01"}
                 """,
             ["default.yaml"] = """
                 name: YAML
-                enabled: true
+                author: Test
+                palaceNumber: null
                 palaceGroup: 1
                 map: 12
-                itembits: 0b1111
                 connections: 0b1001
                 sideviewData: "04600F08"
                 enemies: "01"
                 """,
             ["explicit.json"] = """
-                {"name":"Explicit","Group":"V5_0","enabled":true,"bitmask":"0F","connections":"00FCFC00","sideviewData":"04600F08","enemies":"01"}
+                {"name":"Explicit","author":"Test","Group":"V5_0","palaceNumber":null,"enabled":true,"bitmask":"0F","connections":"00FCFC00","sideviewData":"04600F08","enemies":"01"}
                 """,
         });
 
@@ -52,6 +52,14 @@ public class CustomRoomLoaderTests
             rooms.RoomsByGroup(RoomGroup.CUSTOM).Select(room => room.Name).ToArray());
         Assert.AreEqual(RoomGroup.V5_0, rooms.GetRoomByName("Explicit")!.Group);
         Assert.IsNull(rooms.GetRoomByName("YAML")!.VanillaMap);
+        foreach (string name in new[] { "JSON", "YAML" })
+        {
+            var room = rooms.GetRoomByName(name)!;
+            Assert.IsTrue(room.Enabled);
+            Assert.IsFalse(room.IsThunderBirdRoom);
+            Assert.AreEqual((byte)0x0F, room.ItemPresenceBits.Single());
+            Assert.AreEqual(-1, room.ElevatorScreen);
+        }
     }
 
     [TestMethod]
@@ -144,13 +152,15 @@ public class CustomRoomLoaderTests
     {
         var bundled = new PalaceRooms(Array.Empty<Room>());
         const string alpha = """
-            {"name":"Alpha","group":"NONE","bitmask":"0F","connections":"00FCFC00","enemies":"01","sideviewData":"04600F08"}
+            {"name":"Alpha","author":"Test","group":"NONE","palaceNumber":null,"bitmask":"0F","connections":"00FCFC00","enemies":"01","sideviewData":"04600F08"}
             """;
         const string beta = """
-            {"name":"Beta","group":"NONE","bitmask":"0F","connections":"00FCFC00","enemies":"01","sideviewData":"04600F08"}
+            {"name":"Beta","author":"Test","group":"NONE","palaceNumber":null,"bitmask":"0F","connections":"00FCFC00","enemies":"01","sideviewData":"04600F08"}
             """;
         const string yamlAlpha = """
             name: Alpha
+            author: Test
+            palaceNumber: null
             group: NONE
             itembits: 0b1111
             connections: 0b1001
@@ -185,6 +195,8 @@ public class CustomRoomLoaderTests
     {
         const string definition = """
             name: Example
+            author: Test
+            palaceNumber: null
             group: NONE
             enabled: true
             itembits: 0b1111
