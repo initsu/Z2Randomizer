@@ -9,6 +9,7 @@ on:
     - extras
     - next
     - keylogic
+    - customrooms2026
     - '5.2'
     - '5.3'
   pull_request:
