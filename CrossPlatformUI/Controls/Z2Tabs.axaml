@@ -1,0 +1,98 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:converters="using:CrossPlatformUI.Converters">
+    <converters:TabHeaderFontSizeConverter x:Key="TabHeaderFontSize"
+                                         ExpandedFontSize="{StaticResource Z2TabFontSize}"
+                                         CompactFontSize="{StaticResource Z2CompactTabFontSize}" />
+    <!-- Per-state tab shape/border settings. Top includes both corner diagonals. -->
+    <converters:TabOutlineClipConverter x:Key="TabIdleOutline" CornerCut="0"
+                                        DrawTopEdge="True" DrawLeftEdge="False" DrawRightEdge="False" DrawBottomEdge="False" />
+    <converters:TabOutlineClipConverter x:Key="TabHoverOutline" CornerCut="0"
+                                        DrawTopEdge="True" DrawLeftEdge="False" DrawRightEdge="False" DrawBottomEdge="False" />
+    <converters:TabOutlineClipConverter x:Key="TabActiveOutline" CornerCut="2"
+                                        DrawTopEdge="True" DrawLeftEdge="True" DrawRightEdge="True" DrawBottomEdge="False" />
+    <ControlTheme x:Key="{x:Type TabItem}" TargetType="TabItem">
+        <Setter Property="Foreground" Value="{DynamicResource Z2ForegroundBrush}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Padding" Value="6,12" />
+        <Setter Property="MinHeight" Value="48" />
+        <Setter Property="MinWidth" Value="78" />
+        <Setter Property="FontFamily" Value="{DynamicResource Z2TabFontFamily}" />
+        <Setter Property="FontStyle" Value="{DynamicResource Z2TabFontStyle}" />
+        <Setter Property="FontWeight" Value="{DynamicResource Z2TabFontWeight}" />
+        <Setter Property="FontSize" Value="{Binding $parent[TabControl].Bounds.Width, Converter={StaticResource TabHeaderFontSize}}" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="FocusAdorner" Value="{x:Null}" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Grid Name="TabRoot" Background="Transparent">
+                    <Border Name="TabSurface" Background="Transparent" IsHitTestVisible="False" />
+                    <Border Name="TabBackground" Background="{TemplateBinding Background}" IsHitTestVisible="False" />
+                    <Border Name="TabFeedback" Background="Transparent" IsHitTestVisible="False" />
+                    <ContentPresenter Name="PART_ContentPresenter" Content="{TemplateBinding Header}"
+                                      ContentTemplate="{TemplateBinding HeaderTemplate}" Padding="{TemplateBinding Padding}"
+                                      HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                      VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                      RecognizesAccessKey="True" />
+                    <!-- Bounds-driven decoration must not contribute its old width to measurement. -->
+                    <Canvas IsHitTestVisible="False">
+                        <Path Name="TabOutline" StrokeThickness="1" />
+                    </Canvas>
+                </Grid>
+            </ControlTemplate>
+        </Setter>
+        <Style Selector="^ /template/ Grid#TabRoot">
+            <Setter Property="Clip" Value="{Binding Bounds, RelativeSource={RelativeSource Self}, Converter={StaticResource TabIdleOutline}}" />
+        </Style>
+        <Style Selector="^ /template/ Path#TabOutline">
+            <Setter Property="Data" Value="{Binding $parent[Grid].Bounds, Converter={StaticResource TabIdleOutline}, ConverterParameter=Outline}" />
+            <Setter Property="Stroke" Value="{DynamicResource Z2DisabledForegroundBrush}" />
+        </Style>
+        <Style Selector="^:selected">
+            <Setter Property="Foreground" Value="{DynamicResource Z2PrimaryBrush}" />
+        </Style>
+        <Style Selector="^:pointerover /template/ Grid#TabRoot">
+            <Setter Property="Clip" Value="{Binding Bounds, RelativeSource={RelativeSource Self}, Converter={StaticResource TabHoverOutline}}" />
+        </Style>
+        <Style Selector="^:pointerover /template/ Path#TabOutline">
+            <Setter Property="Data" Value="{Binding $parent[Grid].Bounds, Converter={StaticResource TabHoverOutline}, ConverterParameter=Outline}" />
+        </Style>
+        <!-- Selected styling wins over hover styling. -->
+        <Style Selector="^:selected /template/ Grid#TabRoot">
+            <Setter Property="Clip" Value="{Binding Bounds, RelativeSource={RelativeSource Self}, Converter={StaticResource TabActiveOutline}}" />
+        </Style>
+        <Style Selector="^:selected /template/ Path#TabOutline">
+            <Setter Property="Data" Value="{Binding $parent[Grid].Bounds, Converter={StaticResource TabActiveOutline}, ConverterParameter=Outline}" />
+        </Style>
+        <Style Selector="^:not(:selected) /template/ Border#TabSurface">
+            <Setter Property="Background" Value="{DynamicResource Z2TabInactiveBrush}" />
+        </Style>
+        <Style Selector="^:not(:selected):pointerover /template/ Border#TabFeedback">
+            <Setter Property="Background" Value="{DynamicResource Z2HoverBrush}" />
+        </Style>
+        <Style Selector="^:focus-visible /template/ Path#TabOutline">
+            <Setter Property="Stroke" Value="{DynamicResource Z2PrimaryBrush}" />
+        </Style>
+        <Style Selector="^:disabled">
+            <Setter Property="Opacity" Value="0.56" />
+        </Style>
+    </ControlTheme>
+    <ControlTheme x:Key="{x:Type TabControl}" TargetType="TabControl">
+        <Setter Property="Foreground" Value="{DynamicResource Z2ForegroundBrush}" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <DockPanel>
+                    <ItemsPresenter Name="PART_ItemsPresenter" DockPanel.Dock="{TemplateBinding TabStripPlacement}"
+                                    ItemsPanel="{TemplateBinding ItemsPanel}" KeyboardNavigation.TabNavigation="Once" />
+                    <ContentPresenter Name="PART_SelectedContentHost" Content="{TemplateBinding SelectedContent}"
+                                      ContentTemplate="{TemplateBinding SelectedContentTemplate}" Margin="{TemplateBinding Padding}"
+                                      HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                      VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+                </DockPanel>
+            </ControlTemplate>
+        </Setter>
+    </ControlTheme>
+</ResourceDictionary>

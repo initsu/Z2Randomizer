@@ -8,7 +8,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using Material.Styles.Assists;
 using Microsoft.Extensions.DependencyInjection;
 using ReactiveUI.Primitives;
 using Z2Randomizer.RandomizerCore;
@@ -136,10 +135,6 @@ public sealed partial class App : Application // , IDisposable
                 TopLevel = TopLevel.GetTopLevel(singleViewPlatform.MainView)!;
                 break;
         }
-
-        // Turn of window animations that were making the comboboxes glitch out when changing tabs.
-        var state = !TransitionAssist.GetDisableTransitions(TopLevel!);
-        TransitionAssist.SetDisableTransitions(TopLevel!, state);
 
         ThemeHelper.SetTheme(main.RandomizerViewModel.ThemeVariantName);
 

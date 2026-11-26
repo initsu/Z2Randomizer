@@ -15,6 +15,7 @@
 *.user
 .vscode/
 .DS_Store
+__pycache__/
 *.log
 *.user
 *.mlb

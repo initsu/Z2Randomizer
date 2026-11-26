@@ -1,0 +1,136 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Host/presenter structure adapted from the MIT-licensed Material.Avalonia 3.21.0 library.
+         See THIRD-PARTY-NOTICES.md at the repository root for full attribution and license text. -->
+    <!-- Root and popup hosts must supply their own presenters and visual layers. -->
+    <ControlTheme x:Key="Z2Root" TargetType="ContentControl">
+        <Setter Property="FontFamily" Value="{DynamicResource Z2FontFamily}" />
+        <Setter Property="FontSize" Value="{DynamicResource Z2FontSize}" />
+        <Setter Property="FontStyle" Value="{DynamicResource Z2FontStyle}" />
+        <Setter Property="FontWeight" Value="{DynamicResource Z2FontWeight}" />
+        <Setter Property="Foreground" Value="{DynamicResource Z2ForegroundBrush}" />
+        <Setter Property="Background" Value="{DynamicResource Z2PaperBrush}" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Panel>
+                    <Border Name="PART_TransparencyFallback" IsHitTestVisible="False" />
+                    <Border Background="{TemplateBinding Background}" IsHitTestVisible="False" />
+                    <VisualLayerManager Name="PART_VisualLayerManager">
+                        <ContentPresenter Name="PART_ContentPresenter"
+                                          Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          Padding="{TemplateBinding Padding}"
+                                          HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+                    </VisualLayerManager>
+                </Panel>
+            </ControlTemplate>
+        </Setter>
+    </ControlTheme>
+    <ControlTheme x:Key="{x:Type Window}" TargetType="Window" BasedOn="{StaticResource Z2Root}">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Panel>
+                    <Border Name="PART_TransparencyFallback" IsHitTestVisible="False" />
+                    <Border Background="{TemplateBinding Background}" IsHitTestVisible="False" />
+                    <Panel Background="Transparent" Margin="{TemplateBinding WindowDecorationMargin}" />
+                    <VisualLayerManager Name="PART_VisualLayerManager">
+                        <ContentPresenter Name="PART_ContentPresenter"
+                                          Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          Padding="{TemplateBinding Padding}"
+                                          HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+                    </VisualLayerManager>
+                </Panel>
+            </ControlTemplate>
+        </Setter>
+    </ControlTheme>
+    <ControlTheme x:Key="{x:Type EmbeddableControlRoot}" TargetType="EmbeddableControlRoot" BasedOn="{StaticResource Z2Root}" />
+
+    <ControlTheme x:Key="{x:Type OverlayPopupHost}" TargetType="OverlayPopupHost" BasedOn="{StaticResource Z2Root}">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="FontWeight" Value="{DynamicResource Z2FontWeight}" />
+        <Setter Property="FontStyle" Value="{DynamicResource Z2FontStyle}" />
+        <Setter Property="Inline.TextDecorations" Value="" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <LayoutTransformControl LayoutTransform="{TemplateBinding Transform}">
+                    <VisualLayerManager Name="PART_VisualLayerManager">
+                        <ContentPresenter Name="PART_ContentPresenter" Background="{TemplateBinding Background}"
+                                          Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          Padding="{TemplateBinding Padding}" />
+                    </VisualLayerManager>
+                </LayoutTransformControl>
+            </ControlTemplate>
+        </Setter>
+    </ControlTheme>
+    <ControlTheme x:Key="{x:Type PopupRoot}" TargetType="PopupRoot" BasedOn="{StaticResource Z2Root}">
+        <Setter Property="Background" Value="{x:Null}" />
+        <Setter Property="TransparencyLevelHint" Value="Transparent" />
+        <Setter Property="FontWeight" Value="{DynamicResource Z2FontWeight}" />
+        <Setter Property="FontStyle" Value="{DynamicResource Z2FontStyle}" />
+        <Setter Property="Inline.TextDecorations" Value="" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <LayoutTransformControl LayoutTransform="{TemplateBinding Transform}">
+                    <Panel>
+                        <Border Name="PART_TransparencyFallback" IsHitTestVisible="False" />
+                        <VisualLayerManager Name="PART_VisualLayerManager">
+                            <ContentPresenter Name="PART_ContentPresenter" Background="{TemplateBinding Background}"
+                                              Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                                              Padding="{TemplateBinding Padding}" />
+                        </VisualLayerManager>
+                    </Panel>
+                </LayoutTransformControl>
+            </ControlTemplate>
+        </Setter>
+    </ControlTheme>
+
+    <ControlTheme x:Key="{x:Type UserControl}" TargetType="UserControl" BasedOn="{StaticResource {x:Type ContentControl}}" />
+    <ControlTheme x:Key="{x:Type TransitioningContentControl}" TargetType="TransitioningContentControl">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <!-- Avalonia manages both presenters during routing transitions. -->
+                <Panel>
+                    <ContentPresenter Name="PART_ContentPresenter" Background="{TemplateBinding Background}"
+                                      BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                                      CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}"
+                                      HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                      VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+                    <ContentPresenter Name="PART_ContentPresenter2" Background="{TemplateBinding Background}"
+                                      BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                                      CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}"
+                                      HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                      VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+                </Panel>
+            </ControlTemplate>
+        </Setter>
+    </ControlTheme>
+    <ControlTheme x:Key="{x:Type ToolTip}" TargetType="ToolTip">
+        <Setter Property="Background" Value="{DynamicResource Z2ToolTipBackgroundBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource Z2PaperBrush}" />
+        <Setter Property="Padding" Value="8" />
+        <Setter Property="Margin" Value="0,8" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="Placement" Value="Pointer" />
+        <Setter Property="TextBlock.TextDecorations" Value="{x:Null}" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Name="ToolTipSurface" Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}">
+                    <ContentPresenter Name="PART_ContentPresenter" Content="{TemplateBinding Content}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}" Padding="{TemplateBinding Padding}" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </ControlTheme>
+    <ControlTheme x:Key="{x:Type AdornerLayer}" TargetType="AdornerLayer">
+        <Setter Property="DefaultFocusAdorner">
+            <FocusAdornerTemplate>
+                <Rectangle Stroke="{DynamicResource Z2ForegroundBrush}" StrokeThickness="1" StrokeDashArray="1,2" />
+            </FocusAdornerTemplate>
+        </Setter>
+    </ControlTheme>
+</ResourceDictionary>

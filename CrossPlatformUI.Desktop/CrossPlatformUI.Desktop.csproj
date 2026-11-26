@@ -43,6 +43,7 @@
 
     <ItemGroup>
         <PackageReference Include="Avalonia.Desktop" />
+        <PackageReference Include="Avalonia.Fonts.Inter" />
     </ItemGroup>
 
     <ItemGroup>

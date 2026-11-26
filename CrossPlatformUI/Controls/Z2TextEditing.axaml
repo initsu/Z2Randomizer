@@ -1,0 +1,123 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ControlTheme x:Key="Z2MenuSurface" TargetType="ItemsControl">
+        <Setter Property="Background" Value="{DynamicResource Z2PaperBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource Z2ForegroundBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Z2DisabledForegroundBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Padding" Value="4" />
+        <Setter Property="MaxHeight" Value="500" />
+        <Setter Property="Cursor" Value="Arrow" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Name="MenuSurface" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}"
+                        Padding="{TemplateBinding Padding}">
+                    <ScrollViewer Name="PART_ScrollViewer" Theme="{StaticResource Z2ComboBoxScrollViewer}"
+                                  HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                        <ItemsPresenter Name="PART_ItemsPresenter" ItemsPanel="{TemplateBinding ItemsPanel}"
+                                        KeyboardNavigation.TabNavigation="Continue" />
+                    </ScrollViewer>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </ControlTheme>
+    <ControlTheme x:Key="{x:Type ContextMenu}" TargetType="ContextMenu" BasedOn="{StaticResource Z2MenuSurface}" />
+    <ControlTheme x:Key="{x:Type MenuFlyoutPresenter}" TargetType="MenuFlyoutPresenter" BasedOn="{StaticResource Z2MenuSurface}" />
+    <ControlTheme x:Key="Z2TextMenuItem" TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Name="MenuItemBorder" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <ContentPresenter Name="PART_HeaderPresenter" Content="{TemplateBinding Header}"
+                                          VerticalAlignment="Center" RecognizesAccessKey="True" />
+                        <TextBlock Name="Shortcut" Grid.Column="1" Text="{TemplateBinding InputGesture}"
+                                   Margin="20,0,0,0" VerticalAlignment="Center" Opacity="0.7" />
+                    </Grid>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </ControlTheme>
+    <ControlTheme x:Key="Z2TouchTextMenuItem" TargetType="MenuItem" BasedOn="{StaticResource Z2TextMenuItem}">
+        <Style Selector="^ /template/ TextBlock#Shortcut">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+    </ControlTheme>
+    <ControlTheme x:Key="Z2TouchTextMenu" TargetType="MenuFlyoutPresenter" BasedOn="{StaticResource {x:Type MenuFlyoutPresenter}}">
+        <Setter Property="ItemsPanel">
+            <ItemsPanelTemplate>
+                <StackPanel Orientation="Horizontal" Margin="0" />
+            </ItemsPanelTemplate>
+        </Setter>
+    </ControlTheme>
+
+    <!-- Commands and platform shortcuts stay on TextBox. The popup's logical
+         parent follows the editor that opened this shared flyout. -->
+    <MenuFlyout x:Key="Z2TextContextFlyout" x:DataType="TextBox" ItemContainerTheme="{StaticResource Z2TextMenuItem}">
+        <MenuItem Header="Cut" Command="{Binding $parent[TextBox].Cut}"
+                  IsEnabled="{Binding $parent[TextBox].CanCut}" InputGesture="{x:Static TextBox.CutGesture}" />
+        <MenuItem Header="Copy" Command="{Binding $parent[TextBox].Copy}"
+                  IsEnabled="{Binding $parent[TextBox].CanCopy}" InputGesture="{x:Static TextBox.CopyGesture}" />
+        <MenuItem Header="Paste" Command="{Binding $parent[TextBox].Paste}"
+                  IsEnabled="{Binding $parent[TextBox].CanPaste}" InputGesture="{x:Static TextBox.PasteGesture}" />
+        <Separator />
+        <MenuItem Header="Select All" Command="{Binding $parent[TextBox].SelectAll}" />
+    </MenuFlyout>
+    <MenuFlyout x:Key="Z2TouchTextContextFlyout" x:DataType="TextBox" ShowMode="Transient" Placement="Bottom"
+                FlyoutPresenterTheme="{StaticResource Z2TouchTextMenu}" ItemContainerTheme="{StaticResource Z2TouchTextMenuItem}">
+        <MenuItem Header="Cut" Command="{Binding $parent[TextBox].Cut}"
+                  IsEnabled="{Binding $parent[TextBox].CanCut}" IsVisible="{Binding $parent[TextBox].CanCut}" />
+        <MenuItem Header="Copy" Command="{Binding $parent[TextBox].Copy}"
+                  IsEnabled="{Binding $parent[TextBox].CanCopy}" IsVisible="{Binding $parent[TextBox].CanCopy}" />
+        <MenuItem Header="Paste" Command="{Binding $parent[TextBox].Paste}"
+                  IsEnabled="{Binding $parent[TextBox].CanPaste}" />
+        <MenuItem Header="Select All" Command="{Binding $parent[TextBox].SelectAll}" />
+    </MenuFlyout>
+
+    <!-- Host/presenter structure adapted from the MIT-licensed Material.Avalonia 3.21.0 library.
+         See THIRD-PARTY-NOTICES.md at the repository root for full attribution and license text. -->
+    <!-- PART_Indicator anchors each handle to its text endpoint. -->
+    <GeometryGroup x:Key="Z2SelectionHandleShape" FillRule="NonZero">
+        <RectangleGeometry Rect="0,0,16,16" />
+        <EllipseGeometry Center="16,16" RadiusX="16" RadiusY="16" />
+    </GeometryGroup>
+    <GeometryGroup x:Key="Z2CaretHandleShape" FillRule="NonZero">
+        <RectangleGeometry Rect="0,0,16,16">
+            <RectangleGeometry.Transform>
+                <RotateTransform CenterX="16" Angle="-45" />
+            </RectangleGeometry.Transform>
+        </RectangleGeometry>
+        <EllipseGeometry Center="16,22.7" RadiusX="16" RadiusY="16" />
+    </GeometryGroup>
+    <ControlTheme x:Key="{x:Type TextSelectionHandle}" TargetType="TextSelectionHandle">
+        <Setter Property="Background" Value="{DynamicResource Z2PrimaryBrush}" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Grid>
+                    <Border Background="Transparent" Padding="0,0,0,10">
+                        <Path Name="HandleShape" Data="{StaticResource Z2SelectionHandleShape}" Fill="{TemplateBinding Background}"
+                              Width="32" Height="32" Stretch="Uniform" Cursor="Arrow" />
+                    </Border>
+                    <Border Name="PART_Indicator" Background="Transparent" Width="1" Height="5"
+                            HorizontalAlignment="Center" VerticalAlignment="Top" />
+                </Grid>
+            </ControlTemplate>
+        </Setter>
+        <Style Selector="^:caret /template/ Path#HandleShape">
+            <Setter Property="Data" Value="{StaticResource Z2CaretHandleShape}" />
+        </Style>
+        <Style Selector="^:start /template/ Path#HandleShape">
+            <Setter Property="RenderTransform">
+                <ScaleTransform ScaleX="-1" ScaleY="1" />
+            </Setter>
+        </Style>
+        <Style Selector="^:start /template/ Border#PART_Indicator">
+            <Setter Property="HorizontalAlignment" Value="Right" />
+        </Style>
+        <Style Selector="^:end /template/ Border#PART_Indicator">
+            <Setter Property="HorizontalAlignment" Value="Left" />
+        </Style>
+    </ControlTheme>
+</ResourceDictionary>

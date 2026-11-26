@@ -1,0 +1,120 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="using:CrossPlatformUI.Controls">
+    <ControlTheme x:Key="Z2NumericTextScrollViewer" TargetType="ScrollViewer">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <ScrollContentPresenter Name="PART_ContentPresenter" />
+            </ControlTemplate>
+        </Setter>
+    </ControlTheme>
+    <ControlTheme x:Key="Z2NumericTextBox" TargetType="TextBox">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="CaretBrush" Value="{DynamicResource Z2NumericForeground}" />
+        <Setter Property="SelectionBrush" Value="{DynamicResource Z2NumericHover}" />
+        <Setter Property="SelectionForegroundBrush" Value="{DynamicResource Z2NumericForeground}" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <ScrollViewer Name="PART_ScrollViewer" Theme="{StaticResource Z2NumericTextScrollViewer}"
+                              HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
+                    <TextPresenter Name="PART_TextPresenter" VerticalAlignment="Center"
+                                   Text="{TemplateBinding Text, Mode=TwoWay}" TextAlignment="{TemplateBinding TextAlignment}"
+                                   TextWrapping="NoWrap" CaretIndex="{TemplateBinding CaretIndex}"
+                                   SelectionStart="{TemplateBinding SelectionStart}" SelectionEnd="{TemplateBinding SelectionEnd}"
+                                   CaretBrush="{TemplateBinding CaretBrush}" SelectionBrush="{TemplateBinding SelectionBrush}"
+                                   SelectionForegroundBrush="{TemplateBinding SelectionForegroundBrush}" />
+                </ScrollViewer>
+            </ControlTemplate>
+        </Setter>
+    </ControlTheme>
+    <ControlTheme x:Key="Z2NumericSpinButton" TargetType="RepeatButton">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <ContentPresenter Name="PART_ContentPresenter" Background="{TemplateBinding Background}"
+                                  Content="{TemplateBinding Content}" HorizontalContentAlignment="Center"
+                                  VerticalContentAlignment="Center" />
+            </ControlTemplate>
+        </Setter>
+        <Style Selector="^:pointerover, ^:pressed">
+            <Setter Property="Background" Value="{DynamicResource Z2NumericHover}" />
+        </Style>
+        <Style Selector="^:disabled">
+            <Setter Property="Opacity" Value="0.35" />
+        </Style>
+    </ControlTheme>
+    <ControlTheme x:Key="Z2NumericSpinner" TargetType="ButtonSpinner">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <DockPanel>
+                    <UniformGrid Name="SpinButtons" DockPanel.Dock="Right" Width="40" Rows="2"
+                                 IsVisible="{TemplateBinding ShowButtonSpinner}">
+                        <RepeatButton Name="PART_IncreaseButton" Theme="{StaticResource Z2NumericSpinButton}">
+                            <Path Data="M0,4 L4,0 L8,4" Stroke="{TemplateBinding Foreground}" StrokeThickness="1.5" />
+                        </RepeatButton>
+                        <RepeatButton Name="PART_DecreaseButton" Theme="{StaticResource Z2NumericSpinButton}">
+                            <Path Data="M0,0 L4,4 L8,0" Stroke="{TemplateBinding Foreground}" StrokeThickness="1.5" />
+                        </RepeatButton>
+                    </UniformGrid>
+                    <ContentPresenter Name="PART_ContentPresenter" Content="{TemplateBinding Content}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}"
+                                      HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
+                </DockPanel>
+            </ControlTemplate>
+        </Setter>
+        <Style Selector="^:left /template/ UniformGrid#SpinButtons">
+            <Setter Property="DockPanel.Dock" Value="Left" />
+        </Style>
+    </ControlTheme>
+    <ControlTheme x:Key="{x:Type local:Z2NumericUpDown}" TargetType="local:Z2NumericUpDown">
+        <Setter Property="Foreground" Value="{DynamicResource Z2NumericForeground}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Z2NumericOutline}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="Height" Value="72" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <DockPanel>
+                    <TextBlock Name="FieldHint" DockPanel.Dock="Bottom" Text="{TemplateBinding Hint}"
+                               FontFamily="{DynamicResource Z2NumericLabelFontFamily}"
+                               FontSize="{DynamicResource Z2NumericLabelFontSize}"
+                               FontStyle="{DynamicResource Z2NumericLabelFontStyle}"
+                               FontWeight="{DynamicResource Z2NumericLabelFontWeight}"
+                               Margin="0,3,0,0" TextTrimming="CharacterEllipsis" />
+                    <Border Name="FieldBorder" Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}"
+                            MinHeight="48" Margin="{TemplateBinding Padding}">
+                        <Grid>
+                            <ButtonSpinner Name="PART_Spinner" Theme="{StaticResource Z2NumericSpinner}"
+                                           Foreground="{TemplateBinding Foreground}" AllowSpin="{TemplateBinding AllowSpin}"
+                                           ShowButtonSpinner="{TemplateBinding ShowButtonSpinner}"
+                                           ButtonSpinnerLocation="{TemplateBinding ButtonSpinnerLocation}">
+                                <TextBox Name="PART_TextBox" Theme="{StaticResource Z2NumericTextBox}" Margin="16,0,8,0"
+                                         Foreground="{TemplateBinding Foreground}" IsReadOnly="{TemplateBinding IsReadOnly}"
+                                         Text="{TemplateBinding Text}" TextAlignment="{TemplateBinding TextAlignment}"
+                                         TextWrapping="NoWrap" AcceptsReturn="False" />
+                            </ButtonSpinner>
+                            <Border Name="FieldOutline" BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}"
+                                    IsHitTestVisible="False" />
+                        </Grid>
+                    </Border>
+                </DockPanel>
+            </ControlTemplate>
+        </Setter>
+        <Style Selector="^:focus-within, ^:pointerover">
+            <Setter Property="BorderBrush" Value="{DynamicResource Z2NumericAccent}" />
+        </Style>
+        <Style Selector="^.DifficultyOnly">
+            <Setter Property="Background" Value="{DynamicResource Z2DifficultyHighlightBrush}" />
+        </Style>
+        <Style Selector="^:disabled">
+            <Setter Property="Opacity" Value="0.56" />
+        </Style>
+        <Style Selector="^:error">
+            <Setter Property="BorderBrush" Value="{DynamicResource Z2NumericErrorBrush}" />
+        </Style>
+    </ControlTheme>
+</ResourceDictionary>

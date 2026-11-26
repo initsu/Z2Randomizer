@@ -56,14 +56,14 @@
                 <StackPanel Margin="0">
                     <ToolTip.Tip><TextBlock Text="{x:Static lang:Resources.HeartContainersToolTip}" /></ToolTip.Tip>
                     <TextBlock Text="Heart Containers" Classes="SectionCaption" />
-                    <Grid ColumnDefinitions="72,72,122" ColumnSpacing="8" Margin="17 -4 17 4">
+                    <Grid Classes="AlignedFields" ColumnDefinitions="72,72,122" ColumnSpacing="8" Margin="17 0 17 4">
                         <z:Z2NumericUpDown Flag="StartingHeartContainersMin" Grid.Column="0" />
                         <z:Z2NumericUpDown Flag="StartingHeartContainersMax" Grid.Column="1" />
-                        <z:Z2ComboBox Flag="MaxHeartContainers" Grid.Column="2" Height="78" Margin="-16 -4 0 24" />
+                        <z:Z2ComboBox Flag="MaxHeartContainers" Grid.Column="2" />
                     </Grid>
                 </StackPanel>
 
-                <StackPanel Margin="0,-12,0,0">
+                <StackPanel Margin="0">
                     <ToolTip.Tip><TextBlock Text="{x:Static lang:Resources.MagicContainersToolTip}" /></ToolTip.Tip>
                     <TextBlock Text="Magic Containers" Classes="SectionCaption" />
                     <Grid ColumnDefinitions="72,72" ColumnSpacing="8" Margin="17 8 17 4">

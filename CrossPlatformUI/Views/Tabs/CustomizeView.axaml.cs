@@ -1,4 +1,3 @@
-using Avalonia.Markup.Xaml;
 using ReactiveUI;
 using ReactiveUI.Avalonia;
 using ReactiveUI.Primitives.Disposables;
@@ -15,7 +14,7 @@ public partial class CustomizeView : ReactiveUserControl<MainViewModel>
     public CustomizeView()
     {
         this.WhenActivated((MultipleDisposable disposables) => { });
-        AvaloniaXamlLoader.Load(this);
+        InitializeComponent();
 #if CUSTOM_MUSIC
         CustomMusicWiki.IsVisible = true;
         CustomMusicControls.Children.Add(new Z2CheckBox { Flag = ConfigFlag.RandomizeMusic });

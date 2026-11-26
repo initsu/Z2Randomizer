@@ -22,6 +22,9 @@ public partial class RandomizerView : ReactiveUserControl<RandomizerViewModel>
     public RandomizerView()
     {
         AvaloniaXamlLoader.Load(this);
+        var tabs = this.FindControl<TabControl>("Tabs")!;
+        tabs.SizeChanged += (_, _) => UpdateCompactLayout(tabs.Bounds.Width);
+        UpdateCompactLayout(tabs.Bounds.Width);
         AddHandler(PointerPressedEvent, OnSearchInputPressed, RoutingStrategies.Tunnel);
         this.WhenActivated((MultipleDisposable disposables) =>
         {
@@ -56,6 +59,9 @@ public partial class RandomizerView : ReactiveUserControl<RandomizerViewModel>
             }
         });
     }
+
+    private void UpdateCompactLayout(double tabStripWidth) =>
+        Classes.Set("CompactLayout", tabStripWidth < ResponsiveLayout.CompactTabStripWidth);
 
     protected override void OnDataContextChanged(EventArgs e)
     {

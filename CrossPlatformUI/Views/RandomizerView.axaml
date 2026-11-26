@@ -1,8 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:p1="clr-namespace:Material.Styles.Assists;assembly=Material.Styles"
-             xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
-             xmlns:controls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+             xmlns:z="clr-namespace:CrossPlatformUI.Controls"
              xmlns:tabs="clr-namespace:CrossPlatformUI.Views.Tabs"
              xmlns:dialogHostAvalonia="clr-namespace:DialogHostAvalonia;assembly=DialogHost.Avalonia"
              xmlns:ui="clr-namespace:CrossPlatformUI"
@@ -14,51 +12,96 @@
              Name="RandomizerViewControl"
              x:DataType="vm:RandomizerViewModel"
              x:Class="CrossPlatformUI.Views.RandomizerView">
+    <UserControl.Styles>
+        <Style Selector="Button#RerollSeedButton">
+            <Setter Property="Padding" Value="4" />
+        </Style>
+        <Style Selector="PathIcon#RerollSeedIcon">
+            <Setter Property="Width" Value="32" />
+            <Setter Property="Height" Value="32" />
+        </Style>
+        <Style Selector="views|RandomizerView.CompactLayout z|Z2TextBox">
+            <Setter Property="FontSize" Value="{DynamicResource Z2CompactInputFontSize}" />
+            <Setter Property="MinHeight" Value="48" />
+            <Setter Property="Padding" Value="10,0" />
+        </Style>
+        <Style Selector="views|RandomizerView.CompactLayout z|Z2TextBox /template/ Grid#TextFieldRoot">
+            <Setter Property="MinHeight" Value="36" />
+        </Style>
+        <Style Selector="views|RandomizerView.CompactLayout z|Z2TextBox /template/ Border#LabelBorder TextBlock">
+            <Setter Property="FontSize" Value="{DynamicResource Z2CompactLabelFontSize}" />
+        </Style>
+        <Style Selector="views|RandomizerView.CompactLayout Button#RerollSeedButton">
+            <Setter Property="Padding" Value="2" />
+        </Style>
+        <Style Selector="views|RandomizerView.CompactLayout PathIcon#RerollSeedIcon">
+            <Setter Property="Width" Value="24" />
+            <Setter Property="Height" Value="24" />
+        </Style>
+        <Style Selector="views|RandomizerView.CompactLayout TabItem">
+            <Setter Property="MinWidth" Value="0" />
+        </Style>
+        <Style Selector="views|RandomizerView.CompactLayout TabItem:selected /template/ Path#TabOutline">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+        <Style Selector="views|RandomizerView.CompactLayout TabItem:selected /template/ Grid#TabRoot">
+            <Setter Property="Clip" Value="{Binding Bounds, RelativeSource={RelativeSource Self}, Converter={StaticResource TabIdleOutline}}" />
+        </Style>
+    </UserControl.Styles>
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="ToolbarIcons.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
     <Grid RowDefinitions="Auto,*" Margin="15, 8">
         <Grid Grid.Row="0" ColumnDefinitions="2*, *, 196" RowDefinitions="Auto" Margin="0">
             <StackPanel Grid.Column="0" Margin="4 8 0 8">
-                <TextBox Name="FlagInputTextBox" UseFloatingPlaceholder="True" PlaceholderText="Paste Flags Here"
-                         BorderBrush="{Binding FlagInputUnderlineObservable^}" p1:TextFieldAssist.Label="Flag String" Text="{Binding FlagInput}">
-                    <TextBox.InnerRightContent>
-                    </TextBox.InnerRightContent>
-                </TextBox>
+                <z:Z2TextBox Name="FlagInputTextBox" PlaceholderText="Paste Flags Here"
+                         BorderBrush="{Binding FlagInputBorderObservable^}" Label="Flag String" Text="{Binding FlagInput}" />
             </StackPanel>
 
             <StackPanel Grid.Column="1">
-                <TextBox Name="SeedInputTextBox" UseFloatingPlaceholder="True" PlaceholderText="Paste Seed Here" p1:TextFieldAssist.Label="Seed" Text="{Binding Seed}">
-                    <TextBox.InnerRightContent>
-                        <Button ToolTip.Tip="Generate a random number as your Seed" Classes="Flat" Padding="4" Width="{Binding $self.Bounds.Height}"
-                                Content="{avalonia:MaterialIconExt Kind=DiceMultiple, IconSize=32}" Command="{Binding RerollSeed}" />
-                    </TextBox.InnerRightContent>
-                </TextBox>
+                <z:Z2TextBox Name="SeedInputTextBox" PlaceholderText="Paste Seed Here" Label="Seed" Text="{Binding Seed}">
+                    <z:Z2TextBox.InnerRightContent>
+                        <Button Name="RerollSeedButton" ToolTip.Tip="Generate a random number as your Seed" Classes="Flat" Width="{Binding $self.Bounds.Height}"
+                                Command="{Binding RerollSeed}">
+                            <PathIcon Name="RerollSeedIcon" Theme="{StaticResource ToolbarIconTheme}" Data="{StaticResource IconDiceMultiple}" />
+                        </Button>
+                    </z:Z2TextBox.InnerRightContent>
+                </z:Z2TextBox>
             </StackPanel>
             <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button HorizontalAlignment="Right" Width="112" Content="Generate" IsEnabled="{Binding CanGenerateObservable^}"
                         Command="{Binding Generate}" />
-                <Menu Padding="0" Margin="0" Width="80" ToolTip.Tip="Menu">
-                    <MenuItem Height="48" Width="64" Header="{avalonia:MaterialIconExt Kind=Cog, IconSize=32}" Cursor="Hand">
+                <Menu Padding="0" Margin="0" Width="80" ToolTip.Tip="Menu" AutomationProperties.Name="Application menu">
+                    <MenuItem Height="48" Width="64" Cursor="Hand" AutomationProperties.Name="Application menu">
+                        <MenuItem.Header>
+                            <PathIcon Theme="{StaticResource ToolbarIconTheme}" Data="{StaticResource IconCog}" Width="32" Height="32" />
+                        </MenuItem.Header>
                         <MenuItem Header="{Binding AppVersion}" IsEnabled="false">
                         </MenuItem>
                         <MenuItem Header="Check For Updates" IsVisible="{Binding IsDesktop}" Command="{Binding CheckForUpdates}" >
                             <MenuItem.Icon>
-                                <avalonia:MaterialIcon Kind="Update" Width="24" Height="24" />
+                                <PathIcon Theme="{StaticResource ToolbarIconTheme}" Data="{StaticResource IconUpdate}" Width="24" Height="24" />
                             </MenuItem.Icon>
                         </MenuItem>
                         <Separator />
                         <MenuItem Header="Toggle Light/Dark Mode" Command="{Binding ToggleTheme}" >
                             <MenuItem.Icon>
-                                <avalonia:MaterialIcon Kind="LightbulbNight" Width="24" Height="24" />
+                                <PathIcon Theme="{StaticResource ToolbarIconTheme}" Data="{StaticResource IconLightbulbNight}" Width="24" Height="24" />
                             </MenuItem.Icon>
                         </MenuItem>
                         <Separator />
                         <MenuItem Header="Reload ROM" Command="{Binding LoadRom}" >
                             <MenuItem.Icon>
-                                <avalonia:MaterialIcon Kind="ReloadAlert" Width="24" Height="24" />
+                                <PathIcon Theme="{StaticResource ToolbarIconTheme}" Data="{StaticResource IconReloadAlert}" Width="24" Height="24" />
                             </MenuItem.Icon>
                         </MenuItem>
                         <MenuItem Header="Choose ROM Save Folder" IsVisible="{Binding IsDesktop}" Command="{Binding SaveFolder}" >
                             <MenuItem.Icon>
-                                <avalonia:MaterialIcon Kind="ContentSaveOutline" Width="24" Height="24" />
+                                <PathIcon Theme="{StaticResource ToolbarIconTheme}" Data="{StaticResource IconContentSaveOutline}" Width="24" Height="24" />
                             </MenuItem.Icon>
                         </MenuItem>
                         <Separator />
@@ -70,6 +113,11 @@
                                   Command="{Binding VisitWiki}"
                                   CommandParameter="{Binding $self}">
                         </MenuItem>
+                        <Separator />
+                        <MenuItem Header="Third-Party Notices"
+                                  Command="{Binding VisitThirdPartyNotices}"
+                                  CommandParameter="{Binding $self}">
+                        </MenuItem>
                     </MenuItem>
                 </Menu>
             </StackPanel>
@@ -79,23 +127,24 @@
                 <ItemsPanelTemplate>
                     <views:MultiRowTabsPanel FirstRowCount="3">
                         <views:MultiRowTabsPanel.FirstRowContent>
-                            <TextBox Name="SearchInputTextBox" x:DataType="vm:RandomizerViewModel" UseFloatingPlaceholder="False"
+                            <z:Z2TextBox Name="SearchInputTextBox" x:DataType="vm:RandomizerViewModel"
                                      PlaceholderText="Search settings" AutomationProperties.Name="Search options"
                                      ScrollViewer.HorizontalScrollBarVisibility="Hidden"
                                      ScrollViewer.VerticalScrollBarVisibility="Disabled"
                                      GotFocus="OnSearchInputFocused"
-                                     Height="56" HorizontalAlignment="Stretch" Text="{Binding SearchViewModel.Query}">
-                                <TextBox.InnerLeftContent>
-                                    <avalonia:MaterialIcon Kind="Magnify" Width="20" Height="20" Margin="0,0,4,0" />
-                                </TextBox.InnerLeftContent>
-                                <TextBox.InnerRightContent>
+                                     HorizontalAlignment="Stretch" Text="{Binding SearchViewModel.Query}">
+                                <z:Z2TextBox.InnerLeftContent>
+                                    <PathIcon Theme="{StaticResource ToolbarIconTheme}" Data="{StaticResource IconMagnify}" Width="20" Height="20" Margin="0,0,4,0" />
+                                </z:Z2TextBox.InnerLeftContent>
+                                <z:Z2TextBox.InnerRightContent>
                                     <Button ToolTip.Tip="Clear the search" AutomationProperties.Name="Clear the search"
                                             Classes="Flat" Padding="0" Width="32" Height="32"
-                                            Content="{avalonia:MaterialIconExt Kind=Close, IconSize=20}"
                                             IsVisible="{Binding SearchViewModel.HasQuery}"
-                                            Command="{Binding SearchViewModel.Clear}" />
-                                </TextBox.InnerRightContent>
-                            </TextBox>
+                                            Command="{Binding SearchViewModel.Clear}">
+                                        <PathIcon Theme="{StaticResource ToolbarIconTheme}" Data="{StaticResource IconClose}" Width="20" Height="20" />
+                                    </Button>
+                                </z:Z2TextBox.InnerRightContent>
+                            </z:Z2TextBox>
                         </views:MultiRowTabsPanel.FirstRowContent>
                     </views:MultiRowTabsPanel>
                 </ItemsPanelTemplate>

@@ -1,0 +1,105 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <SolidColorBrush x:Key="Z2DialogOverlayBrush" Color="Black" />
+    <!-- Theme-independent app colors and effects. Transparent template surfaces
+         remain local because they provide hit testing rather than a visual color. -->
+    <SolidColorBrush x:Key="Z2WikiLinkBrush" Color="#4557c4" />
+    <SolidColorBrush x:Key="Z2DifficultyHighlightBrush" Color="#803376ff" />
+    <SolidColorBrush x:Key="Z2TextBoxError" Color="#d32f2f" />
+    <SolidColorBrush x:Key="Z2NumericErrorBrush" Color="#d32f2f" />
+    <SolidColorBrush x:Key="Z2ColorPickerBorderBrush" Color="Gray" />
+    <SolidColorBrush x:Key="BorderColorBrush" Color="#969696" />
+    <SolidColorBrush x:Key="Z2CloseButtonHoverBrush" Color="#ffe81123" />
+    <SolidColorBrush x:Key="Z2CloseButtonPressedBrush" Color="#fff1707a" />
+    <SolidColorBrush x:Key="Z2SplitterHitTestBrush" Color="#01000000" />
+    <BoxShadows x:Key="Z2WindowShadow">0 2 10 2 #80000000</BoxShadows>
+    <BoxShadows x:Key="Z2FileChooserSidebarShadow">inset -6 0 3 -3 #20000000</BoxShadows>
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Default">
+            <SolidColorBrush x:Key="Z2PaperBrush" Color="White" />
+            <SolidColorBrush x:Key="Z2ForegroundBrush" Color="#dd000000" />
+            <SolidColorBrush x:Key="Z2SecondaryForegroundBrush" Color="#99000000" />
+            <SolidColorBrush x:Key="Z2PrimaryBrush" Color="#002a88" />
+            <SolidColorBrush x:Key="Z2DisabledForegroundBrush" Color="#61000000" />
+            <SolidColorBrush x:Key="Z2HoverBrush" Color="#18000000" />
+            <SolidColorBrush x:Key="Z2TabInactiveBrush" Color="#eeeeee" />
+            <SolidColorBrush x:Key="Z2SelectionBrush" Color="#20002a88" />
+            <SolidColorBrush x:Key="Z2ToolTipBackgroundBrush" Color="#757575" />
+            <!-- Z2CheckBox -->
+            <SolidColorBrush x:Key="Z2CheckBoxForeground" Color="#dd000000" />
+            <SolidColorBrush x:Key="Z2CheckBoxAccent" Color="#002a88" />
+            <SolidColorBrush x:Key="Z2CheckBoxOutline" Color="#757575" />
+            <SolidColorBrush x:Key="Z2CheckBoxHover" Color="#14002a88" />
+            <SolidColorBrush x:Key="Z2CheckBoxPressed" Color="#28002a88" />
+            <!-- Z2Button -->
+            <SolidColorBrush x:Key="Z2ButtonForeground" Color="#dd000000" />
+            <SolidColorBrush x:Key="Z2ButtonSurface" Color="#eeeeee" />
+            <SolidColorBrush x:Key="Z2ButtonOutline" Color="#757575" />
+            <SolidColorBrush x:Key="Z2ButtonAccent" Color="#002a88" />
+            <SolidColorBrush x:Key="Z2ButtonOnAccent" Color="White" />
+            <SolidColorBrush x:Key="Z2ButtonHover" Color="#18000000" />
+            <SolidColorBrush x:Key="Z2ButtonPressed" Color="#30000000" />
+            <!-- Z2ComboBox -->
+            <SolidColorBrush x:Key="Z2ComboBoxForeground" Color="#dd000000" />
+            <SolidColorBrush x:Key="Z2ComboBoxSurface" Color="White" />
+            <SolidColorBrush x:Key="Z2ComboBoxOutline" Color="#757575" />
+            <SolidColorBrush x:Key="Z2ComboBoxAccent" Color="#002a88" />
+            <SolidColorBrush x:Key="Z2ComboBoxHighlight" Color="#20002a88" />
+            <!-- Z2NumericUpDown -->
+            <SolidColorBrush x:Key="Z2NumericForeground" Color="#dd000000" />
+            <SolidColorBrush x:Key="Z2NumericOutline" Color="#757575" />
+            <SolidColorBrush x:Key="Z2NumericAccent" Color="#002a88" />
+            <SolidColorBrush x:Key="Z2NumericHover" Color="#20002a88" />
+            <!-- Z2TextBox -->
+            <SolidColorBrush x:Key="Z2TextBoxForeground" Color="#dd000000" />
+            <SolidColorBrush x:Key="Z2TextBoxOutline" Color="#757575" />
+            <SolidColorBrush x:Key="Z2TextBoxAccent" Color="#002a88" />
+            <SolidColorBrush x:Key="Z2TextBoxSelection" Color="#40002a88" />
+            <SolidColorBrush x:Key="Z2FlagAlertBrush" Color="#c8b30000" />
+            <SolidColorBrush x:Key="Z2FlagInvalidFallbackBrush" Color="#b30000" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+            <SolidColorBrush x:Key="Z2PaperBrush" Color="#1a1a1a" />
+            <SolidColorBrush x:Key="Z2ForegroundBrush" Color="White" />
+            <SolidColorBrush x:Key="Z2SecondaryForegroundBrush" Color="#99ffffff" />
+            <SolidColorBrush x:Key="Z2PrimaryBrush" Color="#ffbc33" />
+            <SolidColorBrush x:Key="Z2DisabledForegroundBrush" Color="#61ffffff" />
+            <SolidColorBrush x:Key="Z2HoverBrush" Color="#18ffffff" />
+            <SolidColorBrush x:Key="Z2TabInactiveBrush" Color="#242424" />
+            <SolidColorBrush x:Key="Z2SelectionBrush" Color="#30ffbc33" />
+            <SolidColorBrush x:Key="Z2ToolTipBackgroundBrush" Color="#eeeeee" />
+            <!-- Z2CheckBox -->
+            <SolidColorBrush x:Key="Z2CheckBoxForeground" Color="White" />
+            <SolidColorBrush x:Key="Z2CheckBoxAccent" Color="#ffbc33" />
+            <SolidColorBrush x:Key="Z2CheckBoxOutline" Color="#bdbdbd" />
+            <SolidColorBrush x:Key="Z2CheckBoxHover" Color="#14ffbc33" />
+            <SolidColorBrush x:Key="Z2CheckBoxPressed" Color="#28ffbc33" />
+            <!-- Z2Button -->
+            <SolidColorBrush x:Key="Z2ButtonForeground" Color="White" />
+            <SolidColorBrush x:Key="Z2ButtonSurface" Color="#333333" />
+            <SolidColorBrush x:Key="Z2ButtonOutline" Color="#bdbdbd" />
+            <SolidColorBrush x:Key="Z2ButtonAccent" Color="#ffbc33" />
+            <SolidColorBrush x:Key="Z2ButtonOnAccent" Color="#dd000000" />
+            <SolidColorBrush x:Key="Z2ButtonHover" Color="#18ffffff" />
+            <SolidColorBrush x:Key="Z2ButtonPressed" Color="#30ffffff" />
+            <!-- Z2ComboBox -->
+            <SolidColorBrush x:Key="Z2ComboBoxForeground" Color="White" />
+            <SolidColorBrush x:Key="Z2ComboBoxSurface" Color="#262626" />
+            <SolidColorBrush x:Key="Z2ComboBoxOutline" Color="#bdbdbd" />
+            <SolidColorBrush x:Key="Z2ComboBoxAccent" Color="#ffbc33" />
+            <SolidColorBrush x:Key="Z2ComboBoxHighlight" Color="#30ffbc33" />
+            <!-- Z2NumericUpDown -->
+            <SolidColorBrush x:Key="Z2NumericForeground" Color="White" />
+            <SolidColorBrush x:Key="Z2NumericOutline" Color="#bdbdbd" />
+            <SolidColorBrush x:Key="Z2NumericAccent" Color="#ffbc33" />
+            <SolidColorBrush x:Key="Z2NumericHover" Color="#30ffbc33" />
+            <!-- Z2TextBox -->
+            <SolidColorBrush x:Key="Z2TextBoxForeground" Color="White" />
+            <SolidColorBrush x:Key="Z2TextBoxOutline" Color="#bdbdbd" />
+            <SolidColorBrush x:Key="Z2TextBoxAccent" Color="#ffbc33" />
+            <SolidColorBrush x:Key="Z2TextBoxSelection" Color="#60ffbc33" />
+            <SolidColorBrush x:Key="Z2FlagAlertBrush" Color="#80b10600" />
+            <SolidColorBrush x:Key="Z2FlagInvalidFallbackBrush" Color="#b10600" />
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+</ResourceDictionary>

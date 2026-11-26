@@ -4,7 +4,6 @@ using Avalonia;
 using Avalonia.Controls;
 using CrossPlatformUI.Controls.Generated;
 using Z2Randomizer.RandomizerCore.Flags;
-using Material.Styles.Assists;
 
 namespace CrossPlatformUI.Controls;
 
@@ -24,6 +23,15 @@ public sealed class Z2NumericUpDown : NumericUpDown
     public static readonly StyledProperty<ConfigFlag?> FlagProperty =
         AvaloniaProperty.Register<Z2NumericUpDown, ConfigFlag?>(nameof(Flag));
 
+    public static readonly StyledProperty<string?> HintProperty =
+        AvaloniaProperty.Register<Z2NumericUpDown, string?>(nameof(Hint));
+
+    public string? Hint
+    {
+        get => GetValue(HintProperty);
+        set => SetValue(HintProperty, value);
+    }
+
     private FlagBinding? _binding;
 
     /// <summary>
@@ -39,10 +47,6 @@ public sealed class Z2NumericUpDown : NumericUpDown
         get => GetValue(FlagProperty);
         set => SetValue(FlagProperty, value);
     }
-
-    // NumericUpDown's Material template is selected on StyleKey, which defaults to
-    // the concrete type; without this the control has no template at all.
-    protected override Type StyleKeyOverride => typeof(NumericUpDown);
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
@@ -96,9 +100,8 @@ public sealed class Z2NumericUpDown : NumericUpDown
         ClipValueToMinMax = true;
         Minimum = numeric.Minimum;
         Maximum = numeric.Maximum;
-        Height = 72;
 
-        TextFieldAssist.SetHints(this, entry.Label() ?? string.Empty);
+        Hint = entry.Label();
 
         var toolTip = entry.ToolTip();
         if (!string.IsNullOrEmpty(toolTip))

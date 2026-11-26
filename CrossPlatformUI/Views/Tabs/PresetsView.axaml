@@ -25,13 +25,13 @@
     </UserControl.Styles>
     <Grid ColumnDefinitions="3*,5*" Margin="4">
         <Grid Grid.Column="0" RowDefinitions="*,Auto">
-            <ListBox Grid.Row="0"
+            <ListBox Name="PresetList" Grid.Row="0"
                      ItemsSource="{Binding Presets}"
                      SelectedItem="{Binding SelectedPreset}">
                 <ListBox.ItemTemplate>
                     <DataTemplate x:DataType="vmt:PresetItem">
                     <Grid>
-                        <TextBlock Text="{Binding Name}" IsVisible="{Binding IsCustom}" Foreground="{DynamicResource MaterialPrimaryMidBrush}"/>
+                        <TextBlock Text="{Binding Name}" IsVisible="{Binding IsCustom}" Foreground="{DynamicResource Z2PrimaryBrush}"/>
                         <TextBlock Text="{Binding Name}" IsVisible="{Binding !IsCustom}"/>
                     </Grid>
                     </DataTemplate>
@@ -43,7 +43,7 @@
         </Grid>
 
         <Grid Grid.Column="1" Margin="16 0 0 0" RowDefinitions="Auto,Auto,Auto,*">
-            <TextBlock Grid.Row="0" Text="{Binding Title}" FontSize="18" FontWeight="Bold"/>
+            <TextBlock Grid.Row="0" Text="{Binding Title}" FontSize="{DynamicResource Z2PresetHeadingFontSize}" FontWeight="{DynamicResource Z2PresetHeadingFontWeight}"/>
 
             <TextBlock Grid.Row="1" Text="{Binding Description}"
                        TextWrapping="Wrap"
@@ -56,14 +56,15 @@
             </StackPanel>
 
             <Expander Grid.Row="3"
+                      Theme="{StaticResource Z2DiffExpander}"
                       Classes="DiffExpander"
                       MinWidth="{Binding #PresetButtons.Bounds.Width}"
                       HorizontalAlignment="Left" VerticalAlignment="Top"
                       IsVisible="{Binding HasDiff}"
                       IsExpanded="{Binding IsDiffExpanded, Mode=TwoWay}"
                       Header="Compare To Current Flags">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0 0">
-                    <ItemsControl ItemsSource="{Binding DiffRows}">
+                <ScrollViewer Theme="{StaticResource Z2ComboBoxScrollViewer}" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0 0">
+                    <ItemsControl Theme="{StaticResource Z2DiffItems}" ItemsSource="{Binding DiffRows}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vmt:PresetDiffRow">
                                 <Grid ColumnDefinitions="310,*"

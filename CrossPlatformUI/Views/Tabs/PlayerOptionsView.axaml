@@ -3,7 +3,6 @@
              xmlns:v="clr-namespace:CrossPlatformUI.Views"
              xmlns:ui="clr-namespace:CrossPlatformUI"
              xmlns:vm="clr-namespace:CrossPlatformUI.ViewModels"
-             xmlns:assists="clr-namespace:Material.Styles.Assists;assembly=Material.Styles"
              xmlns:lang="clr-namespace:Z2Randomizer.CrossPlatformUI.Lang"
              xmlns:z="clr-namespace:CrossPlatformUI.Controls"
              Design.Width="{x:Static ui:MainWindowSize.TabPreviewWidth}"
@@ -34,13 +33,12 @@
             <z:Z2CheckBox Flag="UseCommunityText" />
 
             <TextBlock Text="Output" Classes="SectionHeader" />
-            <TextBox Margin="17,0,0,0"
-                     UseFloatingPlaceholder="True"
+            <z:Z2TextBox Margin="17,0,0,0"
                      PlaceholderText="%g-%s-%h-%f.nes"
-                     assists:TextFieldAssist.Label="Filename"
+                     Label="Filename"
                      Text="{Binding Config.OutputFilenameTemplate, Mode=TwoWay}">
                 <ToolTip.Tip><TextBlock Text="%f = flags, %s = seed, %h = hash, %d = date/time, %v = version, %g = game (Z2, Z2M)" /></ToolTip.Tip>
-            </TextBox>
+            </z:Z2TextBox>
         </v:FlexColumnsPanel>
     </ScrollViewer>
 </UserControl>

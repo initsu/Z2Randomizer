@@ -1,0 +1,86 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="using:CrossPlatformUI.Controls"
+                    x:DataType="CheckBox">
+    <ControlTheme x:Key="{x:Type CheckBox}" TargetType="CheckBox">
+        <Setter Property="Foreground" Value="{DynamicResource Z2CheckBoxForeground}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Padding" Value="0,4" />
+        <Setter Property="Margin" Value="14,4,4,4" />
+        <Setter Property="FocusAdorner" Value="{x:Null}" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Background="{TemplateBinding Background}" CornerRadius="3"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}">
+                    <Border Name="InteractionBorder" CornerRadius="3" Padding="{TemplateBinding Padding}"
+                            BorderBrush="Transparent" BorderThickness="1">
+                        <Grid ColumnDefinitions="24,*">
+                            <Border Name="Indicator" Width="18" Height="18" CornerRadius="2"
+                                    BorderThickness="2" BorderBrush="{DynamicResource Z2CheckBoxOutline}"
+                                    VerticalAlignment="Center">
+                                <Panel>
+                                    <Path Name="CheckMark" Data="M1,6 L5,10 L12,2" IsVisible="False"
+                                          Stroke="{DynamicResource Z2CheckBoxAccent}" StrokeThickness="2"
+                                          StrokeLineCap="Round" />
+                                    <Path Name="RandomMark" Data="M3,3 C3,0 10,0 10,3 C10,5 6.5,5 6.5,8 M6.5,11 L6.5,11.5"
+                                          IsVisible="False" Stroke="{DynamicResource Z2CheckBoxAccent}"
+                                          StrokeThickness="1.8" StrokeLineCap="Round" />
+                                </Panel>
+                            </Border>
+                            <ContentPresenter Grid.Column="1" Name="PART_ContentPresenter"
+                                              Margin="10,0,0,0"
+                                              Content="{TemplateBinding Content}"
+                                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                                              RecognizesAccessKey="True"
+                                              HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+                        </Grid>
+                    </Border>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+        <Style Selector="^.DifficultyOnly">
+            <Setter Property="Background" Value="{DynamicResource Z2DifficultyHighlightBrush}" />
+        </Style>
+        <Style Selector="^:pointerover /template/ Border#InteractionBorder">
+            <Setter Property="Background" Value="{DynamicResource Z2CheckBoxHover}" />
+        </Style>
+        <Style Selector="^:pressed /template/ Border#InteractionBorder">
+            <Setter Property="Background" Value="{DynamicResource Z2CheckBoxPressed}" />
+        </Style>
+        <Style Selector="^:focus-visible /template/ Border#InteractionBorder">
+            <Setter Property="BorderBrush" Value="{DynamicResource Z2CheckBoxAccent}" />
+        </Style>
+        <Style Selector="^:checked /template/ Border#Indicator, ^:indeterminate /template/ Border#Indicator">
+            <Setter Property="BorderBrush" Value="{DynamicResource Z2CheckBoxAccent}" />
+        </Style>
+        <Style Selector="^:checked /template/ Path#CheckMark">
+            <Setter Property="IsVisible" Value="True" />
+        </Style>
+        <Style Selector="^:indeterminate /template/ Path#RandomMark">
+            <Setter Property="IsVisible" Value="True" />
+        </Style>
+        <Style Selector="^:disabled">
+            <Setter Property="Opacity" Value="0.56" />
+        </Style>
+        <Style Selector="^:disabled /template/ Border#InteractionBorder">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+        </Style>
+        <Style Selector="^:disabled /template/ Border#Indicator">
+            <Setter Property="BorderBrush" Value="{DynamicResource Z2CheckBoxOutline}" />
+        </Style>
+        <Style Selector="^:disabled /template/ Path#CheckMark, ^:disabled /template/ Path#RandomMark">
+            <Setter Property="IsVisible" Value="False" />
+            <Setter Property="Stroke" Value="{DynamicResource Z2CheckBoxOutline}" />
+        </Style>
+        <Style Selector="^.DisabledMeansChecked:disabled /template/ Path#CheckMark">
+            <Setter Property="IsVisible" Value="True" />
+        </Style>
+    </ControlTheme>
+    <ControlTheme x:Key="{x:Type local:Z2CheckBox}" TargetType="local:Z2CheckBox"
+                  BasedOn="{StaticResource {x:Type CheckBox}}" />
+</ResourceDictionary>

@@ -1,0 +1,60 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <FontFamily x:Key="Z2FontFamily">avares://CrossPlatformUI/Assets/Fonts/Roboto#Roboto, $Default</FontFamily>
+    <FontStyle x:Key="Z2FontStyle">Normal</FontStyle>
+    <FontWeight x:Key="Z2FontWeight">Normal</FontWeight>
+    <x:Double x:Key="Z2FontSize">14</x:Double>
+
+    <FontFamily x:Key="Z2SectionFontFamily">avares://CrossPlatformUI/Assets/Fonts/Roboto#Roboto, $Default</FontFamily>
+    <FontStyle x:Key="Z2SectionFontStyle">Italic</FontStyle>
+    <FontWeight x:Key="Z2SectionFontWeight">Normal</FontWeight>
+    <x:Double x:Key="Z2SectionFontSize">12</x:Double>
+
+    <FontFamily x:Key="Z2SectionCaptionFontFamily">avares://CrossPlatformUI/Assets/Fonts/Roboto#Roboto, $Default</FontFamily>
+    <FontStyle x:Key="Z2SectionCaptionFontStyle">Italic</FontStyle>
+    <FontWeight x:Key="Z2SectionCaptionFontWeight">Normal</FontWeight>
+    <x:Double x:Key="Z2SectionCaptionFontSize">12</x:Double>
+
+    <FontFamily x:Key="Z2HyperlinkFontFamily">avares://CrossPlatformUI/Assets/Fonts/Roboto#Roboto, $Default</FontFamily>
+    <FontWeight x:Key="Z2HyperlinkFontWeight">Normal</FontWeight>
+    <FontStyle x:Key="Z2HyperlinkFontStyle">Normal</FontStyle>
+    <x:Double x:Key="Z2HyperlinkFontSize">12</x:Double>
+
+    <FontFamily x:Key="Z2ComboBoxHeadingFontFamily">avares://CrossPlatformUI/Assets/Fonts/Roboto#Roboto, $Default</FontFamily>
+    <FontWeight x:Key="Z2ComboBoxHeadingFontWeight">Normal</FontWeight>
+    <FontStyle x:Key="Z2ComboBoxHeadingFontStyle">Normal</FontStyle>
+    <x:Double x:Key="Z2ComboBoxHeadingFontSize">12</x:Double>
+
+    <FontFamily x:Key="Z2NumericLabelFontFamily">avares://CrossPlatformUI/Assets/Fonts/Roboto#Roboto, $Default</FontFamily>
+    <FontWeight x:Key="Z2NumericLabelFontWeight">Normal</FontWeight>
+    <FontStyle x:Key="Z2NumericLabelFontStyle">Normal</FontStyle>
+    <x:Double x:Key="Z2NumericLabelFontSize">12</x:Double>
+
+    <FontFamily x:Key="Z2TabFontFamily">$Default</FontFamily>
+    <FontStyle x:Key="Z2TabFontStyle">Normal</FontStyle>
+    <FontWeight x:Key="Z2TabFontWeight">Medium</FontWeight>
+    <x:Double x:Key="Z2TabFontSize">14</x:Double>
+    <x:Double x:Key="Z2CompactTabFontSize">12</x:Double>
+
+    <FontFamily x:Key="Z2ButtonFontFamily">$Default</FontFamily>
+    <FontStyle x:Key="Z2ButtonFontStyle">Normal</FontStyle>
+    <FontWeight x:Key="Z2ButtonFontWeight">Medium</FontWeight>
+    <x:Double x:Key="Z2ButtonFontSize">14</x:Double>
+
+    <FontWeight x:Key="Z2ProgressHeadingFontWeight">Bold</FontWeight>
+    <x:Double x:Key="Z2ProgressHeadingFontSize">24</x:Double>
+    <FontWeight x:Key="Z2DialogTargetFontWeight">Bold</FontWeight>
+    <x:Double x:Key="Z2DialogPromptFontSize">16</x:Double>
+
+    <FontWeight x:Key="Z2PresetHeadingFontWeight">Bold</FontWeight>
+    <x:Double x:Key="Z2PresetHeadingFontSize">18</x:Double>
+
+    <x:Double x:Key="Z2TextBoxLabelFontSize">12</x:Double>
+    <x:Double x:Key="Z2CompactInputFontSize">11</x:Double>
+    <x:Double x:Key="Z2CompactLabelFontSize">11</x:Double>
+
+    <x:Double x:Key="Z2WindowTitleFontSize">12</x:Double>
+    <x:Double x:Key="Z2CaptionGlyphFontSize">12</x:Double>
+    <x:Double x:Key="Z2MenuFontSize">14</x:Double>
+
+</ResourceDictionary>

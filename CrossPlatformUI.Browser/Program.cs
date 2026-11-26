@@ -53,7 +53,6 @@ internal sealed partial class Program
         LogManager.Configuration = logging;
 
         return BuildAvaloniaApp()
-            .WithInterFont()
             .AfterSetup(_ =>
             {
                 App.ServiceContainer ??= new();

@@ -4,7 +4,6 @@
              xmlns:tabs="clr-namespace:CrossPlatformUI.Views.Tabs"
              xmlns:vm="clr-namespace:CrossPlatformUI.ViewModels"
              xmlns:v="clr-namespace:CrossPlatformUI.Views"
-             xmlns:assists="clr-namespace:Material.Styles.Assists;assembly=Material.Styles"
              xmlns:lang="clr-namespace:Z2Randomizer.CrossPlatformUI.Lang"
              xmlns:z="clr-namespace:CrossPlatformUI.Controls"
              Design.Width="{x:Static ui:MainWindowSize.TabPreviewWidth}"
@@ -26,11 +25,10 @@
 
             <StackPanel Margin="0">
                 <TextBlock Text="Sprites" Classes="SectionHeader"  Margin="0,12,0,-7" />
-                <ComboBox Margin="0,0,0,24" Theme="{StaticResource MaterialOutlineComboBox}"
-                          Name="SelectedSprite" assists:ComboBoxAssist.Label="Character Sprite"
+                <z:Z2SelectionBox Name="SelectedSprite" Label="Character Sprite"
                           ItemsSource="{Binding SpriteCustomizationViewModel.Options}" SelectedItem="{Binding SpriteCustomizationViewModel.Sprite}">
                     <ToolTip.Tip><TextBlock Text="{x:Static lang:Resources.CharacterSpriteToolTip}" /></ToolTip.Tip>
-                    <ComboBox.ItemTemplate>
+                    <z:Z2SelectionBox.ItemTemplate>
                         <DataTemplate>
                             <Grid ColumnDefinitions="32, *">
                                 <Image Grid.Column="0"
@@ -45,8 +43,8 @@
                                             Text="{Binding Name}" />
                             </Grid>
                         </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
+                    </z:Z2SelectionBox.ItemTemplate>
+                </z:Z2SelectionBox>
                 <z:Z2CheckBox Flag="ChangeItemSprites" />
 
                 <TextBlock Text="Sprite Colors" Classes="SectionHeader" />

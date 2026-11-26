@@ -1,0 +1,74 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ControlTheme x:Key="Z2ScrollThumb" TargetType="Thumb">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Name="ThumbSurface" Background="{DynamicResource Z2DisabledForegroundBrush}" CornerRadius="3" Margin="2" />
+            </ControlTemplate>
+        </Setter>
+        <Style Selector="^:pointerover /template/ Border#ThumbSurface, ^:pressed /template/ Border#ThumbSurface">
+            <Setter Property="Background" Value="{DynamicResource Z2PrimaryBrush}" />
+        </Style>
+    </ControlTheme>
+    <ControlTheme x:Key="Z2ScrollPageButton" TargetType="RepeatButton">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Background="Transparent" />
+            </ControlTemplate>
+        </Setter>
+    </ControlTheme>
+    <ControlTheme x:Key="{x:Type ScrollBar}" TargetType="ScrollBar">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Track Name="PART_Track" Minimum="{TemplateBinding Minimum}" Maximum="{TemplateBinding Maximum}"
+                       Value="{TemplateBinding Value, Mode=TwoWay}" ViewportSize="{TemplateBinding ViewportSize}"
+                       Orientation="{TemplateBinding Orientation}" DeferThumbDrag="{TemplateBinding (ScrollViewer.IsDeferredScrollingEnabled)}">
+                    <Track.DecreaseButton>
+                        <RepeatButton Name="PART_PageUpButton" Theme="{StaticResource Z2ScrollPageButton}" />
+                    </Track.DecreaseButton>
+                    <Track.Thumb>
+                        <Thumb Theme="{StaticResource Z2ScrollThumb}" AutomationProperties.Name="Scroll position" />
+                    </Track.Thumb>
+                    <Track.IncreaseButton>
+                        <RepeatButton Name="PART_PageDownButton" Theme="{StaticResource Z2ScrollPageButton}" />
+                    </Track.IncreaseButton>
+                </Track>
+            </ControlTemplate>
+        </Setter>
+        <Style Selector="^:vertical">
+            <Setter Property="Width" Value="12" />
+        </Style>
+        <Style Selector="^:vertical /template/ Track#PART_Track">
+            <Setter Property="IsDirectionReversed" Value="True" />
+        </Style>
+        <Style Selector="^:horizontal">
+            <Setter Property="Height" Value="12" />
+        </Style>
+    </ControlTheme>
+    <ControlTheme x:Key="{x:Type ScrollViewer}" TargetType="ScrollViewer">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Grid RowDefinitions="*,Auto" ColumnDefinitions="*,Auto">
+                    <ScrollContentPresenter Name="PART_ContentPresenter" Background="{TemplateBinding Background}"
+                                            Padding="{TemplateBinding Padding}"
+                                            ScrollViewer.IsScrollInertiaEnabled="{TemplateBinding IsScrollInertiaEnabled}"
+                                            HorizontalSnapPointsType="{TemplateBinding HorizontalSnapPointsType}"
+                                            VerticalSnapPointsType="{TemplateBinding VerticalSnapPointsType}">
+                        <ScrollContentPresenter.GestureRecognizers>
+                            <ScrollGestureRecognizer CanHorizontallyScroll="{Binding CanHorizontallyScroll, ElementName=PART_ContentPresenter}"
+                                                     CanVerticallyScroll="{Binding CanVerticallyScroll, ElementName=PART_ContentPresenter}"
+                                                     IsScrollInertiaEnabled="{Binding (ScrollViewer.IsScrollInertiaEnabled), ElementName=PART_ContentPresenter}"
+                                                     Offset="{Binding Offset, ElementName=PART_ContentPresenter}"
+                                                     Viewport="{Binding Viewport, ElementName=PART_ContentPresenter}"
+                                                     Extent="{Binding Extent, ElementName=PART_ContentPresenter}" />
+                        </ScrollContentPresenter.GestureRecognizers>
+                    </ScrollContentPresenter>
+                    <ScrollBar Name="PART_VerticalScrollBar" Grid.Column="1" Orientation="Vertical" />
+                    <ScrollBar Name="PART_HorizontalScrollBar" Grid.Row="1" Orientation="Horizontal" />
+                </Grid>
+            </ControlTemplate>
+        </Setter>
+    </ControlTheme>
+</ResourceDictionary>

@@ -1,0 +1,13 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:dialog="clr-namespace:DialogHostAvalonia;assembly=DialogHost.Avalonia">
+    <!-- DialogHost owns modality, focus, and placement; the app owns its palette. -->
+    <Style Selector="dialog|DialogHost">
+        <Setter Property="Background" Value="{DynamicResource Z2PaperBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource Z2ForegroundBrush}" />
+        <Setter Property="OverlayBackground" Value="{DynamicResource Z2DialogOverlayBrush}" />
+        <Setter Property="(dialog:DialogHostStyle.CornerRadius)" Value="4" />
+        <Setter Property="(dialog:DialogHostStyle.BorderThickness)" Value="1" />
+        <Setter Property="(dialog:DialogHostStyle.BorderBrush)" Value="{DynamicResource Z2DisabledForegroundBrush}" />
+    </Style>
+</Styles>

@@ -35,6 +35,7 @@
 
     <PropertyGroup Condition="'$(Configuration)' == 'Release'">
         <RunAOTCompilation>true</RunAOTCompilation>
+        <TrimMode>full</TrimMode>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
@@ -69,10 +70,8 @@
             <ExternalSprites Include="..\RandomizerCore\Sprites\**" />
             <ExternalJson Include="..\RandomizerCore\PalaceRooms.json" />
             <ExternalJson Include="..\RandomizerCore\CustomRoomPool.yaml" />
-            <ExternalAsm Include="..\RandomizerCore\Asm\**" />
-
             <!-- Tell Visual Studio to watch them for changes -->
-            <UpToDateCheckInput Include="@(ExternalSprites);@(ExternalJson);@(ExternalAsm)" />
+            <UpToDateCheckInput Include="@(ExternalSprites);@(ExternalJson)" />
         </ItemGroup>
 
         <Copy SourceFiles="@(ExternalSprites)"
@@ -80,9 +79,6 @@
               SkipUnchangedFiles="true" />
         <Copy SourceFiles="@(ExternalJson)"
               DestinationFiles="wwwroot\%(Filename)%(Extension)"
-              SkipUnchangedFiles="true" />
-        <Copy SourceFiles="@(ExternalAsm)"
-              DestinationFiles="@(ExternalAsm -> 'wwwroot\Asm\%(RecursiveDir)%(Filename)%(Extension)')"
               SkipUnchangedFiles="true" />
     </Target>
 

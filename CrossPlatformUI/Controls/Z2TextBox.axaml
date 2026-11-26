@@ -1,0 +1,72 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="using:CrossPlatformUI.Controls">
+    <local:ComboBoxOutlineClipConverter x:Key="TextBoxOutlineClip" />
+    <ControlTheme x:Key="Z2TextBoxScrollViewer" TargetType="ScrollViewer">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <ScrollContentPresenter Name="PART_ContentPresenter" />
+            </ControlTemplate>
+        </Setter>
+    </ControlTheme>
+    <ControlTheme x:Key="{x:Type local:Z2TextBox}" TargetType="local:Z2TextBox">
+        <Setter Property="Foreground" Value="{DynamicResource Z2TextBoxForeground}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Z2TextBoxOutline}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="MinHeight" Value="56" />
+        <Setter Property="Padding" Value="16,0" />
+        <Setter Property="CaretBrush" Value="{DynamicResource Z2TextBoxForeground}" />
+        <Setter Property="SelectionBrush" Value="{DynamicResource Z2TextBoxSelection}" />
+        <Setter Property="SelectionForegroundBrush" Value="{DynamicResource Z2TextBoxForeground}" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Grid Name="TextFieldRoot" Margin="0,8,0,4" MinHeight="40" Background="{TemplateBinding Background}">
+                    <Border Name="FieldBorder" BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}">
+                        <Border.Clip>
+                            <MultiBinding Converter="{StaticResource TextBoxOutlineClip}">
+                                <Binding ElementName="FieldBorder" Path="Bounds" />
+                                <Binding ElementName="LabelBorder" Path="Bounds" />
+                            </MultiBinding>
+                        </Border.Clip>
+                    </Border>
+                    <Grid ColumnDefinitions="Auto,*,Auto" Margin="{TemplateBinding Padding}">
+                        <ContentPresenter Content="{TemplateBinding InnerLeftContent}" VerticalAlignment="Center" />
+                        <Grid Grid.Column="1">
+                            <TextBlock Name="Placeholder" Text="{TemplateBinding PlaceholderText}" Opacity="0.6"
+                                       VerticalAlignment="Center" IsHitTestVisible="False" IsVisible="False" />
+                            <ScrollViewer Name="PART_ScrollViewer" Theme="{StaticResource Z2TextBoxScrollViewer}"
+                                          HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
+                                <TextPresenter Name="PART_TextPresenter" VerticalAlignment="Center"
+                                               Text="{TemplateBinding Text, Mode=TwoWay}" TextWrapping="{TemplateBinding TextWrapping}"
+                                               TextAlignment="{TemplateBinding TextAlignment}" CaretIndex="{TemplateBinding CaretIndex}"
+                                               SelectionStart="{TemplateBinding SelectionStart}" SelectionEnd="{TemplateBinding SelectionEnd}"
+                                               CaretBrush="{TemplateBinding CaretBrush}" SelectionBrush="{TemplateBinding SelectionBrush}"
+                                               SelectionForegroundBrush="{TemplateBinding SelectionForegroundBrush}" />
+                            </ScrollViewer>
+                        </Grid>
+                        <ContentPresenter Grid.Column="2" Content="{TemplateBinding InnerRightContent}" VerticalAlignment="Center" />
+                    </Grid>
+                    <Border Name="LabelBorder" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="14,-8,0,0" Padding="4,0"
+                            IsVisible="{TemplateBinding Label, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                        <TextBlock Text="{TemplateBinding Label}" FontSize="{DynamicResource Z2TextBoxLabelFontSize}" />
+                    </Border>
+                </Grid>
+            </ControlTemplate>
+        </Setter>
+        <Style Selector="^:empty /template/ TextBlock#Placeholder">
+            <Setter Property="IsVisible" Value="True" />
+        </Style>
+        <Style Selector="^:pointerover, ^:focus-within">
+            <Setter Property="BorderBrush" Value="{DynamicResource Z2TextBoxAccent}" />
+        </Style>
+        <Style Selector="^:invalid">
+            <Setter Property="BorderBrush" Value="{DynamicResource Z2TextBoxError}" />
+        </Style>
+        <Style Selector="^:disabled">
+            <Setter Property="Opacity" Value="0.56" />
+        </Style>
+    </ControlTheme>
+</ResourceDictionary>

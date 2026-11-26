@@ -47,13 +47,6 @@ public sealed class Z2CheckBox : CheckBox
         set => SetValue(CaptionOverrideProperty, value);
     }
 
-    // Avalonia's type selectors (Selector="CheckBox", including the one
-    // Material.Avalonia uses to supply the template) match on StyleKey, which
-    // defaults to the *concrete* type. Without this override every CheckBox style
-    // and the theme are skipped: the control still handles clicks and still shows
-    // its Content, but has no template, so the box itself never draws.
-    protected override Type StyleKeyOverride => typeof(CheckBox);
-
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
@@ -114,6 +107,7 @@ public sealed class Z2CheckBox : CheckBox
         _label = new TextBlock
         {
             TextWrapping = TextWrapping.Wrap,
+            Margin = new Thickness(0),
         };
         Content = _label;
         ApplyCaption();

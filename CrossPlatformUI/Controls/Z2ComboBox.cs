@@ -5,8 +5,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Avalonia.Layout;
-using Avalonia.Styling;
-using Material.Styles.Assists;
 using Z2Randomizer.RandomizerCore;
 using Z2Randomizer.RandomizerCore.Flags;
 
@@ -18,12 +16,10 @@ namespace CrossPlatformUI.Controls;
 /// difficulty-only and gating behaviour all come from the flag's
 /// <see cref="FlagEntry"/>, so a view no longer needs a class per flag.
 /// </summary>
-public sealed class Z2ComboBox : ComboBox
+public sealed class Z2ComboBox : Z2SelectionBox
 {
     public static readonly StyledProperty<ConfigFlag?> FlagProperty =
         AvaloniaProperty.Register<Z2ComboBox, ConfigFlag?>(nameof(Flag));
-
-    private const string ThemeKey = "MaterialOutlineComboBox";
 
     private FlagBinding? _binding;
     private List<EnumDescription>? _items;
@@ -41,12 +37,6 @@ public sealed class Z2ComboBox : ComboBox
         get => GetValue(FlagProperty);
         set => SetValue(FlagProperty, value);
     }
-
-    // Avalonia's type selectors (Selector="ComboBox", including the one
-    // Material.Avalonia uses to supply the template) match on StyleKey, which
-    // defaults to the *concrete* type. Without this override every ComboBox style
-    // and the theme are skipped.
-    protected override Type StyleKeyOverride => typeof(ComboBox);
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
@@ -95,16 +85,6 @@ public sealed class Z2ComboBox : ComboBox
         if (Binding.Entry is not { } entry)
             return;
 
-        // Material's outline variant. Resolved from the Application resource host,
-        // which is the same lookup the XAML compiler performs for
-        // Theme="{StaticResource MaterialOutlineComboBox}".
-        if (Application.Current is { } app &&
-            app.TryFindResource(ThemeKey, out var outline) &&
-            outline is ControlTheme outlineTheme)
-        {
-            Theme = outlineTheme;
-        }
-
         // The option list is read once per control: some Enums properties compute a
         // fresh list on every access, and SelectedItem is matched against these
         // exact instances.
@@ -119,9 +99,7 @@ public sealed class Z2ComboBox : ComboBox
         if (!string.IsNullOrEmpty(toolTip))
             ToolTip.SetTip(this, toolTip);
 
-        var label = entry.Label();
-        if (!string.IsNullOrEmpty(label))
-            ComboBoxAssist.SetLabel(this, label);
+        Label = entry.Label();
 
         if (VisualRoot is not null)
             Binding.Rebind(DataContext);

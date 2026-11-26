@@ -24,7 +24,7 @@ public partial class RandomizerViewModel : ReactiveObject, IRoutableViewModel, I
     public IObservable<bool> CanGenerateObservable { get; private set; }
 
     [JsonIgnore]
-    public IObservable<IBrush> FlagInputUnderlineObservable { get; }
+    public IObservable<IBrush> FlagInputBorderObservable { get; }
 
     [JsonIgnore]
     public IObservable<IBrush> HeaderBackgroundObservable { get; }
@@ -160,9 +160,9 @@ public partial class RandomizerViewModel : ReactiveObject, IRoutableViewModel, I
             (flagsValid, seedValid, hasRom, isRunning) =>
                 flagsValid && seedValid && hasRom && !isRunning);
 
-        FlagInputUnderlineObservable = this.WhenAnyValue(x => x.ThemeVariantName)
+        FlagInputBorderObservable = this.WhenAnyValue(x => x.ThemeVariantName)
             .CombineLatest(this.WhenAnyValue(x => x.FlagsValid), (theme, valid) =>
-                ThemeHelper.GetFlagUnderlineBrush(theme, valid));
+                ThemeHelper.GetFlagBorderBrush(theme, valid));
 
         HeaderBackgroundObservable = this.WhenAnyValue(x => x.ThemeVariantName)
             .CombineLatest(
@@ -189,6 +189,15 @@ public partial class RandomizerViewModel : ReactiveObject, IRoutableViewModel, I
             if (topLevel is not null)
             {
                 await topLevel.Launcher.LaunchUriAsync(new Uri("https://github.com/Ellendar/Z2Randomizer/wiki"));
+            }
+        });
+
+        VisitThirdPartyNotices = ReactiveCommand.CreateFromTask<Control>(async control =>
+        {
+            var topLevel = TopLevel.GetTopLevel(control);
+            if (topLevel is not null)
+            {
+                await topLevel.Launcher.LaunchUriAsync(new Uri("https://github.com/Ellendar/Z2Randomizer/THIRD-PARTY-NOTICES.md"));
             }
         });
 
@@ -477,6 +486,9 @@ public partial class RandomizerViewModel : ReactiveObject, IRoutableViewModel, I
     public ReactiveCommand<Control, RxVoid> VisitDiscord { get; }
     [JsonIgnore]
     public ReactiveCommand<Control, RxVoid> VisitWiki { get; }
+
+    [JsonIgnore]
+    public ReactiveCommand<Control, RxVoid> VisitThirdPartyNotices { get; }
     [JsonIgnore]
     public ReactiveCommand<RxVoid, IRoutableViewModel> LoadRom { get; }
 

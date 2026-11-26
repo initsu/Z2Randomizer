@@ -3,7 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Data;
 using Avalonia.Interactivity;
 using Avalonia.Media;
-using Material.Styles.Themes;
+using Avalonia.Markup.Xaml.MarkupExtensions;
 using System;
 using Z2Randomizer.RandomizerCore;
 
@@ -45,6 +45,9 @@ public partial class NesColorDropdown : UserControl
     }
 
     public event EventHandler<int>? ColorSelected;
+
+    private IDisposable? randomBackgroundBinding;
+    private IDisposable? randomForegroundBinding;
 
     public NesColorDropdown()
     {
@@ -113,11 +116,12 @@ public partial class NesColorDropdown : UserControl
                 var btn = new Button
                 {
                     Background = brush,
-                    BorderBrush = Brushes.Gray,
+                    [!Button.BorderBrushProperty] = new DynamicResourceExtension("Z2ColorPickerBorderBrush"),
                     BorderThickness = new Thickness(1),
                     Margin = new Thickness(2),
                     Width = 28,
                     Height = 28,
+                    Padding = new Thickness(0),
                     Tag = index
                 };
 
@@ -134,18 +138,6 @@ public partial class NesColorDropdown : UserControl
     {
         var color = NES.NesColors[index];
         return new SolidColorBrush(Color.FromRgb(color.R, color.G, color.B));
-    }
-
-    private static IBrush GetBackgroundBrush()
-    {
-        if (Application.Current?.LocateMaterialTheme<MaterialTheme>() is { } theme &&
-            theme.TryGetResource("MaterialPaperBrush", null, out var brushObj) &&
-            brushObj is IBrush brush)
-        {
-            return brush;
-        }
-
-        return Brushes.LightGray;
     }
 
     private static IBrush GetContrastBrush(Color background)
@@ -170,12 +162,10 @@ public partial class NesColorDropdown : UserControl
 
     private void SetupButton(int index)
     {
-        IBrush background = index switch
-        {
-            (int)NesColor.Default => GetBrushFromNesColor(DefaultColorIndex),
-            (int)NesColor.Random => GetBackgroundBrush(),
-            _ => GetBrushFromNesColor(index)
-        };
+        randomBackgroundBinding?.Dispose();
+        randomForegroundBinding?.Dispose();
+        randomBackgroundBinding = null;
+        randomForegroundBinding = null;
 
         string text = index switch
         {
@@ -184,11 +174,18 @@ public partial class NesColorDropdown : UserControl
             _ => $"{((NesColor)index).ToDescription()} ({index:X2})",
         };
 
-        Color? baseColor = (background as SolidColorBrush)?.Color;
-        IBrush foreground = baseColor.HasValue ? GetContrastBrush(baseColor.Value) : Brushes.Black;
-
-        SelectedButton.Background = background;
-        SelectedLabel.Foreground = foreground;
         SelectedLabel.Text = text;
+
+        if (index == (int)NesColor.Random)
+        {
+            // Keep the random swatch in sync with live light/dark changes.
+            randomBackgroundBinding = SelectedButton.Bind(Button.BackgroundProperty, new DynamicResourceExtension("Z2PaperBrush"));
+            randomForegroundBinding = SelectedLabel.Bind(TextBlock.ForegroundProperty, new DynamicResourceExtension("Z2ForegroundBrush"));
+            return;
+        }
+
+        var background = GetBrushFromNesColor(index == (int)NesColor.Default ? DefaultColorIndex : index);
+        SelectedButton.Background = background;
+        SelectedLabel.Foreground = GetContrastBrush(background.Color);
     }
 }

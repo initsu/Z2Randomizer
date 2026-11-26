@@ -6,8 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Avalonia;
 using Avalonia.Controls;
 using ReactiveUI.Avalonia;
-using Material.Styles.Themes;
-using Material.Styles.Themes.Base;
 using CrossPlatformUI.Services;
 using CrossPlatformUI.ViewModels;
 using Desktop.Common;
@@ -71,7 +69,7 @@ public static class Program
                 if (Design.IsDesignMode)
                 {
                     // This can be before or after InitializeComponent.
-                    App.Current!.LocateMaterialTheme<MaterialTheme>().BaseTheme = BaseThemeMode.Dark;
+                    App.Current!.RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Dark;
                 }
             })
             .UseReactiveUI(_ =>

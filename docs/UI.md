@@ -1,4 +1,8 @@
-# Frontend / UI conventions (CrossPlatformUI)
+# Working on the CrossPlatformUI
+
+The Desktop and Browser apps share an Avalonia interface. This guide covers the
+usual UI work: adding settings, choosing controls, changing the appearance, and
+adding icons.
 
 ## Contents
 
@@ -9,353 +13,452 @@
 5. [Enabling and disabling controls](#5-enabling-and-disabling-controls)
 6. [Adding a flag, end to end](#6-adding-a-flag-end-to-end)
 7. [The settings search box](#7-the-settings-search-box)
-
----
+8. [Menus](#8-menus)
+9. [Dialogs](#9-dialogs)
+10. [Preset presentation](#10-preset-presentation)
+11. [General controls](#11-general-controls)
+12. [App shell](#12-app-shell)
+13. [Text-editing menus and touch selection](#13-text-editing-menus-and-touch-selection)
+14. [Managed file-picker fallback](#14-managed-file-picker-fallback)
+15. [Adding a Material Design icon](#15-adding-a-material-design-icon)
 
 ## 1. Project layout
 
-| Project | Role |
+Most UI changes belong in `CrossPlatformUI/`. The two host projects provide
+platform services; they use the same views and controls.
+
+| Project | Purpose |
 | --- | --- |
-| `CrossPlatformUI/` | Shared Avalonia views and view models (contents listed below the table). |
-| `CrossPlatformUI.Desktop/` | Avalonia desktop host. |
-| `CrossPlatformUI.Browser/` | WebAssembly host. See the [browser build guide](BROWSER.md). |
-| `Desktop.Common/` | `DesktopJsEngine.cs` (ClearScript V8) and `DesktopFileService.cs`. |
-| `CrossPlatformUI.SourceGenerator/` | Roslyn incremental generator. `FlagsControlsGenerator.cs` emits only the `FlagRegistry` metadata table, the `RandomizerConfigResolver` cast, a small `FlagIncludedResolver` (for hand-written enablement rules), and `FlagControlFactory`. |
-| `CoreSourceGenerator/` | The main source generator used by `RandomizerCore`. `FlagsSerializeGenerator.cs` (reactive properties and flag-string serialization, including `Diff`) and `ConfigFlagGenerator.cs` (emits the `ConfigFlag` enum). |
+| `CrossPlatformUI/` | Shared views, controls, view models, styles, and resources. |
+| `CrossPlatformUI.Desktop/` | Desktop startup and platform integration. |
+| `CrossPlatformUI.Browser/` | WebAssembly startup and browser services. |
+| `Desktop.Common/` | Shared desktop file and JavaScript services. |
+| `CrossPlatformUI.SourceGenerator/` | Generates flag-control metadata and factories. |
+| `CoreSourceGenerator/` | Generates configuration properties, flag serialization, and `ConfigFlag`. |
 
-**Inside `CrossPlatformUI/`:**
-
-| Path | Contents |
-| --- | --- |
-| `Views/` | One `.axaml` per screen |
-| `Views/Tabs/` | The tab pages |
-| `ViewModels/` | View models |
-| `ViewModels/Tabs/` | Tab-page view models |
-| `Lang/Resources.resx` | Label and tooltip strings |
-| `Presets/` | Preset definitions such as `StandardPreset` |
-| `Behaviors/` | Avalonia behaviors |
-| `Converters/` | Value converters |
-| `Assets/` | Static assets |
-| `Services/` | Shared services |
-| `Controls/` | The core flag controls: `Z2CheckBox`, `Z2ComboBox`, `Z2NumericUpDown`, `FlagBinding`, `FlagEntry` |
-
----
+Within the shared project, `Views/` contains screens and `Views/Tabs/` contains
+settings pages. Their view models are under `ViewModels/`. Reusable controls and
+themes live in `Controls/`; labels and tooltips live in `Lang/Resources.resx`.
+`Presets/`, `Services/`, `Converters/`, and `Behaviors/` hold their corresponding
+UI features.
 
 ## 2. How a flag becomes a control
 
-A view refers to a flag **by name**:
+A flag control connects to a configuration property by name. Its label, tooltip,
+options, and numeric bounds come from shared metadata, so a view usually needs
+only the flag and its layout position:
 
 ```xml
-<StackPanel xmlns:z="clr-namespace:CrossPlatformUI.Controls">
-  <z:Z2CheckBox Flag="LegacyVanillaShuffledLocations" />
-  <z:Z2ComboBox Flag="GpLength" />
-  <z:Z2NumericUpDown Flag="AttackLevelCap" />
-  <z:Z2NumericUpDown Flag="PalacesToCompleteMin" />
-</StackPanel>
+<z:Z2CheckBox Flag="StartWithCandle" />
+<z:Z2ComboBox Flag="GpLength" />
+<z:Z2NumericUpDown Flag="StartingAttackLevel" />
 ```
 
-What happens behind that one line:
+These examples use `xmlns:z="clr-namespace:CrossPlatformUI.Controls"` on the
+view's root element. The control's DataContext supplies the configuration through
+`IFlagHost`, normally `MainViewModel`. A tab with its own view model can bind its
+flag controls to `Main`.
 
-1. A public property is declared in `RandomizerConfiguration.cs`.
-2. When you build, `FlagsSerializeGenerator` generates the reactive property
-   and its flag-string serialization. `ConfigFlagGenerator` adds a matching
-   `ConfigFlag` member.
-3. `FlagsControlsGenerator` scans those properties, picks a control kind from
-   the property type, and emits **one `FlagRegistry.g.cs` entry** per flag.
-4. At runtime our custom control (`Controls/Z2*.cs`) looks up its registry
-   entry. `FlagBinding` syncs it with `Config` on the DataContext, and
-   `FlagEntry` supplies the per-flag metadata (label, tooltip, bounds, list,
-   enablement rule).
+Building the project generates a `FlagRegistry` entry for each supported property.
+The controls read that metadata and synchronize with the live configuration.
 
-### Which control a property uses
-
-| Property type | Control | Extra requirements |
+| Property type | Control | Label and other metadata |
 | --- | --- | --- |
-| `bool` / `bool?` | `Z2CheckBox` | `Resources.<Prop>` and `Resources.<Prop>ToolTip` |
-| any enum | `Z2ComboBox` | `Resources.<Prop>`, `Resources.<Prop>ToolTip`, and `Enums.<Prop>List` |
-| `int` / `int?` with both `[Minimum]` and `[Maximum]` | `Z2NumericUpDown` | `Resources.<Prop>` box hint; a Min/Max pair also needs `Resources.<Prop>Caption` (see 4.4) |
+| `bool` / `bool?` | `Z2CheckBox` | `Resources.<Name>` and `<Name>ToolTip`. |
+| Enum | `Z2ComboBox` | The same resource keys, plus `Enums.<Name>List`. |
+| `int` / `int?` with bounds | `Z2NumericUpDown` | `[Minimum]`, `[Maximum]`, and a label resource; pair captions are described below. |
 
-### Attribute cheat sheet
+The configuration attributes also describe how a setting appears:
 
-Put these on the backing field in `RandomizerConfiguration`. The generator
-forwards attributes it does not recognise onto the generated property
-(`FlagsSerializeGenerator.GetPassThroughAttributes`), so an attribute used this
-way must be declared with `Field` as a valid target.
-
-| Attribute | Effect |
+| Attribute | Purpose |
 | --- | --- |
-| `[ConditionallyIncludeInFlags]` | The flag is left out of the flag string when its `xIncluded()` predicate is false. Requires that predicate. |
-| `[IgnoreInFlags]` | Keeps a property out of the serialized flag string (e.g. `DisableMusic`) but **still generates a control**. |
-| `[IgnoreInFlagControls]` | Keeps a property out of the generated controls but **still serializes it**. Works for enums, `int`s and pair ends. Used for the four `NesColor` palette properties (`Tunic`, `SkinTone`, `TunicOutline`, `ShieldTunic`), which have their own `NesColorDropdown`. |
-| `[Minimum(n)]` / `[Maximum(n)]` | Numeric bounds. These are the only source of truth for bounds. |
-| `[UiNumericPair(nameof(partner))]` | Marks both ends of a Min/Max pair. |
-| `[DifficultyOnly]` | Gives the control a read-only look while `ShareSeedAcrossDifficulty` is on. |
-| `[TooltipResource("Key")]` | Points the tooltip at a shared resource key. See 4.3.2. |
+| `[ConditionallyIncludeInFlags]` | Serializes the setting only when its `xIncluded()` predicate allows it. |
+| `[IgnoreInFlags]` | Omits a setting from the flag string while still allowing a UI control. |
+| `[IgnoreInFlagControls]` | Omits the standard control, for settings with a custom editor such as NES colors. |
+| `[Minimum(n)]` / `[Maximum(n)]` | Defines the numeric editor's bounds. |
+| `[UiNumericPair(nameof(partner))]` | Links the two ends of a Min/Max pair. |
+| `[DifficultyOnly]` | Applies the difficulty-only appearance while the seed is shared. |
+| `[TooltipResource("Key")]` | Uses a shared tooltip resource. |
 
----
+These attributes go on the backing field in `RandomizerConfiguration`; attributes
+forwarded to the generated property must support fields as an attribute target.
 
 ## 3. ReactiveUI conventions
 
-The UI uses **ReactiveUI 25** with **ReactiveUI.SourceGenerators**. View models
-are `partial`.
+View models use ReactiveUI with source-generated properties. A typical observable
+property looks like this:
 
-- **Declare properties with `[RUISG.Reactive]`**:
-  `[RUISG.Reactive] public partial T Prop { get; set; }`, not
-  `RaiseAndSetIfChanged`.
-- **Do not import `System.Reactive.Linq`.** Use `ReactiveUI.Primitives`, or the
-  codebase's `SubscribeExtensions.Subscribe(obs, action).DisposeWith(disposables)`.
-  That helper exists specifically to avoid the `System.Reactive.Linq` ambiguity.
-- **`RandomizerCore` has its own `ReactiveAttribute`**, so the core needs no
-  ReactiveUI dependency. Never import both into one file.
+```csharp
+using RUISG = ReactiveUI.SourceGenerators;
 
----
+[RUISG.Reactive]
+public partial string SearchText { get; set; }
+```
+
+The containing view-model class is `partial`. A property that needs side effects
+can instead use a backing field and a setter that calls `RaisePropertyChanged()`.
+
+Observable helpers come from `ReactiveUI.Primitives` and the project's
+`SubscribeExtensions`. Importing `System.Reactive.Linq` introduces conflicting
+extensions. The core's separate `ReactiveAttribute` is for configuration code;
+UI view models use the `RUISG` alias above.
 
 ## 4. Flag controls in detail
 
 ### 4.1 The shared contract
 
-**Compile-time checking.** Every `FlagEntry` member is a literal reference
-(`Resources.X`, `c => c.X`, `Enums.XList`). A renamed property or missing resx
-key fails the build. Nothing is reflection or a string-keyed lookup.
+The flag controls share a small API: `Flag` identifies the setting, while the
+DataContext provides an `IFlagHost`. `MainViewModel` implements that interface,
+and `SpriteCustomizationViewModel` forwards it to `Main`. A control without a
+compatible DataContext has no configuration to edit.
 
-**Binding.** `FlagBinding` is a direct `INotifyPropertyChanged` bridge, not
-reflection and not a string-path Avalonia binding. This avoids depending on
-ReactiveUI's generated binding members across generator boundaries. It binds on
-both `OnDataContextChanged` and `OnAttachedToVisualTree`, and unbinds on detach.
+The registry supplies labels and tooltips. `Classes` is useful for visual variants
+of a shared control; `[DifficultyOnly]` adds its class automatically. Custom
+controls such as the sprite picker and the experience-shuffle grouping have their
+own bindings rather than a `Flag` property.
 
-**DataContext resolution.** The control resolves its config with a single cast:
-`RandomizerConfigResolver.Resolve` is `(dataContext as IFlagHost)?.Config`.
-`IFlagHost` (`CrossPlatformUI/ViewModels/IFlagHost.cs`) exposes `Config` and
-`FlagsChanged`. A DataContext that doesn't implement it resolves to `null`, and
-**the control silently does nothing**.
-
-| DataContext | How it gets there |
-| --- | --- |
-| `MainViewModel` | Implements `IFlagHost` directly. |
-| `SpriteCustomizationViewModel` (inside `CustomizeView`) | Forwards to its `Main` through explicit interface members, so it adds no public surface. |
-| Views with no state of their own (`Biomes`, `Hints`, `Items`, `Palaces`, `Spells`, `Customize`, `Drops`, `Enemies`, `Levels`, `Overworld`, `Start`) | Bind `DataContext` straight to `Main` and have no view model. |
-| `PresetsViewModel` | Creates its controls in code and sets each control's `DataContext` explicitly. It does not implement the interface. |
-
-Because the three control types are shared, a style selector can no longer
-target one flag's class. Use `Classes` instead, which is how `DifficultyOnly`
-works.
-
-**`[DifficultyOnly]` styles itself.** When the config field carries
-`[DifficultyOnly]`, the control watches `ShareSeedAcrossDifficulty` and adds or
-removes the `DifficultyOnly` class, which `App.axaml`'s `.DifficultyOnly`
-selectors use for the read-only look.
-
-**`FlagControlFactory.Create(ConfigFlag)`** is for callers that only know a flag
-at runtime. It returns the control for that flag, or `null` when the flag has no
-flag control (a serialization-only member: an `[IgnoreInFlagControls]` property,
-or a field type that isn't a control).
-
-Its inputs are exactly the values `RandomizerConfiguration.Diff` reports in
-`Field`.
-
-**What is still hand-written.** Not every control in the views is a flag
-control:
-
-- The "shuffle all experience" grouping in `LevelsView`.
-- The `Character Sprite` combo in `CustomizeView`: preview UI state with a
-  custom item template, not a flag.
+For a dynamically built editor, `FlagControlFactory.Create(ConfigFlag)` returns
+the appropriate control, or `null` for a setting without a standard editor. This
+is how search results and preset differences display the same editors as the tabs.
 
 ### 4.2 Checkboxes (`Z2CheckBox`)
 
-- Applies to every `bool` / `bool?` property.
-- A `bool?` is tri-state; the indeterminate state means "roll randomly".
-- Label and tooltip come from the matching `Resources` entries (see section 6,
-  step 2).
+A nullable boolean has three states. Checked and unchecked mean true and false;
+the question mark means the randomizer will choose. Labels wrap to fit the page.
+
+`Controls/Z2CheckBox.axaml` defines the checkbox appearance, including focus,
+disabled, and difficulty-only states. Its colors come from `AppPalette.axaml`.
+The ordinary CheckBox used for "Shuffle All Experience" shares the theme.
 
 ### 4.3 Combo boxes (`Z2ComboBox`)
 
-Every enum-typed public property gets a `ConfigFlag` member and is served by
-`Z2ComboBox`.
+`Z2ComboBox` displays the registry label across the top outline. Disabled flag
+combos retain the label but hide the selected value and arrow.
 
-**4.3.1 Required symbols**
+For a list that is not a flag, such as character sprites, use `Z2SelectionBox`:
 
-The generator references these symbols **unconditionally**, so a missing one is
-a build error that names it:
+```xml
+<z:Z2SelectionBox Label="Character Sprite"
+                  ItemsSource="{Binding SpriteCustomizationViewModel.Options}"
+                  SelectedItem="{Binding SpriteCustomizationViewModel.Sprite}" />
+```
 
-- `Resources.<PropertyName>`
-- `Resources.<PropertyName>ToolTip`
-- `Enums.<PropertyName>List`
+It shares the ComboBox styling and supports a custom `ItemTemplate`. Its selected
+value remains visible when disabled. The templates are in `Controls/Z2ComboBox.axaml`.
 
-**4.3.2 Shared tooltips (`[TooltipResource]`)**
+#### 4.3.1 Required symbols
 
-By default the tooltip key is `Resources.<Prop>ToolTip`. When several flags
-genuinely share one tooltip, put `[TooltipResource("KeyName")]` on the config's
-backing **field**.
+Each enum control uses `Resources.<Name>`, `Resources.<Name>ToolTip`, and
+`Enums.<Name>List`. Missing symbols produce a build error naming the resource
+or list to add.
 
-**4.3.3 Two-column ComboBoxes**
+#### 4.3.2 Shared tooltips (`[TooltipResource]`)
 
-If any member of the enum has a `;` in its `[Description]`
-(`[Description("Long name;Extra info")]`), the ComboBox will use two columns.
-Without a `;` anywhere, the default one-line template is used.
+A tooltip normally uses `<Name>ToolTip`. Several related settings can share one
+resource by putting `[TooltipResource("ClimateToolTip")]`, for example, on their
+configuration fields.
 
-**4.3.4 Why not derive the list from the enum type?**
+#### 4.3.3 Two-column ComboBoxes
 
-Several lists apply a per-flag filter where not all enum values are valid:
+An enum description can include supplementary text after a semicolon:
+`[Description("Long name;Extra info")]`. The dropdown displays that text in a
+second column. Descriptions without it use the ordinary one-line layout.
 
-| List | Filter |
+#### 4.3.4 Why not derive the list from the enum type?
+
+Some settings allow only part of an enum. The named lists in `EnumTypes.cs` are
+where that filtering belongs:
+
+| List | Filtering |
 | --- | --- |
 | `BossLifeOptionList` | Excludes `EnemyLifeOption.WIDE`. |
-| `WestBiomeList` / `EastBiomeList` / `DmBiomeList` / `MazeBiomeList` | Filter by region. |
-| The `West`/`East`/`Dm`/`Maze` climate lists | Filter the same way. |
+| `WestBiomeList`, `EastBiomeList`, `DmBiomeList`, `MazeBiomeList` | Offers biomes appropriate to the region. |
+| The corresponding climate lists | Applies the regional climate choices. |
 
 ### 4.4 Numeric controls (`Z2NumericUpDown`)
 
-An `int` / `int?` property with both `[Minimum(n)]` and `[Maximum(n)]` gets a
-registry entry served by `Z2NumericUpDown`.
+Numeric editors use the configuration's `[Minimum]` and `[Maximum]` attributes.
+The registry label appears underneath the field as its `Hint`. Clearing a nullable
+value selects the random state. Numerics remain editable rather than being
+automatically disabled by flag enablement rules.
 
-**4.4.1 Min/Max pairs**
+For rows containing both numeric fields and a ComboBox, `Classes="AlignedFields"`
+on their parent Grid aligns the outlines:
 
-Both fields carry `[UiNumericPair(nameof(partner))]`.
+```xml
+<Grid Classes="AlignedFields" ColumnDefinitions="72,72,122" ColumnSpacing="8">
+    <z:Z2NumericUpDown Flag="StartingHeartContainersMin" Grid.Column="0" />
+    <z:Z2NumericUpDown Flag="StartingHeartContainersMax" Grid.Column="1" />
+    <z:Z2ComboBox Flag="MaxHeartContainers" Grid.Column="2" />
+</Grid>
+```
 
-- `Z2NumericUpDown.ApplyCrossBound` sets the low box's `Maximum` from the high
-  box's live value, and vice versa. If the partner is cleared, it falls back to
-  the partner's hard bound.
-- A Min/Max pair needs three resource keys: `<Name>` is the box hint
-  (compile-time, so a missing key fails the build), `<Name>Caption` labels it
-  in the preset diff and the settings search, and one shared tooltip
-  `<MinName>ToolTip` serves both boxes. The caption and tooltip are lazy
-  lookups, so a missing key just means no caption or no tooltip.
+#### 4.4.1 Min/Max pairs
 
-**Numerics cannot be disabled.** `ApplyGeneratedEnablers` skips numerics.
+Both fields in a pair carry `[UiNumericPair(nameof(partner))]`. Changing either
+end updates the other's allowed range; clearing an end restores the partner's
+configured bound.
 
----
+A pair has labels for each editor, a `<Name>Caption` for the group, and a shared
+`<MinName>ToolTip`. `Z2NumericPanel` adds the group caption when an editor appears
+on its own in search results or the preset diff.
+
+### 4.5 Text entry
+
+`Z2TextBox` is used for flags, seed, search, preset names, and output filenames.
+`Label` sits in the outline; `PlaceholderText` appears while the field is empty.
+`InnerLeftContent` and `InnerRightContent` accept icons or buttons, as in the search
+field. It otherwise uses the standard TextBox bindings and editing behavior.
+
+The theme in `Controls/Z2TextBox.axaml` provides focus and validation feedback.
+The flag-string field receives its validity border from `ThemeHelper`, so an
+invalid string stays visibly marked during editing.
+
+### 4.6 Buttons
+
+Ordinary Avalonia buttons use the theme in `Controls/Z2Button.axaml`. The default
+is a primary-colored button. The existing variants are:
+
+| Variant | Example |
+| --- | --- |
+| Flat | `<Button Classes="Flat" Content="Cancel" />` |
+| Secondary surface | `<Button Classes="accent" Content="Other action" />` |
+| Outline | `<Button Theme="{StaticResource Z2OutlineButton}" Content="Browse" />` |
+
+Commands and default/cancel actions use Avalonia's Button behavior. Local size
+and padding settings are available for toolbar actions and color swatches.
+
+### 4.7 Semantic palette
+
+Colors are configured in [AppPalette.axaml](../CrossPlatformUI/AppPalette.axaml).
+The `Default` and `Dark` dictionaries hold theme-specific values; resources above
+them apply to both themes. There are separate roles for control states,
+validation, difficulty highlights, flag alerts, borders, and shadows.
+
+For example, changing this resource changes the wiki-link color throughout the app:
+
+```xml
+<SolidColorBrush x:Key="Z2WikiLinkBrush" Color="#4557c4" />
+```
+
+Views and themes refer to the roles with `DynamicResource`, so a new UI color
+usually means adding a brush here and referencing it from the control. Intrinsic
+NES colors and multicolor icon artwork remain with their data; they are not part
+of the interface theme.
 
 ## 5. Enabling and disabling controls
 
-A control gets its `IsEnabled` state purely by **naming convention**: no
-attribute is needed.
+Most enablement comes from a configuration method named after the property:
+`fooIncluded()` supplies the rule for `Foo`. The same predicate can describe
+whether a setting belongs in the flag string and whether its editor is available.
+The presence of the predicate enables this behavior; it also works for settings
+that are not serialized flags.
 
 ### 5.1 The tri-state rule: `!= false`, never `== true`
 
-Most flag properties are `bool?`, and for those **`null` is a third state, not
-"off"**. It means *indeterminate*: the generator still rolls the option (50/50,
-or whatever ratio is configured). So an option whose parent is indeterminate is
-still **live**, and the user must be able to reach it.
-
-The correct predicate is `Config.X != false`.
-
-**Prefer the existing `xIncluded()` accessors** on `RandomizerConfiguration`
-over hand-writing the comparison. They are `!= false` tests, sometimes composed
-(`allowUnsafePathEncountersIncluded()` is
-`shuffleEncountersIncluded() && shuffleEncounters != false`). They matter
-because `FlagsSerializeGenerator` emits `if (xIncluded())` around
-serialization of every `[ConditionallyIncludeInFlags]` field. The rule that
-decides whether a control is live and the rule that decides whether the flag is
-written are therefore *required to agree*.
+For nullable settings, `null` means "choose randomly," so dependent options remain
+available in that state. A predicate based on a nullable boolean therefore uses
+`Config.X != false`. An existing `xIncluded()` method is usually the best way to
+reuse the configuration's rule.
 
 ### 5.2 Rules the generator derives for you
 
-If `RandomizerConfiguration` declares a predicate `fooIncluded()`, the generator
-inlines the rule into the registry entry. A `[ConditionallyIncludeInFlags]`
-field always has one, because the serializer would not compile without it.
+The generator recognizes the PascalCase property and its camelCase predicate
+without an extra UI attribute. Numerics are the exception: their editors are not
+automatically disabled.
 
-- The predicate's **presence** is the opt-in. The
-  `[ConditionallyIncludeInFlags]` attribute is not used by the UI code, so you
-  can use the same logic for non-flag options (like the music options).
-- The lookup handles the casing difference: properties are PascalCase
-  (`RemoveLongDeadEnds`), predicates are camelCase
-  (`removeLongDeadEndsIncluded()`).
-
----
+A rule based on view-model state can use a `<Name>EnabledObservable` instead. For
+simple non-nullable UI properties, an ordinary `IsEnabled` binding also works.
+Binding a nullable configuration boolean directly to `IsEnabled` would turn its
+random state into false; use the predicate or observable for that case.
 
 ## 6. Adding a flag, end to end
 
-1. **Add the property** to `RandomizerConfiguration.cs`.
-   - Add `[ConditionallyIncludeInFlags]` if the flag is conditional. This also
-     requires an `xIncluded()` predicate.
-   - For an `int` / `int?`, add `[Minimum(n)]` and `[Maximum(n)]`. Bounds come
-     only from these.
-   - For a Min/Max pair, put `[UiNumericPair(nameof(partner))]` on **both**
-     fields.
-2. **Add the resources** to `CrossPlatformUI/Lang/Resources.resx`. A checkbox
-   or enum always requires <Name> and <Name>ToolTip; both are compile-time
-   references, so a missing key fails the build.
-
-   For a Min/Max pair, also add <Name>Caption (for the caption above the pair).
-3. **For an enum, add its list** to `RandomizerCore/EnumTypes.cs`, named
-   `<Name>List`. Add any per-flag filtering there.
-
-4. **Add the element** to the right `Views/Tabs/*.axaml`:
-
-   ```xml
-   <z:Z2CheckBox Flag="<Name>" />
-   <z:Z2ComboBox Flag="<Name>" />
-   <z:Z2NumericUpDown Flag="<Name>" />
-   ```
-
-   The root element needs `xmlns:z="clr-namespace:CrossPlatformUI.Controls"`.
-
-5. **Build project.** A missing resource key or enum list fails the build and
-   names the missing symbol. In this case, see steps 1-3 above.
-
-6. **Check enablement.**
-   - If a `fooIncluded()` predicate exists, enablement is derived automatically,
-     for every control kind.
-   - Otherwise add a `<Name>EnabledObservable` on the owning view model, or keep
-     a plain `IsEnabled="{Binding ...}"` binding for a simple view-model
-     property. A plain `{Binding Config.X}` on a `bool?` is a bug (see 5.1).
-   - **Do not** add an `EnabledObservable` for a numeric. They are currently
-     never disabled.
-
----
+1. Add the configuration field and its attributes in `RandomizerConfiguration.cs`.
+   An integer needs bounds; a Min/Max pair needs partner attributes on both fields.
+   A conditional flag also needs its `xIncluded()` predicate.
+2. Add the label and tooltip in `CrossPlatformUI/Lang/Resources.resx`. Enum and
+   boolean labels use `<Name>` and `<Name>ToolTip`; a numeric pair also has its
+   group caption. [Section 4](#4-flag-controls-in-detail) describes the differences.
+3. For an enum, add `<Name>List` to `RandomizerCore/EnumTypes.cs`, including any
+   filtering specific to that setting.
+4. Add the matching `z:Z2CheckBox`, `z:Z2ComboBox`, or `z:Z2NumericUpDown` to the
+   relevant tab. The examples in [section 2](#2-how-a-flag-becomes-a-control) show
+   the usual markup; normal Grid and margin attributes handle its placement.
 
 ## 7. The settings search box
 
-`Views/RandomizerView.axaml` places a search box at the right of the top tab
-row. `MultiRowTabsPanel` aligns the box with the final two columns of the
-second tab row, including at the minimum desktop window width. At narrower
-widths, the box moves above the tabs if the space beside them is too small.
-Clicking or
-focusing the search box opens the results, including any existing query.
-Clearing a query returns to the tab that was open before the results. The results use
-a hidden tab item, so the search box is their entry point in the strip.
+Search opens from the box beside the top tab row. It matches the beginning of
+words in labels, tooltips, and ComboBox options, with synonyms for terms such as
+"gems" and "crystals." Multiple words narrow the results. Each result is the same
+editor used on the settings page; a newly registered flag becomes searchable
+automatically. Clearing the query returns to the previous tab.
 
-| Piece | Where | What it does |
-| --- | --- | --- |
-| The index | `Controls/FlagSearchIndex.cs` | One entry per `ConfigFlag`, built from `FlagRegistry`, holding the caption (the label, plus a Min/Max pair's own caption, e.g. "Starting Level Magic") and the text a query matches: that caption, the tooltip, combo options, and every synonym group the text touches. |
-| The view model | `ViewModels/Tabs/SearchViewModel.cs` | Holds the query, debounces it (150 ms), and rebuilds the results. |
-| The view | `Views/Tabs/SearchView.axaml` | A status line plus the list of hits. |
+The relevant files are
+`Controls/FlagSearchIndex.cs`,
+`ViewModels/Tabs/SearchViewModel.cs`, and
+`Views/Tabs/SearchView.axaml`.
 
-Rules that matter:
+The tab themes are in `Controls/Z2Tabs.axaml`. Their `TabIdleOutline`,
+`TabHoverOutline`, and `TabActiveOutline` resources control corner cuts and which
+edges are drawn. `MultiRowTabsPanel` lays out the rows and search box.
 
-- **The index needs no maintenance.** It is built from the same registry the
-  shared controls read, so a new flag is searchable as soon as it exists.
-- **Never cache the result controls.** `FlagControlFactory.Create` builds a new
-  control per hit, because an Avalonia control can only be in one place at a
-  time. `SearchViewModel.Refresh` therefore drops the old rows and builds new
-  ones.
-- **Set `control.DataContext = Main` explicitly.** Inside the item template the
-  inherited DataContext is the row, which `RandomizerConfigResolver` cannot turn
-  into a config; `Main` resolves to the live config.
-- **A hit is just the control.** Results use a scrollable `FlexColumnsPanel`
-  like the other settings tabs. Each control carries its own tooltip.
-- **Do not hard-code the Search tab's index.** The view reports where the tab
-  sits (`RandomizerViewModel.SearchTabIndex`, resolved from the tab strip) and
-  the view model switches to it. Reordering the tabs in XAML stays safe.
-- The query is **not persisted** (`[JsonIgnore]`), and a session that ended on
-  the Search tab comes back to the first tab.
-- **The tooltip is searchable but not shown.** The index folds `entry.ToolTip()`
-  into the match text, so a player's word ("gems") finds a setting whose caption
-  only says "palaces". Nothing is added to the row, and a caption hit is not
-  distinguished from a tooltip hit.
-- **A combo's options are searchable.** Every `EnumDescription` description and
-  info text is folded into the match text, so "Reconstructed" finds the palace
-  style even though no caption says it. Expect broad option words ("random",
-  "vanilla") to return many hits.
-- **Word-start matching.** A query word matches if it starts any word in the
-  caption, tooltip, combo options, or a synonym group's expansion
-  (case-insensitive). Prefixes work; middle-of-word hits do not, so "lag"
-  matches "lag" in tooltips but not "flag". A multi-word query requires every
-  word to match somewhere.
-- **Synonym groups bridge the players' words.** `FlagSearchIndex.SynonymGroups`
-  lists words that mean the same setting ("gem"/"crystal"). If any word from a
-  group starts a word anywhere in an entry's text, every form is added to it.
-  This is per-entry derivation, not per-flag hard-coding: the palace-count
-  setting gets "crystals" because its tooltip says "gems", and any future
-  tooltip that says "crystal" gets "gem" the same way.
+At the breakpoint in `ResponsiveLayout.CompactTabStripWidth`, the tab font,
+inputs, seed icon, and selected-tab decoration switch to a compact presentation.
+Font sizes are configured in `Typography.axaml`; layout styles are in
+`Views/RandomizerView.axaml`.
 
+## 8. Menus
+
+The gear menu in `RandomizerView.axaml` uses ordinary `MenuItem` elements with
+command bindings. New actions can be added alongside the existing items, with an
+icon from [section 15](#15-adding-a-material-design-icon) if useful.
+
+`Controls/Z2Menu.axaml` supplies the menu, item, and separator themes.
+`Z2MenuRootItem` is the gear-button presentation; its popup opens below the button,
+while submenus open to the side. Avalonia handles keyboard navigation and dismissal.
+
+## 9. Dialogs
+
+The main view hosts generation progress and preset dialogs through
+DialogHost.Avalonia. Each dialog has a view and view model; the corresponding
+open flag on `MainViewModel` controls visibility. `CloseOnClickAway=False` means
+clicking outside a dialog does not dismiss it.
+
+For appearance changes, `Controls/Z2Dialogs.axaml` selects the dialog surface,
+text, overlay, and border resources. DialogHost supplies the modal behavior and
+focus handling.
+
+## 10. Preset presentation
+
+`Views/Tabs/PresetsView.axaml` contains the preset list and the expandable
+"Compare To Current Flags" panel. The diff displays the normal flag editors next
+to the preset's values, so changes apply to the live configuration.
+
+`Controls/Z2Presets.axaml` provides the list selection, diff header, and expander
+themes.
+
+## 11. General controls
+
+The shared themes also cover ordinary Avalonia controls:
+
+| Controls | Theme file |
+| --- | --- |
+| `ScrollViewer`, `ScrollBar` | `Controls/Z2Scrolling.axaml` |
+| `ContentControl`, `ItemsControl` | `Controls/Z2Content.axaml` |
+| `HyperlinkButton` | `Controls/Z2Hyperlink.axaml` |
+
+Scroll viewers support wheel and touch input, thumb dragging, and track paging.
+For a link, `HyperlinkButton.NavigateUri` provides the destination and Avalonia
+handles opening it. The `WikiLink` class applies the app's wiki-link appearance.
+
+## 12. App shell
+
+### Fonts
+
+[Typography.axaml](../CrossPlatformUI/Typography.axaml) is the place to change
+font families, weights, styles, and sizes. Settings are grouped by their visual
+role rather than by the view where they happen to appear:
+
+| Role | Resource prefix |
+| --- | --- |
+| App default | `Z2` (`Z2FontFamily`, `Z2FontSize`, etc.) |
+| Section header | `Z2Section` |
+| Section caption | `Z2SectionCaption` |
+| ComboBox heading | `Z2ComboBoxHeading` |
+| Hyperlink | `Z2Hyperlink` |
+| Label below a numeric field | `Z2NumericLabel` |
+| Button | `Z2Button` |
+| Tab header | `Z2Tab` |
+
+For example, a button's family, style, weight, and size are configured together:
+
+```xml
+<FontFamily x:Key="Z2ButtonFontFamily">$Default</FontFamily>
+<FontStyle x:Key="Z2ButtonFontStyle">Normal</FontStyle>
+<FontWeight x:Key="Z2ButtonFontWeight">Normal</FontWeight>
+<x:Double x:Key="Z2ButtonFontSize">14</x:Double>
+```
+
+`$Default` selects the host's default font. A bundled font uses an Avalonia
+resource URI, such as `avares://CrossPlatformUI/Assets/Fonts/Roboto#Roboto`.
+The file also contains heading sizes, compact input sizes, and the wide/compact
+tab sizes. This keeps font experiments in one file.
+Tab headers share their family, style, and weight across both sizes;
+`Z2TabFontSize` and `Z2CompactTabFontSize` set the wide and compact sizes.
+
+### Theme and window appearance
+
+`ThemeHelper` selects Light, Dark, or the system theme. Most appearance changes
+belong in [the palette](#47-semantic-palette), `Typography.axaml`, or a control's
+theme under `Controls/`.
+
+`Z2Application.axaml` provides the window and popup surfaces, tooltips, and routed
+content presentation. `Z2WindowDecorations.axaml` provides app-drawn title bars
+and caption buttons where the platform uses them. Native OS-drawn decorations
+remain platform-owned.
+
+## 13. Text-editing menus and touch selection
+
+Text fields and numeric editors offer Cut, Copy, Paste, and Select All through
+the shared themes in `Controls/Z2TextEditing.axaml`. Desktop menus show shortcut
+hints; touch input uses a compact horizontal menu and draggable selection handles.
+The operations use Avalonia's TextBox behavior, including read-only restrictions
+and undo.
+
+The global TextBox style in `App.axaml` applies the menu to both `Z2TextBox` and
+the editor inside a numeric control. A local `ContextFlyout` can provide a custom
+menu for an individual field.
+
+## 14. Managed file-picker fallback
+
+File and folder selection use Avalonia's `StorageProvider`, which chooses the
+platform dialog or a managed fallback. The fallback's appearance is in
+`Controls/Z2FileChooser.axaml`, including its overwrite-confirmation prompt.
+Its path and filename fields use `Z2TextBox`, and its filter uses `Z2SelectionBox`.
+Navigation, filtering, selection, and cancellation remain Avalonia features.
+
+## 15. Adding a Material Design icon
+
+Icons are small vector paths in
+[ToolbarIcons.axaml](../CrossPlatformUI/Views/ToolbarIcons.axaml). They come from
+**Pictogrammers Material Design Icons (MDI)**; the app includes only the paths it
+uses, rather than an icon catalog package.
+
+### Choose the icon and add its path
+
+Find an icon in the [MDI library](https://pictogrammers.com/library/mdi/) and download
+its SVG. Ordinary MDI icons use a 24×24 view box, matching `ToolbarIconTheme`.
+Copy the `<path>` element's `d` value into a named `StreamGeometry` in
+`ToolbarIcons.axaml`. For example, the plus icon is:
+
+```xml
+<StreamGeometry x:Key="IconPlus">M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z</StreamGeometry>
+```
+
+An SVG with transforms or several differently styled paths needs its artwork
+adapted to the canvas first; copying a single path may change its appearance.
+
+### Use it in a view
+
+```xml
+<PathIcon Theme="{StaticResource ToolbarIconTheme}"
+          Data="{StaticResource IconPlus}" Width="24" Height="24" />
+```
+
+The theme scales the icon and uses its `Foreground` as the fill, so it normally
+picks up the surrounding button or menu color. `RandomizerView` already includes
+the dictionary. In another view, add it to the merged resources:
+
+```xml
+<UserControl.Resources>
+    <ResourceDictionary>
+        <ResourceDictionary.MergedDictionaries>
+            <ResourceInclude Source="avares://CrossPlatformUI/Views/ToolbarIcons.axaml" />
+        </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+</UserControl.Resources>
+```
+
+The action containing the icon should have readable text or an automation name.
+After building the Desktop app, check the icon at its intended size in both themes.

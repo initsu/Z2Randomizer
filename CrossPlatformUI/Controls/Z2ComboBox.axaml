@@ -1,0 +1,148 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="using:CrossPlatformUI.Controls">
+    <local:ComboBoxOutlineClipConverter x:Key="OutlineClip" />
+
+    <ControlTheme x:Key="Z2ComboBoxItem" TargetType="ComboBoxItem">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Padding" Value="16,8" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="Foreground" Value="{DynamicResource Z2ComboBoxForeground}" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <ContentPresenter Name="PART_ContentPresenter" Content="{TemplateBinding Content}"
+                                  ContentTemplate="{TemplateBinding ContentTemplate}"
+                                  Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}"
+                                  HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                  VerticalContentAlignment="Center" />
+            </ControlTemplate>
+        </Setter>
+        <Style Selector="^:selected, ^:pointerover, ^:focus-visible">
+            <Setter Property="Background" Value="{DynamicResource Z2ComboBoxHighlight}" />
+        </Style>
+        <Style Selector="^:disabled">
+            <Setter Property="Opacity" Value="0.56" />
+        </Style>
+    </ControlTheme>
+
+    <ControlTheme x:Key="Z2ComboBoxScrollThumb" TargetType="Thumb">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Background="{DynamicResource Z2ComboBoxOutline}" CornerRadius="3" Margin="2" />
+            </ControlTemplate>
+        </Setter>
+    </ControlTheme>
+    <ControlTheme x:Key="Z2ComboBoxScrollBar" TargetType="ScrollBar">
+        <Setter Property="Width" Value="12" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Track Name="PART_Track" Orientation="Vertical" IsDirectionReversed="True"
+                       Minimum="{TemplateBinding Minimum}" Maximum="{TemplateBinding Maximum}"
+                       Value="{TemplateBinding Value, Mode=TwoWay}" ViewportSize="{TemplateBinding ViewportSize}">
+                    <Track.Thumb>
+                        <Thumb Theme="{StaticResource Z2ComboBoxScrollThumb}" />
+                    </Track.Thumb>
+                </Track>
+            </ControlTemplate>
+        </Setter>
+    </ControlTheme>
+    <ControlTheme x:Key="Z2ComboBoxScrollViewer" TargetType="ScrollViewer">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Grid ColumnDefinitions="*,Auto">
+                    <ScrollContentPresenter Name="PART_ContentPresenter" Background="Transparent">
+                        <ScrollContentPresenter.GestureRecognizers>
+                            <ScrollGestureRecognizer
+                                CanVerticallyScroll="{Binding CanVerticallyScroll, ElementName=PART_ContentPresenter}"
+                                Offset="{Binding Offset, ElementName=PART_ContentPresenter}"
+                                Viewport="{Binding Viewport, ElementName=PART_ContentPresenter}"
+                                Extent="{Binding Extent, ElementName=PART_ContentPresenter}" />
+                        </ScrollContentPresenter.GestureRecognizers>
+                    </ScrollContentPresenter>
+                    <ScrollBar Name="PART_VerticalScrollBar" Grid.Column="1" Orientation="Vertical"
+                               Theme="{StaticResource Z2ComboBoxScrollBar}" />
+                </Grid>
+            </ControlTemplate>
+        </Setter>
+    </ControlTheme>
+
+    <ControlTheme x:Key="{x:Type local:Z2SelectionBox}" TargetType="local:Z2SelectionBox">
+        <Setter Property="Foreground" Value="{DynamicResource Z2ComboBoxForeground}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Z2ComboBoxOutline}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="Margin" Value="0,0,0,4" />
+        <Setter Property="Padding" Value="16,4" />
+        <Setter Property="MaxDropDownHeight" Value="500" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="ItemContainerTheme" Value="{StaticResource Z2ComboBoxItem}" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <StackPanel Name="FieldLayout">
+                  <Grid Name="FieldContainer">
+                  <Grid Name="FieldRoot" Margin="0,8,0,0" MinHeight="52" Background="{TemplateBinding Background}">
+                    <Border Name="FieldBorder"
+                            BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{TemplateBinding CornerRadius}">
+                        <Border.Clip>
+                            <MultiBinding Converter="{StaticResource OutlineClip}">
+                                <Binding ElementName="FieldBorder" Path="Bounds" />
+                                <Binding ElementName="LabelBorder" Path="Bounds" />
+                            </MultiBinding>
+                        </Border.Clip>
+                    </Border>
+                        <Grid ColumnDefinitions="*,Auto" Margin="{TemplateBinding Padding}">
+                            <ContentPresenter Name="SelectedContent" Content="{TemplateBinding SelectionBoxItem}"
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                              HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+                            <Path Name="DropDownArrow" Grid.Column="1" Data="M0,0 L4,4 L8,0"
+                                  Stroke="{TemplateBinding Foreground}" StrokeThickness="1.5" Width="8" Height="4"
+                                  Margin="12,0,0,0" VerticalAlignment="Center" />
+                        </Grid>
+                    <Border Name="LabelBorder" HorizontalAlignment="Left" VerticalAlignment="Top"
+                            Margin="14,-8,0,0" Padding="4,0"
+                            IsVisible="{TemplateBinding Label, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                        <TextBlock Name="FieldLabel" Text="{TemplateBinding Label}"
+                                   FontSize="{DynamicResource Z2ComboBoxHeadingFontSize}"
+                                   FontFamily="{DynamicResource Z2ComboBoxHeadingFontFamily}"
+                                   FontStyle="{DynamicResource Z2ComboBoxHeadingFontStyle}" 
+                                   FontWeight="{DynamicResource Z2ComboBoxHeadingFontWeight}" />
+                    </Border>
+                  </Grid>
+                  </Grid>
+                    <Popup Name="PART_Popup" PlacementTarget="{Binding ElementName=FieldRoot}" Placement="Bottom" Margin="0"
+                           MinWidth="{Binding $parent[local:Z2SelectionBox].Bounds.Width}"
+                           MaxHeight="{TemplateBinding MaxDropDownHeight}" IsLightDismissEnabled="True"
+                           IsOpen="{TemplateBinding IsDropDownOpen, Mode=TwoWay}" InheritsTransform="True">
+                        <Border Background="{DynamicResource Z2ComboBoxSurface}" BorderBrush="{DynamicResource Z2ComboBoxOutline}"
+                                BorderThickness="1" CornerRadius="3">
+                            <ScrollViewer Theme="{StaticResource Z2ComboBoxScrollViewer}"
+                                          HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                                <ItemsPresenter Name="PART_ItemsPresenter" ItemsPanel="{TemplateBinding ItemsPanel}" />
+                            </ScrollViewer>
+                        </Border>
+                    </Popup>
+                </StackPanel>
+            </ControlTemplate>
+        </Setter>
+        <Style Selector="^:pointerover, ^:focus-visible, ^:dropdownopen">
+            <Setter Property="BorderBrush" Value="{DynamicResource Z2ComboBoxAccent}" />
+        </Style>
+        <Style Selector="^.DifficultyOnly">
+            <Setter Property="Background" Value="{DynamicResource Z2DifficultyHighlightBrush}" />
+        </Style>
+        <Style Selector="^:disabled">
+            <Setter Property="Opacity" Value="0.56" />
+        </Style>
+    </ControlTheme>
+    <ControlTheme x:Key="{x:Type local:Z2ComboBox}" TargetType="local:Z2ComboBox"
+                  BasedOn="{StaticResource {x:Type local:Z2SelectionBox}}">
+        <Setter Property="Height" Value="76" />
+        <Style Selector="^:disabled /template/ ContentPresenter#SelectedContent, ^:disabled /template/ Path#DropDownArrow">
+            <Setter Property="Opacity" Value="0" />
+        </Style>
+    </ControlTheme>
+</ResourceDictionary>

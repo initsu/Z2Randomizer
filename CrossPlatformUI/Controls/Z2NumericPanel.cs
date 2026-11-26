@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
+using Avalonia.Markup.Xaml.MarkupExtensions;
 using Avalonia.Media;
 using CrossPlatformUI.Controls.Generated;
 using Z2Randomizer.RandomizerCore.Flags;
@@ -24,8 +25,8 @@ internal static class Z2NumericPanel
         var panel = new StackPanel { Orientation = Orientation.Vertical };
         panel.Children.Add(box);
 
-        // A Min/Max pair end carries the group's caption above its box; a plain
-        // numeric has no caption, and its box hint already names the setting.
+        // Show the optional group caption above the box, including for a pair
+        // end displayed on its own in search results or the preset diff.
         var caption = FlagRegistry.Get(flag)?.Caption?.Invoke();
         if (!string.IsNullOrEmpty(caption))
         {
@@ -34,6 +35,7 @@ internal static class Z2NumericPanel
                 Text = caption,
                 TextWrapping = TextWrapping.Wrap,
                 Margin = new Thickness(2, 0, 0, 4),
+                [!TextBlock.ForegroundProperty] = new DynamicResourceExtension("Z2NumericForeground"),
             });
         }
 

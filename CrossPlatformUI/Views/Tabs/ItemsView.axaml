@@ -1,6 +1,5 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:assists="clr-namespace:Material.Styles.Assists;assembly=Material.Styles"
              xmlns:v="clr-namespace:CrossPlatformUI.Views"
              xmlns:rc="clr-namespace:Z2Randomizer.RandomizerCore;assembly=RandomizerCore"
              xmlns:ui="clr-namespace:CrossPlatformUI"

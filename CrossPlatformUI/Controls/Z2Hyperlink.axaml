@@ -1,0 +1,32 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ControlTheme x:Key="{x:Type HyperlinkButton}" TargetType="HyperlinkButton">
+        <Setter Property="FontFamily" Value="{DynamicResource Z2HyperlinkFontFamily}" />
+        <Setter Property="FontStyle" Value="{DynamicResource Z2HyperlinkFontStyle}" />
+        <Setter Property="FontWeight" Value="{DynamicResource Z2HyperlinkFontWeight}" />
+        <Setter Property="FontSize" Value="{DynamicResource Z2HyperlinkFontSize}" />
+        <Setter Property="Foreground" Value="{DynamicResource Z2PrimaryBrush}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Padding" Value="2" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusAdorner" Value="{x:Null}" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Name="LinkBorder" Background="{TemplateBinding Background}" BorderThickness="1" CornerRadius="2">
+                    <ContentPresenter Name="PART_ContentPresenter" Content="{TemplateBinding Content}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}" Padding="{TemplateBinding Padding}"
+                                      RecognizesAccessKey="True" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+        <Style Selector="^:pointerover /template/ Border#LinkBorder">
+            <Setter Property="Background" Value="{DynamicResource Z2HoverBrush}" />
+        </Style>
+        <Style Selector="^:focus-visible /template/ Border#LinkBorder">
+            <Setter Property="BorderBrush" Value="{DynamicResource Z2PrimaryBrush}" />
+        </Style>
+        <Style Selector="^:disabled">
+            <Setter Property="Opacity" Value="0.56" />
+        </Style>
+    </ControlTheme>
+</ResourceDictionary>
