@@ -5,6 +5,7 @@
         <RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
         <WasmMainJSPath>wwwroot\main.js</WasmMainJSPath>
         <WasmRuntimeAssetsLocation>./_framework</WasmRuntimeAssetsLocation>
+        <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
         <!-- Link native dependencies even when managed AOT compilation is disabled. -->
         <WasmBuildNative>true</WasmBuildNative>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -53,7 +54,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <WasmExtraFilesToDeploy Include="wwwroot\**" />
+        <Content Update="wwwroot/main.js" RelativePath="main#[.{fingerprint}]!.js" />
+        <!-- Avalonia supplies these paths directly, so they bypass the fingerprint pattern. -->
+        <StaticWebAsset Update="$(_AvaloniaWebAssetsFolder)avalonia.js;$(_AvaloniaWebAssetsFolder)storage.js">
+            <RelativePath>_framework/%(Filename)#[.{fingerprint}]!.js</RelativePath>
+        </StaticWebAsset>
+        <!-- js65 reads embedded core resources. Exclude Asm copies left by older builds. -->
+        <Content Remove="wwwroot\Asm\**" />
+        <WasmExtraFilesToDeploy Include="wwwroot\**" Exclude="wwwroot\Asm\**" />
     </ItemGroup>
     <Target Name="CopyAssetsToLocalWwwRoot" BeforeTargets="BeforeBuild;AssignTargetPaths">
         <ItemGroup>

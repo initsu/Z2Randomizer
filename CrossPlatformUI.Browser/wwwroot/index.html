@@ -5,9 +5,10 @@
     <title>Z2Randomizer Web</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="modulepreload" href="./main.js" />
-    <link rel="modulepreload" href="./_framework/dotnet.js" />
-    <link rel="modulepreload" href="./_framework/avalonia.js" />
+    <script type="importmap"></script>
+    <link rel="modulepreload" href="main#[.{fingerprint}].js" />
+    <link rel="modulepreload" href="_framework/dotnet#[.{fingerprint}].js" />
+    <link rel="modulepreload" href="_framework/avalonia#[.{fingerprint}].js" />
 <!--    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>-->
     <link rel="stylesheet" href="./app.css" />
 </head>
@@ -24,7 +25,7 @@
         </div>
     </div>
 
-    <script type="module" src="./main.js"></script>
+    <script type="module" src="main#[.{fingerprint}].js"></script>
 </body>
 
 </html>
