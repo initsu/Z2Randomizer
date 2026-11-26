@@ -1,5 +1,26 @@
 # Z2Randomizer Changelog
 
+## Custom Rooms build
+
+The program now looks for custom rooms in the Rooms/ folder.
+A README.txt is shipped in that folder with more instructions.
+Any number of JSON and YAML room files may be placed there,
+with one or multiple rooms per file.
+
+When the Custom room pool is selected from within the program,
+all the custom rooms will be tested in a validator, reporting
+any easily found errors - to save some time testing.
+(Do not rely on this fully, it is far from foolproof.)
+
+### Changes
+
+- Add option to block Fairy from going through locked doors.
+
+### Bug Fixes
+
+- Prevent v5 shuffle options being enabled with Shuffle Overworld Items off.
+- Fixed bug with vertical generators and Fokka beams merging to create dots going diagonally.
+
 ## Key Logic build
 
 ### New Key Logic
